@@ -37,4 +37,5 @@ endif()
 file(GLOB SOURCES "*.cpp")
 add_executable(utility_test ${SOURCES})
 target_link_libraries(utility_test utility gtest)
-add_test(utility_test utility_test)
+
+add_test(NAME utility_test COMMAND utility_test)
