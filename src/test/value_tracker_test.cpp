@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "common/value_tracker.h"
+#include "value_tracker.h"
 
 //================================ TEST FIXTURES ===============================
 
@@ -19,7 +19,7 @@
 
 TEST(ValueTrackerTest, testValue)
 {
-    common::ValueTracker<double> tracker(3);
+    utility::ValueTracker<double> tracker(3);
 
     // The tracker is empty at this point and all values are to be 0.
     ASSERT_EQ(0, tracker.value(0));
@@ -49,11 +49,11 @@ TEST(ValueTrackerTest, testValue)
 TEST(ValueTrackerTest, testDelta)
 {
     uint32_t count = 5;
-    common::ValueTracker<uint32_t> tracker(count);
+    utility::ValueTracker<uint32_t> tracker(count);
 
     // The tracker is empty at this point and all values are to be 0.
     ASSERT_EQ(count, tracker.count());
-    ASSERT_EQ(0, tracker.value(0));
+    ASSERT_EQ(uint32_t(0), tracker.value(0));
 
     // Push 10 values.
     uint32_t last_val = 10;
@@ -66,7 +66,7 @@ TEST(ValueTrackerTest, testDelta)
         ASSERT_EQ(expected, tracker.value(i)) << "Loop index: " << i;
     }
 
-    ASSERT_EQ(1, tracker.delta());
+    ASSERT_EQ(uint32_t(1), tracker.delta());
 
     // Compare the delta for all combinations of values.
     // The second position to tracker.delta() must be less than or equal to
@@ -82,7 +82,7 @@ TEST(ValueTrackerTest, testDelta)
 
 TEST(ValueTrackerTest, testInvalidDelta)
 {
-    common::ValueTracker<uint16_t> tracker(3);
+    utility::ValueTracker<uint16_t> tracker(3);
 
     for (uint16_t i = 5; i <= 7; i++) {
         tracker.push(i);

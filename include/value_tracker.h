@@ -1,21 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/*
- * value_tracker.h
- *
- * Created on: 2017-03-16
- *     Author: Sergey Kapustin <svkapustin@gmail.com> */
 
-#ifndef _common_ValueTracker_h_
-#define _common_ValueTracker_h_
+#ifndef _utility_ValueTracker_h_
+#define _utility_ValueTracker_h_
 
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
 
-namespace common
-{
+namespace utility {
 
 /**
  * The class stores two values, prior and current, so as to track delta
@@ -24,8 +18,7 @@ namespace common
  * IMPORTANT: The class is shared by AVR and x86 plaforms. Keep it portable.
  */
 template<typename T>
-class ValueTracker
-{
+class ValueTracker {
 public:
 
 // LIFECYCLE
@@ -104,15 +97,14 @@ template<typename T>
 inline ValueTracker<T>::ValueTracker(uint32_t count) :
     vals_(NULL),
     count_(count),
-    pos_(0)
-{
+    pos_(0) {
+
     // Create the array and set all values to default for the type.
     vals_ = new T[count]();
 }
 
 template<typename T>
-inline ValueTracker<T>::~ValueTracker()
-{
+inline ValueTracker<T>::~ValueTracker() {
     delete [] vals_;
     vals_ = NULL;
 }
@@ -120,47 +112,41 @@ inline ValueTracker<T>::~ValueTracker()
 //=================================== OPERATIONS ===============================
 
 template<typename T>
-inline void ValueTracker<T>::push(T val)
-{
+inline void ValueTracker<T>::push(T val) {
     vals_[pos_ % count_] = val;
     ++pos_;
 }
 
 template<typename T>
-inline uint32_t ValueTracker<T>::count() const
-{
+inline uint32_t ValueTracker<T>::count() const {
     return count_;
 }
 
 template<typename T>
-inline T ValueTracker<T>::last() const
-{
+inline T ValueTracker<T>::last() const {
     // Assume that at least one value was pushed.
     //
     return vals_[(pos_ - 1) % count_];
 }
 
 template<typename T>
-inline T ValueTracker<T>::value(uint32_t requested_pos) const
-{
+inline T ValueTracker<T>::value(uint32_t requested_pos) const {
     uint32_t index = (pos_ - 1) - ((count_ - 1) - requested_pos);
     return vals_[index % count_];
 }
 
 template<typename T>
-inline T ValueTracker<T>::delta() const
-{
+inline T ValueTracker<T>::delta() const {
     return delta(count_ - 1, count_ - 2);
 }
 
 template<typename T>
-inline T ValueTracker<T>::delta(uint32_t upper_pos, uint32_t lower_pos) const
-{
+inline T ValueTracker<T>::delta(uint32_t upper_pos, uint32_t lower_pos) const {
     T upper_val = value(upper_pos);
     T lower_val = value(lower_pos);
     return (upper_val - lower_val);
 }
 
-} // namespace common
+} // namespace utility
 
-#endif // _common_ValueTracker_h_
+#endif // _utility_ValueTracker_h_

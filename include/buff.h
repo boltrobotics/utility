@@ -1,22 +1,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/*
- * buff.h
- *
- * Created on: 2017-01-10
- *     Author: Sergey Kapustin <svkapustin@gmail.com> */
 
-#ifndef _common_Buff_h_
-#define _common_Buff_h_
+#ifndef _utility_Buff_h_
+#define _utility_Buff_h_
 
+// SYSTEM INCLUDES
+#include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
 
-namespace common
-{
+namespace utility {
 
-class Buff
-{
+class Buff {
 public:
 
 // LIFECYCLE
@@ -359,6 +355,6 @@ inline bool Buff::writeChunk(T (&vals)[N], bool extend_buff)
     return success;
 }
 
-} // namespace common
+} // namespace utility
 
-#endif // _common_Buff_h_
+#endif // _utility_Buff_h_
