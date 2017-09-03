@@ -40,18 +40,17 @@ public:
 // OPERATIONS
 
     /**
-     * Nullify allocated memory and set read/write pointers to buffer start.
+     * Nullify allocated memory and set read/write pointers to position 0.
      */
     void reset();
 
     /**
-     * Shift available data to buffer's front so as read_ptr points to buffer's
-     * start, and write_ptr to read_ptr + available bytes. This takes effect
-     * only if there is room between start and read_ptr.
+     * Shift available data to the front of the buffer's storage so as read_ptr
+     * points to buffer's start, and write_ptr to read_ptr + available bytes. 
      *
      * @param target_bytes_remain
-     * @return true if content was shifted and remaing() bytes are more or equal
-     *  to 'expect' bytes
+     * @return true if the content was shifted and remaining() bytes are
+     *  greater than or equal to the provided target_bytes_remain value
      */
     bool shift(uint32_t target_bytes_remain);
 
@@ -79,22 +78,22 @@ public:
     uint32_t size() const;
 
     /**
-     * @return the number of bytes from buffer's start to read_ptr().
+     * @return the number of bytes between position 0 and read pointer.
      */
     uint32_t consumed() const;
 
     /**
-     * @return the data content length
+     * @return the content length
      */
     uint32_t available() const;
 
     /**
-     * @return the data content length
+     * @return the bytes in buffer available for writing
      */
     uint32_t remaining() const;
 
     /**
-     * Read a single byte of data.
+     * Read a single byte of content.
      *
      * @param v - the storage for the value
      * @param advance - the flag indicating to advance read position
@@ -104,7 +103,7 @@ public:
     bool read(T* v, bool advance = true);
 
     /**
-     * Read a chunk of data.
+     * Read a chunk of content.
      *
      * @param v - the storage for the data
      * @return false if not enough data is avalable, true otherwise
@@ -113,12 +112,12 @@ public:
     bool readChunk(T (&vals)[N], bool advance = true);
 
     /**
-     * Advance read position and reset buffer if read/writer ptr point to the same
-     * location.
+     * Advance read position. Reset the buffer if read/writer pointers point to the
+     * same position.
      *
-     * @param steps - the number of steps to advance read pointer
+     * @param bytes - the number of bytes to advance read pointer
      */
-    void advanceReadPtr(uint32_t steps);
+    void advanceReadPtr(uint32_t bytes);
 
     /**
      * Write scalar value to the buffer.
@@ -138,7 +137,7 @@ public:
      *
      * @param data - the data to write
      * @parma extend_buff - the flag whether to extend the buffer if there is
-     * not enough allocated memory
+     *  not enough allocated memory
      * @return true if the data was written, false otherwise. The failure could
      *  be caused by inability to allocate new memory if extend parameter is true
      *  or insufficient memory if extend parameter is false.
@@ -322,9 +321,9 @@ inline bool Buff::readChunk(T (&vals)[N], bool advance)
 }
 
 
-inline void Buff::advanceReadPtr(uint32_t steps)
+inline void Buff::advanceReadPtr(uint32_t bytes)
 {
-    read_ptr() += steps;
+    read_ptr() += bytes;
 }
 
 template<typename T>
