@@ -9,7 +9,7 @@
 #include <limits>
 
 // PROJECT INCLUDES
-#include "buff.h"
+#include "buff.hpp"
 
 namespace utility {
 

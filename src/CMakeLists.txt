@@ -1,3 +1,8 @@
 file(GLOB SOURCES "*.cpp")
-add_library(utility SHARED ${SOURCES})
+list(LENGTH SOURCES SOURCES_LEN)
+
+if (SOURCES_LEN GREATER 0)
+    add_library(utility STATIC ${SOURCES})
+endif()
+
 add_subdirectory(test)

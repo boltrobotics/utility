@@ -1,25 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/*
- * encoder_test.cpp
- *
- * Created on: 2017-01-27
- *     Author: Sergey Kapustin <svkapustin@gmail.com> */
 
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "value_tracker.h"
+#include "value_tracker.hpp"
 
 //================================ TEST FIXTURES ===============================
 
 //=================================== TESTS ====================================
 
+namespace utility {
+
 TEST(ValueTrackerTest, testValue)
 {
-    utility::ValueTracker<double> tracker(3);
+    ValueTracker<double> tracker(3);
 
     // The tracker is empty at this point and all values are to be 0.
     ASSERT_EQ(0, tracker.value(0));
@@ -49,7 +46,7 @@ TEST(ValueTrackerTest, testValue)
 TEST(ValueTrackerTest, testDelta)
 {
     uint32_t count = 5;
-    utility::ValueTracker<uint32_t> tracker(count);
+    ValueTracker<uint32_t> tracker(count);
 
     // The tracker is empty at this point and all values are to be 0.
     ASSERT_EQ(count, tracker.count());
@@ -82,7 +79,7 @@ TEST(ValueTrackerTest, testDelta)
 
 TEST(ValueTrackerTest, testInvalidDelta)
 {
-    utility::ValueTracker<uint16_t> tracker(3);
+    ValueTracker<uint16_t> tracker(3);
 
     for (uint16_t i = 5; i <= 7; i++) {
         tracker.push(i);
@@ -97,3 +94,5 @@ TEST(ValueTrackerTest, testInvalidDelta)
     //
     ASSERT_EQ(65534, tracker.delta(0, 2));
 }
+
+} // namespace utility
