@@ -1,4 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2016, Sergey V. Kapustin <svkapustin.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -148,7 +150,7 @@ public:
      *  or insufficient memory if extend parameter is false.
      */
     template<typename T, uint32_t N>
-    bool writeChunk(T (&vals)[N], bool extend_buff = true);
+    bool writeChunk(const T (&vals)[N], bool extend_buff = true);
 
 private:
 
@@ -339,7 +341,7 @@ inline bool Buff::write(T val, bool extend_buff)
 }
 
 template<typename T, uint32_t N>
-inline bool Buff::writeChunk(T (&vals)[N], bool extend_buff)
+inline bool Buff::writeChunk(const T (&vals)[N], bool extend_buff)
 {
     bool success = true;
     uint32_t bytes_target = sizeof(T) * N;
@@ -352,7 +354,7 @@ inline bool Buff::writeChunk(T (&vals)[N], bool extend_buff)
         success = extend(bytes_target);
     }
     if (success) {
-        uint8_t* bytes = reinterpret_cast<uint8_t*>(vals);
+        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(vals);
         memcpy(write_ptr(), bytes, bytes_target);
         write_ptr() += bytes_target;
     }
