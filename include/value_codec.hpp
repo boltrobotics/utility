@@ -103,7 +103,7 @@ public:
     /**
      * @return true if this host is little endian
      */
-	static bool isLittleEndian();
+    static bool isLittleEndian();
 
     /**
      * Modulo operator to handle negative numbers. The % operator in C is not the
