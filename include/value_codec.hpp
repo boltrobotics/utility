@@ -61,10 +61,12 @@ public:
      * @param bit_map - a high nibble of each entry indicates whether to get the
      *  number of bits, specified in the low nibble, starting from most-
      *  significant bit. Otherwise, use low-significant bits.
+     * @param move_ptr - move buff's read pointer by N bytes
      * @see value_codec_test.cpp to clarify
      */
     template<typename IntType, typename IdxType, uint32_t N>
-    static IntType getInt(Buff* buff, const IdxType (&bit_map)[N]);
+    static IntType getInt(
+            Buff* buff, const IdxType (&bit_map)[N], bool move_ptr = true);
 
     /**
      * Extract an integer of type IntType using only n bytes from the buffer.
@@ -182,7 +184,8 @@ inline int ValueCodec::getVarInt(Buff* buff, IntType* val) {
 }
 
 template<typename IntType, typename IdxType, uint32_t N>
-inline IntType ValueCodec::getInt(Buff* buff, const IdxType (&bit_map)[N]) {
+inline IntType ValueCodec::getInt(
+        Buff* buff, const IdxType (&bit_map)[N], bool move_ptr) {
 
     IntType val = 0;
 
@@ -201,7 +204,9 @@ inline IntType ValueCodec::getInt(Buff* buff, const IdxType (&bit_map)[N]) {
         val = ((val << bits) | (v & mask));
     }
 
-    buff->advanceReadPtr(N);
+    if (move_ptr) {
+        buff->advanceReadPtr(N);
+    }
     return val;
 }
 
