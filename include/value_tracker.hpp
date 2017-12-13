@@ -39,7 +39,7 @@ public:
      *
      * @param count - the number of values to track
      */
-    ValueTracker(uint32_t count = 2);
+    ValueTracker(uint32_t count = 2, uint8_t id = 0);
 
     /**
      * Dtor.
@@ -47,6 +47,11 @@ public:
     ~ValueTracker();
 
 // OPERATIONS
+
+    /**
+     * @return the identifier
+     */
+    uint8_t id() const;
 
     /**
      * Add new value to the list.
@@ -93,6 +98,7 @@ private:
     T* vals_;
     uint32_t count_;
     uint32_t pos_;
+    uint8_t id_;
 
 }; // class ValueTracker
 
@@ -105,10 +111,11 @@ private:
 //=================================== LIFECYCLE ================================
 
 template<typename T>
-inline ValueTracker<T>::ValueTracker(uint32_t count) :
+inline ValueTracker<T>::ValueTracker(uint32_t count, uint8_t id) :
     vals_(NULL),
     count_(count),
-    pos_(0) {
+    pos_(0),
+    id_(id) {
 
     // Create the array and set all values to default for the type.
     vals_ = new T[count]();
@@ -121,6 +128,11 @@ inline ValueTracker<T>::~ValueTracker() {
 }
 
 //=================================== OPERATIONS ===============================
+
+template<typename T>
+inline uint8_t ValueTracker<T>::id() const {
+    return id_;
+}
 
 template<typename T>
 inline void ValueTracker<T>::push(T val) {
