@@ -19,6 +19,7 @@
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
+#include "sorters.hpp"
 
 namespace utility {
 
@@ -88,6 +89,16 @@ public:
      * @return the delta as in (upper value - lower value)
      */
     T delta(uint32_t upper_pos, uint32_t lower_pos) const;
+
+    /**
+     * @return the median value
+     */
+    T median() const;
+
+    /**
+     * @return the median value
+     */
+    T mean() const;
 
 private:
 
@@ -168,6 +179,31 @@ inline T ValueTracker<T>::delta(uint32_t upper_pos, uint32_t lower_pos) const {
     T upper_val = value(upper_pos);
     T lower_val = value(lower_pos);
     return (upper_val - lower_val);
+}
+
+template<typename T>
+inline T ValueTracker<T>::median() const {
+    T arr[count_] = {0};
+    memcpy(arr, vals_, count_ * sizeof(T));
+
+    Sorters::insertionSort(arr, count_);
+
+    if ((count_ % 2) != 0) {
+        return arr[count_ / 2];
+    } else {
+        return (arr[count_ / 2] + arr[(count_ / 2) - 1]) / 2;
+    }
+}
+
+template<typename T>
+inline T ValueTracker<T>::mean() const {
+    T sum = 0;
+
+    for (uint32_t i = 0; i < count_; i++) {
+        sum += vals_[i];
+    }
+
+    return sum / count_;
 }
 
 } // namespace utility

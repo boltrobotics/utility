@@ -25,8 +25,7 @@
 
 namespace utility {
 
-TEST(ValueTrackerTest, testValue)
-{
+TEST(ValueTrackerTest, testValue) {
     ValueTracker<double> tracker(3);
 
     // The tracker is empty at this point and all values are to be 0.
@@ -54,8 +53,7 @@ TEST(ValueTrackerTest, testValue)
     ASSERT_EQ(6, tracker.value(2));
 }
 
-TEST(ValueTrackerTest, testDelta)
-{
+TEST(ValueTrackerTest, testDelta) {
     uint32_t count = 5;
     ValueTracker<uint32_t> tracker(count);
 
@@ -88,8 +86,7 @@ TEST(ValueTrackerTest, testDelta)
     }
 }
 
-TEST(ValueTrackerTest, testInvalidDelta)
-{
+TEST(ValueTrackerTest, testInvalidDelta) {
     ValueTracker<uint16_t> tracker(3);
 
     for (uint16_t i = 5; i <= 7; i++) {
@@ -106,4 +103,42 @@ TEST(ValueTrackerTest, testInvalidDelta)
     ASSERT_EQ(65534, tracker.delta(0, 2));
 }
 
+TEST(ValueTrackerTest, testMedianOdd) {
+    uint16_t data[] = { 7, 5, 2, 16, 4 };
+    uint32_t size = sizeof(data) / sizeof(uint16_t);
+    ValueTracker<uint16_t> tracker(size);
+
+    for (uint32_t i = 0; i < size; i++) {
+        tracker.push(data[i]);
+    }
+
+    uint16_t v = tracker.median();
+    ASSERT_EQ(5, v);
+}
+
+TEST(ValueTrackerTest, testMedianEven) {
+    uint16_t data[] = { 7, 5, 2, 16, 4, 5 };
+    uint32_t size = sizeof(data) / sizeof(uint16_t);
+    ValueTracker<uint16_t> tracker(size);
+
+    for (uint32_t i = 0; i < size; i++) {
+        tracker.push(data[i]);
+    }
+
+    uint16_t v = tracker.median();
+    ASSERT_EQ(5, v);
+}
+
+TEST(ValueTrackerTest, testMean) {
+    uint16_t data[] = { 7, 5, 2, 16, 4, 5 };
+    uint32_t size = sizeof(data) / sizeof(uint16_t);
+    ValueTracker<uint16_t> tracker(size);
+
+    for (uint32_t i = 0; i < size; i++) {
+        tracker.push(data[i]);
+    }
+
+    uint16_t v = tracker.mean();
+    ASSERT_EQ(6, v);
+}
 } // namespace utility
