@@ -23,9 +23,9 @@
 namespace utility {
 
 /**
- * A one line description of the class.
+ * The class provide facilities to sort data.
  *
- * A longer description.
+ * IMPORTANT: Implementation has to be compatible with AVR platform.
  */
 class Sorters {
 public:
