@@ -27,6 +27,12 @@ namespace utility {
 class Misc {
 public:
 
+// ATTRIBUTES
+
+    constexpr static const double PI        = 3.14159;
+    constexpr static const double PI_HALF   = PI / 2;
+    constexpr static const double PI_TWO    = PI * 2;
+
 // LIFECYCLE
 
     /**
@@ -86,11 +92,15 @@ public:
      */
     static double delta(double angle1, double angle2);
 
-// ATTRIBUTES
-
-    constexpr static const double PI        = 3.14159;
-    constexpr static const double TWO_PI    = PI * 2;
-    constexpr static const double PI_HALF   = PI / 2;
+    /**
+     * Modulo operator to handle negative numbers. The % operator in C is not the
+     * modulo but the remainder operator.
+     *
+     * @param a - left parameter
+     * @param b - right parameter
+     */
+    template<typename T, typename U>
+    static T modulo(T a, U b);
 
 }; // class Misc
 
@@ -132,6 +142,12 @@ inline double Misc::toDegrees(double rad) {
 
 inline double Misc::delta(double angle1, double angle2) {
     return std::pow((angle1 - angle2), 2);
+}
+
+template<typename T, typename U>
+inline T Misc::modulo(T a, U b) {
+    T r = a % b;
+    return (r < 0 ? r + b : r);
 }
 
 } // namespace utility

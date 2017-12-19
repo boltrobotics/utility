@@ -26,7 +26,7 @@ namespace utility {
 #define ARRAY(...) (const uint8_t[]) { __VA_ARGS__ }
 
 /**
- * The class converts between raw character data and C++ types.
+ * The class converts between raw bytes and C++ types.
  *
  * IMPORTANT: The class is shared by AVR and x86 plaforms. Keep it portable.
  */
@@ -39,6 +39,13 @@ public:
         SMALL_VALUE = 2
     };
 
+// LIFECYCLE
+
+    ValueCodec() = delete;
+    ~ValueCodec() = delete;
+    ValueCodec(const ValueCodec&) = delete;
+    ValueCodec& operator=(const ValueCodec&) = delete;
+
 // OPERATIONS
 
     /**
@@ -48,33 +55,38 @@ public:
     static uint8_t getMask(uint8_t bits);
 
     /**
-     * Compose an integer of type IntType from variable length bit pattern.
-     * If a byte of an integer has high bit set, more bits should be added from
-     * the next byte. If the high bit is clear, this byte has the last 7 bits.
+     * Compose an integer of type IntType from a variable-length bit pattern.
+     *
+     * 7 bits of each byte are used to reconstruct the number. If a byte of
+     * an integer has high bit set, more bits should be read from the next byte
+     * to reconstruct the target number. If the high bit is clear, this byte has
+     * the last 7 bits.
      *
      * @param - buff the data buffer
      * @param - target integer
-     * @return SUCCESS or one of the error codes
+     * @return the value from Result enum
      */
     template<typename IntType>
-    static int getVarInt(Buff* buff, IntType* val);
+    static int get7BitVarInt(Buff* buff, IntType* val);
 
     /**
      * Compose an integer of type IntType from the bits of the buffer.
      *
+     * @see value_codec_test.cpp for additional information
+     *
      * IMPORTANT: This function doesn't check for buffer and source/target
      * sizes
      *
-     * @param buff - character data container
+     * @param buff - data container
      * @param val - target value
-     * @param bit_map - a high nibble of each entry indicates whether to get the
-     *  number of bits, specified in the low nibble, starting from most-
-     *  significant bit. Otherwise, use low-significant bits.
+     * @param bit_map - a high nibble of each entry indicates whether to read the
+     *      number of bits (specified in the low nibble) starting from most-
+     *      significant bit. If the high bit is not set, read low-significant
+     *      bits.
      * @param move_ptr - move buff's read pointer by N bytes
-     * @see value_codec_test.cpp to clarify
      */
     template<typename IntType, typename IdxType, uint32_t N>
-    static IntType getInt(
+    static IntType getNBitVarInt(
             Buff* buff, const IdxType (&bit_map)[N], bool move_ptr = true);
 
     /**
@@ -83,31 +95,42 @@ public:
      * IMPORTANT: This function doesn't check for buffer and source/target
      * sizes
      *
-     * @param buff - character data container
+     * @param buff - data container
      * @param val - target value
      * @parma bytes - the number of bytes that the integer occupies
      * @param msb - the data is in most-significant byte order 
      */
     template<typename IntType>
-    static IntType getInt(Buff* buff, uint32_t bytes, bool msb = true);
+    static IntType getFixedInt(Buff* buff, uint32_t bytes, bool msb = true);
 
     /**
-     * Check buffer and source/target sizes, then call getInt()
+     * Check buffer and source/target sizes, then call getFixedInt()
      *
-     * @param buff - character data container
+     * @param buff - data container
      * @param val - target value
      * @parma bytes - the number of bytes that the integer occupies
      * @param msb - the data is in most-significant byte order 
      * @return the values returned by check()
      */
     template<typename IntType>
-    static int getInt(Buff* buff, IntType* val, uint32_t bytes, bool msb = true);
+    static int getFixedInt(
+            Buff* buff, IntType* val, uint32_t bytes, bool msb = true);
 
     /**
+     * Check if the provided data can be converted into requested number.
+     *
+     * @param buff - the data container
+     * @param target_size - byte-size of target number (e.g. uint32_t == 4 bytes)
+     * @param source_size - amount of bytes to use for conversion to the target
+     *      number
+     *
      * @return one of the Result values:
-     *  0 - on success
-     *  1 - if buff->available() is less than source_size
-     *  2 - if target_size is less than source size
+     *      SMALL_BUFF - if buff->available() is less than source_size. Not
+     *          enough raw bytes in the buffer
+     *      SMALL_VALUE - if target_size is less than source size. If the
+     *          requested amount of bytes is converted to a number, the
+     *          target integer type needs to be larger
+     *      SUCCESS - if all conditions above are met
      */
     static int check(Buff* buff, uint32_t target_size, uint32_t source_size);
 
@@ -117,35 +140,12 @@ public:
     static bool isLittleEndian();
 
     /**
-     * Modulo operator to handle negative numbers. The % operator in C is not the
-     * modulo but the remainder operator.
-     *
-     * @param a - left parameter
-     * @param b - right parameter
-     */
-    template<typename T, typename U>
-    static T modulo(T a, U b);
-
-    /**
      * Convert a value between MSB and LSB ordering.
      *
      * @param val - the value
      */
     template<typename ValueType>
     static void swap(ValueType* val);
-
-// ATTRIBUTES
-
-private:
-
-// LIFECYCLE
-
-    // Not supported.
-    //
-    ValueCodec();
-    ~ValueCodec();
-    ValueCodec(const ValueCodec&);
-    ValueCodec& operator=(const ValueCodec&);
 
 }; // class ValueCodec
 
@@ -162,7 +162,7 @@ inline uint8_t ValueCodec::getMask(uint8_t bits) {
 }
 
 template<typename IntType>
-inline int ValueCodec::getVarInt(Buff* buff, IntType* val) {
+inline int ValueCodec::get7BitVarInt(Buff* buff, IntType* val) {
 
     int success = SMALL_VALUE; 
     uint8_t bits = 7;
@@ -180,7 +180,7 @@ inline int ValueCodec::getVarInt(Buff* buff, IntType* val) {
         }
 
         uint8_t byte = *buff->read_ptr();
-        uint8_t v = getInt<uint8_t>(buff, bit_map);
+        uint8_t v = getNBitVarInt<uint8_t>(buff, bit_map, true);
         *val = ((*val << bit_map[0]) | v);
 
         if ((byte & 0x80) == 0) {
@@ -193,7 +193,7 @@ inline int ValueCodec::getVarInt(Buff* buff, IntType* val) {
 }
 
 template<typename IntType, typename IdxType, uint32_t N>
-inline IntType ValueCodec::getInt(
+inline IntType ValueCodec::getNBitVarInt(
         Buff* buff, const IdxType (&bit_map)[N], bool move_ptr) {
 
     IntType val = 0;
@@ -201,15 +201,19 @@ inline IntType ValueCodec::getInt(
     for (register uint32_t i = 0; i < N; i++) {
         uint8_t c = buff->read_ptr()[i];
 
-        // When most-significatn bit in bit_map is set, get the number of bits,
-        // which is specified in low-nibble, from the data byte starting at
-        // most-significant bit position. Otherwise, get that number of bits
-        // from the least-significant side.
+        // @see valuce_codec_test.cpp to clarify the logic here
         //
-        uint8_t bits = bit_map[i] & 0x0F; // 0 through 8
+        // Low nibble will contain a number of bits (0-8) that represents a
+        // number (0-15) IF a most-significant bit of this byte is set.
+        // If high bit is set, read the number of bits from the most-significant
+        // bit position.
+        // Otherwise, get that number of bits from the least-significant side.
+
+        // How many bits represent a number? Lower nibble: 0 through 8
+        uint8_t bits = bit_map[i] & 0x0F;
         uint8_t mask = getMask(bits);
-        uint8_t high = (bit_map[i] >> 7) & 1;
-        uint8_t v = (high ? (c >> (8 - bits)) : c);
+        uint8_t high_bit_set = (bit_map[i] >> 7) & 1;
+        uint8_t v = (high_bit_set ? (c >> (8 - bits)) : c);
         val = ((val << bits) | (v & mask));
     }
 
@@ -220,7 +224,7 @@ inline IntType ValueCodec::getInt(
 }
 
 template<typename IntType>
-inline IntType ValueCodec::getInt(Buff* buff, uint32_t bytes, bool msb) {
+inline IntType ValueCodec::getFixedInt(Buff* buff, uint32_t bytes, bool msb) {
 
     IntType val = 0;
 
@@ -241,13 +245,13 @@ inline IntType ValueCodec::getInt(Buff* buff, uint32_t bytes, bool msb) {
 }
 
 template<typename IntType>
-inline int ValueCodec::getInt(
+inline int ValueCodec::getFixedInt(
         Buff* buff, IntType* val, uint32_t bytes, bool msb) {
 
     int success = check(buff, sizeof(IntType), bytes);
 
     if (success == SUCCESS) {
-        *val = getInt<IntType>(buff, bytes, msb);
+        *val = getFixedInt<IntType>(buff, bytes, msb);
     }
 
     return success;
@@ -256,7 +260,7 @@ inline int ValueCodec::getInt(
 inline int ValueCodec::check(
         Buff* buff, uint32_t target_size, uint32_t source_size) {
 
-    int success = 0;
+    int success = SUCCESS;
 
     if (buff->available() < source_size) {
         success = SMALL_BUFF;
@@ -270,12 +274,6 @@ inline bool ValueCodec::isLittleEndian() {
     int16_t number = 0x0001;
     char* ptr = (char*) &number;
     return (ptr[0] == 1);
-}
-
-template<typename T, typename U>
-inline T ValueCodec::modulo(T a, U b) {
-    T r = a % b;
-    return (r < 0 ? r + b : r);
 }
 
 template<typename ValueType>
