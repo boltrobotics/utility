@@ -10,10 +10,6 @@ set(TEST_DIR ${PROJECT_SOURCE_DIR}/test)
 
 enable_testing()
 
-include_directories(${INCLUDE_DIR})
-add_subdirectory(${SOURCE_DIR})
-add_subdirectory(${TEST_DIR})
-
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
         "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(warnings "-Wall -Wextra -Werror")
@@ -24,3 +20,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
         set(CONFIGURED_ONCE TRUE CACHE INTERNAL "CMake is configured at least once")
     endif()
 endif()
+
+include_directories(${INCLUDE_DIR})
+add_subdirectory(${SOURCE_DIR})
+add_subdirectory(${TEST_DIR})

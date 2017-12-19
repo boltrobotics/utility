@@ -1,3 +1,4 @@
+find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(GTest)
 
 if (GTEST_FOUND)
@@ -41,6 +42,7 @@ if (TARGET utility)
     set(UTILITY_LIB utility)
 endif()
 
-target_link_libraries(utility_test ${UTILITY_LIB} gtest)
+target_link_libraries(
+    utility_test ${UTILITY_LIB} gtest boost_system boost_thread)
 
 add_test(NAME utility_test COMMAND utility_test)
