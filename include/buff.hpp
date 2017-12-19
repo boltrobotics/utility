@@ -180,52 +180,43 @@ inline Buff::Buff(uint32_t size) :
     size_(size),
     data_((uint8_t*) malloc(size_)),
     read_ptr_(data_),
-    write_ptr_(data_)
-{
+    write_ptr_(data_) {
 }
 
-inline Buff::~Buff()
-{
+inline Buff::~Buff() {
     free(data_);
     data_ = NULL;
     read_ptr_ = NULL;
     write_ptr_ = NULL;
 }
 
-inline const uint8_t* Buff::data() const
-{
+inline const uint8_t* Buff::data() const {
     return data_;
 }
 
-inline const uint8_t* Buff::end() const
-{
+inline const uint8_t* Buff::end() const {
     return (data_ + size_);
 }
 
-inline const uint8_t* Buff::read_ptr() const
-{
+inline const uint8_t* Buff::read_ptr() const {
     return read_ptr_;
 }
 
-inline uint8_t*& Buff::read_ptr()
-{
+inline uint8_t*& Buff::read_ptr() {
     return read_ptr_;
 }
 
-inline uint8_t*& Buff::write_ptr()
-{
+inline uint8_t*& Buff::write_ptr() {
     return write_ptr_;
 }
 
-inline void Buff::reset()
-{
+inline void Buff::reset() {
     memset(data_, 0, size_);
     read_ptr_ = data_;
     write_ptr_ = data_;
 }
 
-inline bool Buff::shift(uint32_t target_bytes_remain)
-{
+inline bool Buff::shift(uint32_t target_bytes_remain) {
     uint32_t bytes_consumed = consumed();
 
     // Check if the buffer has some room to use for shifting.
@@ -251,15 +242,13 @@ inline bool Buff::shift(uint32_t target_bytes_remain)
     return (target_bytes_remain <= remaining());
 }
 
-inline bool Buff::extend(uint32_t size)
-{
+inline bool Buff::extend(uint32_t size) {
     uint32_t bytes_remain = remaining();
     bool success = resize(size_ + (size - bytes_remain));
     return success;
 }
 
-inline bool Buff::resize(uint32_t size)
-{
+inline bool Buff::resize(uint32_t size) {
     uint32_t read_offset = read_ptr_ - data_;
     uint32_t write_offset = write_ptr_ - data_;
     uint8_t* data = (uint8_t*) realloc(data_, size * sizeof(uint8_t));
@@ -286,29 +275,24 @@ inline bool Buff::resize(uint32_t size)
     }
 }
 
-inline uint32_t Buff::size() const
-{
+inline uint32_t Buff::size() const {
     return size_;
 }
 
-inline uint32_t Buff::consumed() const
-{
+inline uint32_t Buff::consumed() const {
     return (read_ptr() - data());
 }
 
-inline uint32_t Buff::available() const
-{
+inline uint32_t Buff::available() const {
     return (write_ptr_ - read_ptr_);
 }
 
-inline uint32_t Buff::remaining() const
-{
+inline uint32_t Buff::remaining() const {
     return ((data_ + size_) - write_ptr_);
 }
 
 template<typename T>
-inline bool Buff::read(T* v, bool advance)
-{
+inline bool Buff::read(T* v, bool advance) {
     if (available() > 0) {
         *v = *read_ptr();
 
@@ -322,8 +306,7 @@ inline bool Buff::read(T* v, bool advance)
 }
 
 template<typename T, uint32_t N>
-inline bool Buff::readChunk(T (&vals)[N], bool advance)
-{
+inline bool Buff::readChunk(T (&vals)[N], bool advance) {
     if (available() >= N) {
         memcpy(vals, read_ptr(), N);
 
@@ -336,22 +319,18 @@ inline bool Buff::readChunk(T (&vals)[N], bool advance)
     }
 }
 
-
-inline void Buff::advanceReadPtr(uint32_t bytes)
-{
+inline void Buff::advanceReadPtr(uint32_t bytes) {
     read_ptr() += bytes;
 }
 
 template<typename T>
-inline bool Buff::write(T val, bool extend_buff)
-{
+inline bool Buff::write(T val, bool extend_buff) {
     T vals[] = { val };
     return writeChunk(vals, extend_buff);
 }
 
 template<typename T, uint32_t N>
-inline bool Buff::writeChunk(const T (&vals)[N], bool extend_buff)
-{
+inline bool Buff::writeChunk(const T (&vals)[N], bool extend_buff) {
     bool success = true;
     uint32_t bytes_target = sizeof(T) * N;
     uint32_t bytes_remain = remaining();

@@ -117,6 +117,16 @@ public:
             Buff* buff, IntType* val, uint32_t bytes, bool msb = true);
 
     /**
+     * Encode a number in different host order.
+     *
+     * @param buff - the buffer to store encoded value
+     * @param num - the value to encode
+     * @param msb - if true, encode in MSB order, otherwise in LSB
+     */
+    template<typename NumType>
+    static void encodeNum(Buff* buff, NumType num, bool msb = true);
+
+    /**
      * Check if the provided data can be converted into requested number.
      *
      * @param buff - the data container
@@ -140,12 +150,12 @@ public:
     static bool isLittleEndian();
 
     /**
-     * Convert a value between MSB and LSB ordering.
+     * Convert a value between MSB and LSB host order.
      *
-     * @param val - the value
+     * @param num - the numeric value
      */
-    template<typename ValueType>
-    static void swap(ValueType* val);
+    template<typename NumType>
+    static void swap(NumType* num);
 
 }; // class ValueCodec
 
@@ -257,6 +267,20 @@ inline int ValueCodec::getFixedInt(
     return success;
 }
 
+template<typename NumType>
+inline void ValueCodec::encodeNum(Buff* buff, NumType num, bool msb) {
+    if (isLittleEndian()) {
+        if (msb) {
+            swap(&num);
+        }
+    } else {
+        if (!msb) {
+            swap(&num);
+        }
+    }
+    buff->write(num);
+}
+
 inline int ValueCodec::check(
         Buff* buff, uint32_t target_size, uint32_t source_size) {
 
@@ -276,11 +300,11 @@ inline bool ValueCodec::isLittleEndian() {
     return (ptr[0] == 1);
 }
 
-template<typename ValueType>
-inline void ValueCodec::swap(ValueType* val) {
+template<typename NumType>
+inline void ValueCodec::swap(NumType* num) {
 
-    uint8_t* bytes = reinterpret_cast<uint8_t*>(val);
-    register int j = sizeof(ValueType) - 1;
+    uint8_t* bytes = reinterpret_cast<uint8_t*>(num);
+    register int j = sizeof(NumType) - 1;
 
     for (register int i = 0; i < j; i++, j--) {
         uint8_t tmp = bytes[i];
