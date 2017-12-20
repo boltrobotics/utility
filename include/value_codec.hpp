@@ -123,8 +123,8 @@ public:
      * @param num - the value to encode
      * @param msb - if true, encode in MSB order, otherwise in LSB
      */
-    template<typename NumType>
-    static void encodeNum(Buff* buff, NumType num, bool msb = true);
+    template<typename IntType>
+    static void setFixedInt(Buff* buff, IntType val, bool msb = true);
 
     /**
      * Check if the provided data can be converted into requested number.
@@ -152,10 +152,10 @@ public:
     /**
      * Convert a value between MSB and LSB host order.
      *
-     * @param num - the numeric value
+     * @param val - the numeric value
      */
-    template<typename NumType>
-    static void swap(NumType* num);
+    template<typename IntType>
+    static void swap(IntType* val);
 
 }; // class ValueCodec
 
@@ -267,18 +267,18 @@ inline int ValueCodec::getFixedInt(
     return success;
 }
 
-template<typename NumType>
-inline void ValueCodec::encodeNum(Buff* buff, NumType num, bool msb) {
+template<typename IntType>
+inline void ValueCodec::setFixedInt(Buff* buff, IntType val, bool msb) {
     if (isLittleEndian()) {
         if (msb) {
-            swap(&num);
+            swap(&val);
         }
     } else {
         if (!msb) {
-            swap(&num);
+            swap(&val);
         }
     }
-    buff->write(num);
+    buff->write(val);
 }
 
 inline int ValueCodec::check(
@@ -295,16 +295,16 @@ inline int ValueCodec::check(
 }
 
 inline bool ValueCodec::isLittleEndian() {
-    int16_t number = 0x0001;
-    char* ptr = (char*) &number;
+    int16_t val = 0x0001;
+    char* ptr = (char*) &val;
     return (ptr[0] == 1);
 }
 
-template<typename NumType>
-inline void ValueCodec::swap(NumType* num) {
+template<typename IntType>
+inline void ValueCodec::swap(IntType* val) {
 
-    uint8_t* bytes = reinterpret_cast<uint8_t*>(num);
-    register int j = sizeof(NumType) - 1;
+    uint8_t* bytes = reinterpret_cast<uint8_t*>(val);
+    register int j = sizeof(IntType) - 1;
 
     for (register int i = 0; i < j; i++, j--) {
         uint8_t tmp = bytes[i];

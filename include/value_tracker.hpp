@@ -55,6 +55,11 @@ public:
     uint8_t id() const;
 
     /**
+     * Set all samples to 0.
+     */
+    void clear();
+
+    /**
      * Add new value to the list.
      *
      * @param val - the value to add
@@ -123,19 +128,16 @@ private:
 
 template<typename T>
 inline ValueTracker<T>::ValueTracker(uint32_t count, uint8_t id) :
-    vals_(NULL),
+    vals_(new T[count]()),
     count_(count),
     pos_(0),
     id_(id) {
-
-    // Create the array and set all values to default for the type.
-    vals_ = new T[count]();
 }
 
 template<typename T>
 inline ValueTracker<T>::~ValueTracker() {
     delete [] vals_;
-    vals_ = NULL;
+    vals_ = nullptr;
 }
 
 //=================================== OPERATIONS ===============================
@@ -143,6 +145,13 @@ inline ValueTracker<T>::~ValueTracker() {
 template<typename T>
 inline uint8_t ValueTracker<T>::id() const {
     return id_;
+}
+
+template<typename T>
+inline void ValueTracker<T>::clear() {
+    for (int i = 0; i < count_; i++) {
+        vals_[i] = 0;
+    }
 }
 
 template<typename T>

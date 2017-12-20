@@ -228,7 +228,7 @@ TEST_F(ValueCodecTest, testGetVarIntBad) {
     ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testEncodeNumPositive) {
+TEST_F(ValueCodecTest, testSetFixedIntPositive) {
     const uint16_t num = 0x0402;
     uint16_t val = 0;
 
@@ -247,28 +247,28 @@ TEST_F(ValueCodecTest, testEncodeNumPositive) {
     ASSERT_EQ(num, val);
 
     // If this host is little-endian, the number is encoded in MSB, 0x0402
-    ValueCodec::encodeNum(&buff_, num, true);
+    ValueCodec::setFixedInt(&buff_, num, true);
     // Decode in MSB
     success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
     ASSERT_EQ(ValueCodec::SUCCESS, success);
     ASSERT_EQ(num, val);
 
     // If this host is little-endian, the number is encoded in LSB, 0x0204
-    ValueCodec::encodeNum(&buff_, num, false);
+    ValueCodec::setFixedInt(&buff_, num, false);
     // Decode in MSB
     success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
     ASSERT_EQ(ValueCodec::SUCCESS, success);
     ASSERT_EQ(uint16_t(0x0204), val);
 
     // If this host is little-endian, the number is encoded in LSB, 0x0204
-    ValueCodec::encodeNum(&buff_, num, false);
+    ValueCodec::setFixedInt(&buff_, num, false);
     // Decode in MSB
     success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
     ASSERT_EQ(ValueCodec::SUCCESS, success);
     ASSERT_EQ(num, val);
 }
 
-TEST_F(ValueCodecTest, testEncodeNumNegative) {
+TEST_F(ValueCodecTest, testSetFixedIntNegative) {
     const int16_t num = -0x0402;
     int16_t val = 0;
 
@@ -287,21 +287,21 @@ TEST_F(ValueCodecTest, testEncodeNumNegative) {
     ASSERT_EQ(num, val);
 
     // If this host is little-endian, the number is encoded in MSB, -0x0402
-    ValueCodec::encodeNum(&buff_, num, true);
+    ValueCodec::setFixedInt(&buff_, num, true);
     // Decode in MSB
     success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
     ASSERT_EQ(ValueCodec::SUCCESS, success);
     ASSERT_EQ(num, val);
 
     // If this host is little-endian, the number is encoded in LSB, -0x0204
-    ValueCodec::encodeNum(&buff_, num, false);
+    ValueCodec::setFixedInt(&buff_, num, false);
     // Decode in MSB
     success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
     ASSERT_EQ(ValueCodec::SUCCESS, success);
     ASSERT_EQ(int16_t(-0x0105), val);
 
     // If this host is little-endian, the number is encoded in LSB, -0x0204
-    ValueCodec::encodeNum(&buff_, num, false);
+    ValueCodec::setFixedInt(&buff_, num, false);
     // Decode in MSB
     success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
     ASSERT_EQ(ValueCodec::SUCCESS, success);
