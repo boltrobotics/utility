@@ -246,6 +246,10 @@ inline bool Buff::extend(uint32_t bytes_add) {
 }
 
 inline bool Buff::resize(uint32_t new_size) {
+    if (new_size == 0) {
+        return false;
+    }
+
     uint32_t read_offset = read_ptr_ - data_;
     uint32_t write_offset = write_ptr_ - data_;
     uint8_t* data = (uint8_t*) realloc(data_, new_size * sizeof(uint8_t));
