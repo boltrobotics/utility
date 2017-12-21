@@ -64,29 +64,28 @@ public:
      * Shift available data to the front of the buffer's storage so as read_ptr
      * points to buffer's start, and write_ptr to read_ptr + available bytes. 
      *
-     * @param target_bytes_remain
-     * @return true if the content was shifted and remaining() bytes are
-     *  greater than or equal to the provided target_bytes_remain value
+     * @return the remaining() bytes available for writing
      */
-    bool shift(uint32_t target_bytes_remain);
+    uint32_t shift();
 
     /**
      * Extend the buffer by preserving the existing content and read/write
      * positions.
      *
-     * @param size - the new size
+     * @param bytes_add - the bytes to add to the existing buffer beyond what
+     *      is remaining()
      * @return true if operation was successful, false otherwise
      */
-    bool extend(uint32_t size);
+    bool extend(uint32_t bytes_add);
 
     /**
-     * Resize the buffer. The data is preserved unless new size is less than
-     * the previous.
+     * Resize the buffer. The data is preserved only if the new size is greater than
+     * or equal to the previous size.
      *
-     * @param size - the new size
+     * @param new_size - the new size in bytes
      * @return true if operation was successful, false otherwise
      */
-    bool resize(uint32_t size);
+    bool resize(uint32_t new_size);
 
     /**
      * @return the allocated memory size
@@ -216,11 +215,12 @@ inline void Buff::reset() {
     write_ptr_ = data_;
 }
 
-inline bool Buff::shift(uint32_t target_bytes_remain) {
+inline uint32_t Buff::shift() {
+    // Check if at least one byte was consumed so as to shift the data down to
+    // the begining of the buffer.
+    //
     uint32_t bytes_consumed = consumed();
 
-    // Check if the buffer has some room to use for shifting.
-    //
     if (bytes_consumed > 0) {
         uint32_t bytes_avail = available();
 
@@ -238,25 +238,22 @@ inline bool Buff::shift(uint32_t target_bytes_remain) {
         read_ptr() = data_;
         write_ptr() = data_ + bytes_avail;
     }
-
-    return (target_bytes_remain <= remaining());
+    return remaining();
 }
 
-inline bool Buff::extend(uint32_t size) {
-    uint32_t bytes_remain = remaining();
-    bool success = resize(size_ + (size - bytes_remain));
-    return success;
+inline bool Buff::extend(uint32_t bytes_add) {
+    return resize(size_ + bytes_add);
 }
 
-inline bool Buff::resize(uint32_t size) {
+inline bool Buff::resize(uint32_t new_size) {
     uint32_t read_offset = read_ptr_ - data_;
     uint32_t write_offset = write_ptr_ - data_;
-    uint8_t* data = (uint8_t*) realloc(data_, size * sizeof(uint8_t));
+    uint8_t* data = (uint8_t*) realloc(data_, new_size * sizeof(uint8_t));
 
     if (data != NULL) {
-        size_ = size;
+        size_ = new_size;
         data_ = data;
-        const uint8_t* end = this->end();
+        const uint8_t* end = (data_ + size_);
 
         if ((data_ + read_offset) < end) {
             read_ptr_ = data_ + read_offset;
@@ -336,7 +333,13 @@ inline bool Buff::writeChunk(const T (&vals)[N], bool extend_buff) {
     uint32_t bytes_remain = remaining();
 
     if (bytes_remain < bytes_target) {
-        success = shift(bytes_target);
+        bytes_remain = shift();
+
+        if (bytes_remain < bytes_target) {
+            success = false;
+        } else {
+            success = true; // Some usable space is gained
+        }
     }
     if (!success && extend_buff) {
         success = extend(bytes_target);
