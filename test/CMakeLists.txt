@@ -38,14 +38,14 @@ endif()
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
 )
+
 file(GLOB SOURCES "*.cpp")
-add_executable(utility_test ${SOURCES})
 
 if (TARGET utility)
     set(UTILITY_LIB utility)
 endif()
 
-target_link_libraries(
-    utility_test ${UTILITY_LIB} gtest boost_system boost_thread)
+add_executable(unit_tests ${SOURCES})
+target_link_libraries(unit_tests ${UTILITY_LIB} gtest boost_system boost_thread)
 
-add_test(NAME utility_test COMMAND utility_test)
+add_test(NAME unit_tests COMMAND unit_tests)
