@@ -1,4 +1,4 @@
-find_package(Threads)
+find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(GTest)
 
 if (GTEST_FOUND)
@@ -35,6 +35,9 @@ else()
     endif()
 endif()
 
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+)
 file(GLOB SOURCES "*.cpp")
 add_executable(utility_test ${SOURCES})
 

@@ -1,12 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
-project("utility" C CXX)
+project(utility CXX)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
-set(TEST_DIR ${PROJECT_SOURCE_DIR}/test)
 
 enable_testing()
 
@@ -21,6 +17,5 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     endif()
 endif()
 
-include_directories(${INCLUDE_DIR})
-add_subdirectory(${SOURCE_DIR})
-add_subdirectory(${TEST_DIR})
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+add_subdirectory(${PROJECT_SOURCE_DIR}/test)
