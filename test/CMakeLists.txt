@@ -1,4 +1,4 @@
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Threads)
 find_package(GTest)
 
 if (GTEST_FOUND)

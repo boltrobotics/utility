@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
-project("utility")
+cmake_minimum_required(VERSION 3.5)
+project("utility" C CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
