@@ -13,48 +13,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _utility_Sorters_hpp_
-#define _utility_Sorters_hpp_
+#ifndef _btr_Sorters_hpp_
+#define _btr_Sorters_hpp_
 
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
 
-namespace utility {
+namespace btr
+{
 
 /**
  * The class provide facilities to sort data.
  *
  * IMPORTANT: Implementation has to be compatible with AVR platform.
  */
-class Sorters {
+class Sorters
+{
 public:
 
-// OPERATIONS
+  // LIFECYCLE
 
-    /**
-     * Sort array in-place using insertion sort.
-     *
-     * @param arr the elements to sort
-     */
-    template<typename T>
-    static void insertionSort(T* arr, uint32_t size);
+  Sorters() = delete;
+  ~Sorters() = delete;
+
+  // OPERATIONS
+
+  /**
+   * Sort array in-place using insertion sort.
+   *
+   * @param arr the elements to sort
+   */
+  template<typename T>
+  static void insertionSort(T* arr, uint32_t size);
 
 private:
-
-// LIFECYCLE
-
-    /**
-     * Ctor.
-     */
-    Sorters();
-
-    /**
-     * Dtor.
-     */
-    virtual ~Sorters();
-
-// ATTRIBUTES
 
 }; // class Sorters
 
@@ -63,20 +56,20 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-inline void Sorters::insertionSort(T* arr, uint32_t size) {
+inline void Sorters::insertionSort(T* arr, uint32_t size)
+{
+  for (uint32_t i = 1; i < size; i++) {
+    uint32_t j = i;
 
-    for (uint32_t i = 1; i < size; i++) {
-        uint32_t j = i;
-
-        while (j > 0 && arr[j - 1] > arr[j]) {
-            T tmp = arr[j];
-            arr[j] = arr[j - 1];
-            arr[j - 1] = tmp;
-            j--;
-        }
+    while (j > 0 && arr[j - 1] > arr[j]) {
+      T tmp = arr[j];
+      arr[j] = arr[j - 1];
+      arr[j - 1] = tmp;
+      j--;
     }
+  }
 }
 
-} // namespace utility
+} // namespace btr
 
-#endif // _utility_Sorters_hpp_
+#endif // _btr_Sorters_hpp_

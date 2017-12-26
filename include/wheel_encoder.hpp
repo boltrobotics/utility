@@ -13,62 +13,64 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _utility_WheelEncoder_h_
-#define _utility_WheelEncoder_h_
+#ifndef _btr_WheelEncoder_hpp_
+#define _btr_WheelEncoder_hpp_
 
 // SYSTEM INCLUDES
 // PROJECT INCLUDES
 
-namespace utility {
+namespace btr
+{
 
 /**
  * The class counts the number of clicks that a virtual wheel moved forward and
  * backward.
  */
-class WheelEncoder {
+class WheelEncoder
+{
 public:
 
-// LIFECYCLE
+  // LIFECYCLE
 
-    /**
-     * Ctor.
-     *
-     * @param a_state - 1 if A encoder output is set, false otherwise
-     * @param b_state - 1 if B encoder output is set, false otherwise
-     * @param direction_step - 1 for left encoder (B follows A), -1 for right
-     *      encoder (A follows B)
-     */
-    WheelEncoder(int8_t a_state, int8_t b_state, int8_t direction_step);
+  /**
+   * Ctor.
+   *
+   * @param a_state - 1 if A encoder output is set, false otherwise
+   * @param b_state - 1 if B encoder output is set, false otherwise
+   * @param direction_step - 1 for left encoder (B follows A), -1 for right
+   *      encoder (A follows B)
+   */
+  WheelEncoder(int8_t a_state, int8_t b_state, int8_t direction_step);
 
-// OPERATIONS
+  // OPERATIONS
 
-    /**
-     * Update encoder click count.
-     *
-     * @param a_state - 1 if A encoder output is set, 0 otherwise
-     * @param b_state - 1 if B encoder output is set, 0 otherwise
-     */
-    void update(int8_t a_state, int8_t b_state);
+  /**
+   * Update encoder click count.
+   *
+   * @param a_state - 1 if A encoder output is set, 0 otherwise
+   * @param b_state - 1 if B encoder output is set, 0 otherwise
+   */
+  void update(int8_t a_state, int8_t b_state);
 
-    /**
-     * Reset the number of clicks to zero.
-     */
-    void reset();
+  /**
+   * Reset the number of clicks to zero.
+   */
+  void reset();
 
-    /**
-     * @return the number of clicks
-     */
-    int16_t clicks() const;
+  /**
+   * @return the number of clicks
+   */
+  int16_t clicks() const;
 
 private:
 
-// ATTRIBUTES
+  // ATTRIBUTES
 
-    int16_t clicks_;
-    int8_t direction_;
-    int8_t direction_step_;
-    int8_t a_state_;
-    int8_t b_state_;
+  int16_t clicks_;
+  int8_t direction_;
+  int8_t direction_step_;
+  int8_t a_state_;
+  int8_t b_state_;
 
 }; // class WheelEncoder
 
@@ -80,50 +82,53 @@ private:
 
 //=================================== LIFECYCLE ================================
 
-inline WheelEncoder::WheelEncoder(
-        int8_t a_state, int8_t b_state, int8_t direction_step) :
-    clicks_(0),
-    direction_(0),
-    direction_step_(direction_step),
-    a_state_(a_state),
-    b_state_(b_state) {
+inline WheelEncoder::WheelEncoder(int8_t a_state, int8_t b_state, int8_t direction_step)
+: clicks_(0),
+  direction_(0),
+  direction_step_(direction_step),
+  a_state_(a_state),
+  b_state_(b_state)
+{
 }
 
 //=================================== OPERATIONS ===============================
 
-inline void WheelEncoder::update(int8_t a_state, int8_t b_state) {
-    // If B output follows A, use positive direction, reverse sign if A
-    // follows B.
-    //
-    if (a_state_ != a_state) {
-        a_state_ = a_state;
+inline void WheelEncoder::update(int8_t a_state, int8_t b_state)
+{
+  // If B output follows A, use positive direction, reverse sign if A
+  // follows B.
+  //
+  if (a_state_ != a_state) {
+    a_state_ = a_state;
 
-        if (a_state_ != b_state_) {
-            direction_ = direction_step_;
-        } else {
-            direction_ = -direction_step_;
-        }
-        clicks_ += direction_;
-    } else if (b_state_ != b_state) {
-        b_state_ = b_state;
-
-        if (b_state_ != a_state_) {
-            direction_ = -direction_step_;
-        } else {
-            direction_ = direction_step_;
-        }
-        clicks_ += direction_;
+    if (a_state_ != b_state_) {
+      direction_ = direction_step_;
+    } else {
+      direction_ = -direction_step_;
     }
+    clicks_ += direction_;
+  } else if (b_state_ != b_state) {
+    b_state_ = b_state;
+
+    if (b_state_ != a_state_) {
+      direction_ = -direction_step_;
+    } else {
+      direction_ = direction_step_;
+    }
+    clicks_ += direction_;
+  }
 }
 
-inline void WheelEncoder::reset() {
-    clicks_ = 0;
+inline void WheelEncoder::reset()
+{
+  clicks_ = 0;
 }
 
-inline int16_t WheelEncoder::clicks() const {
-    return clicks_;
+inline int16_t WheelEncoder::clicks() const
+{
+  return clicks_;
 }
 
-} // namespace utility
+} // namespace btr
 
-#endif // _utility_WheelEncoder_h_
+#endif // _btr_WheelEncoder_hpp_
