@@ -55,7 +55,7 @@ public:
   /**
    * Output a string accumulated via stringstream super class.
    */
-  ~TestHelpers();
+  virtual ~TestHelpers();
 
   // OPERATIONS
 
@@ -86,7 +86,7 @@ public:
 
 //=================================== LIFECYCLE ================================
 
-TestHelpers::~TestHelpers()
+inline TestHelpers::~TestHelpers()
 {
   PRINTF("%s", str().c_str());
 }
