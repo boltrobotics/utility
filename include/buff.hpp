@@ -117,7 +117,7 @@ public:
    * @return false if no data is avalable
    */
   template<typename T>
-    bool read(T* v, bool advance = true);
+  bool read(T* v, bool advance = true);
 
   /**
    * Read a chunk of content.
@@ -126,11 +126,10 @@ public:
    * @return false if not enough data is avalable, true otherwise
    */
   template<typename T, uint32_t N>
-    bool readChunk(T (&vals)[N], bool advance = true);
+  bool readChunk(T (&vals)[N], bool advance = true);
 
   /**
-   * Advance read position. Reset the buffer if read/writer pointers point to the
-   * same position.
+   * Advance read position.
    *
    * @param bytes - the number of bytes to advance read pointer
    */
@@ -147,7 +146,7 @@ public:
    *  or insufficient memory if extend parameter is false.
    */
   template<typename T>
-    bool write(T val, bool extend_buff = true);
+  bool write(T val, bool extend_buff = true);
 
   /**
    * Write array of bytes to the buffer.
@@ -160,7 +159,7 @@ public:
    *  or insufficient memory if extend parameter is false.
    */
   template<typename T, uint32_t N>
-    bool writeChunk(const T (&vals)[N], bool extend_buff = true);
+  bool writeChunk(const T (&vals)[N], bool extend_buff = true);
 
 private:
 
