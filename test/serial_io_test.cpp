@@ -23,6 +23,7 @@
 // PROJECT INCLUDES
 #include "serial_io.hpp"
 #include "buff.hpp"
+#include "test_helpers.hpp"
 
 namespace bsy = boost::system;
 namespace ber = bsy::errc;
@@ -35,8 +36,6 @@ namespace btr
 #define TTY_SIM_1 "/tmp/ttySIM1"
 #define PTY0 "PTY,link=" TTY_SIM_0 ",raw,echo=0"
 #define PTY1 "PTY,link=" TTY_SIM_1 ",raw,echo=0"
-
-static const char lut[] = "0123456789ABCDEF";
 
 //------------------------------------------------------------------------------
 
@@ -103,8 +102,8 @@ protected:
   SerialIO sim_serial_;
   Buff wbuff_;
   Buff rbuff_;
-  std::error_code success_; 
-  std::error_code timeout_; 
+  std::error_code success_;
+  std::error_code timeout_;
 };
 
 //------------------------------------------------------------------------------
@@ -174,47 +173,7 @@ struct Term
 
 //------------------------------------------------------------------------------
 
-std::string toHex(const Buff& buff)
-{
-  std::string hex_buff("     Hex: ");
-  uint32_t size = buff.size();
-
-  for (uint32_t i = 0; i < size; i++) {
-    const uint8_t c = buff.data()[i];
-    hex_buff.push_back(lut[c >> 4]);
-    hex_buff.push_back(lut[c & 15]);
-    hex_buff.push_back(' ');
-  }
-  return hex_buff;
-}
-
-template<typename T, typename U, uint32_t N, uint32_t M>
-std::string toString(T (&uvals)[N], U (&svals)[M])
-{
-  std::ostringstream ss;
-
-  for (uint32_t i = 0; i < N; i++) {
-    ss << uvals[i] << ' ';
-  }
-  for (uint32_t i = 0; i < M; i++) {
-    ss << svals[i] << ' ';
-  }
-
-  return ss.str();
-}
-
-std::string toString(const uint8_t* data, uint32_t size)
-{
-  std::ostringstream oss;
-
-  for (uint32_t i = 0; i < size; i++) {
-    oss << " " << data[i];
-  }
-  return oss.str();
-}
-
-//------------------------------------------------------------------------------
-// Tests { 
+// Tests {
 
 TEST_F(SerialIOTest, ReadWriteOK)
 {
@@ -224,8 +183,7 @@ TEST_F(SerialIOTest, ReadWriteOK)
   e = act_serial_.recv(&rbuff_);
 
   ASSERT_EQ(success_, e) << " Message: " << e.message();
-  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size()))
-    << toHex(rbuff_);
+  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOTest, ReadTimeout)

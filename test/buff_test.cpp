@@ -25,8 +25,6 @@
 namespace btr
 {
 
-static const char lut[] = "0123456789ABCDEF";
-
 //------------------------------------------------------------------------------
 
 class BuffTest : public testing::Test
@@ -38,34 +36,6 @@ public:
   BuffTest()
   : buff_(1)
   {
-  }
-
-  // OPERATIONS
-
-  std::string toHex()
-  {
-    std::string hex_buff("     Hex: ");
-    uint32_t size = buff_.size();
-
-    for (uint32_t i = 0; i < size; i++) {
-      const uint8_t c = buff_.data()[i];
-      hex_buff.push_back(lut[c >> 4]);
-      hex_buff.push_back(lut[c & 15]);
-      hex_buff.push_back(' ');
-    }
-    return hex_buff;
-  }
-
-  template<typename T, uint32_t N>
-  std::string toString(T (&vals)[N])
-  {
-    std::stringstream ss;
-
-    for (uint32_t i = 0; i < N; i++) {
-      ss << vals[i] << ' ';
-    }
-
-    return ss.str();
   }
 
   // ATTRIBUTES
