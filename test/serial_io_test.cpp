@@ -85,8 +85,12 @@ public:
     success_(),
     timeout_(std::make_error_code(std::errc::operation_canceled))
   {
-    // TODO: Verify if newline is actuall required.
-    uint8_t h[] =  { 'h','e','l','l','o','\n' };
+    reset();
+  }
+
+  void reset()
+  {
+    uint8_t h[] =  { 'h','e','l','l','o' };
     wbuff_.resize(sizeof(h));
     wbuff_.writeChunk(h);
     // Don't expect to receive endline character(s)
@@ -182,6 +186,27 @@ TEST_F(SerialIOTest, ReadWriteOK)
 
   e = act_serial_.recv(&rbuff_);
 
+  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
+}
+
+TEST_F(SerialIOTest, Flush)
+{
+  std::error_code e = sim_serial_.send(&wbuff_);
+  ASSERT_EQ(success_, e) << " Message: " << e.message();
+
+  e = sim_serial_.flush();
+  ASSERT_EQ(success_, e) << " Message: " << e.message();
+
+  e = act_serial_.recv(&rbuff_);
+  ASSERT_EQ(timeout_, e) << " Message: " << e.message();
+
+  reset();
+
+  e = sim_serial_.send(&wbuff_);
+  ASSERT_EQ(success_, e) << " Message: " << e.message();
+
+  e = act_serial_.recv(&rbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }

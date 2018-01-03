@@ -56,6 +56,11 @@ public:
   // OPERATIONS
 
   /**
+   * Flush not-transmitted and non-read data on the serial port.
+   */
+  std::error_code flush();
+
+  /**
    * Read data from serial port.
    *
    * @param bytes - the number of bytes to read
@@ -131,6 +136,16 @@ SerialIO::~SerialIO()
 
 //=================================== OPERATIONS ===============================
 
+std::error_code SerialIO::flush()
+{
+  if (0 == tcflush(serial_.lowest_layer().native_handle(), TCIOFLUSH)) {
+    err_.clear();
+  } else {
+    err_ = std::error_code(errno, std::generic_category());
+  }
+  return err_;
+}
+
 std::error_code SerialIO::recv(Buff* buff)
 {
     io_service_.reset();
@@ -163,7 +178,7 @@ std::error_code SerialIO::send(Buff* buff)
       bio::buffer(buff->read_ptr(), expected_bytes_),
       boost::bind(&SerialIO::onOprComplete,
         this,
-        bio::placeholders::error, 
+        bio::placeholders::error,
         bio::placeholders::bytes_transferred));
 
     timeAsyncOpr();
@@ -186,9 +201,7 @@ void SerialIO::timeAsyncOpr()
     io_service_.run();
 }
 
-void SerialIO::onOprComplete(
-        const boost::system::error_code& err,
-        size_t bytes_transferred)
+void SerialIO::onOprComplete(const boost::system::error_code& err, size_t bytes_transferred)
 {
     if (err) {
         err_ = std::make_error_code(static_cast<std::errc>(err.value()));
