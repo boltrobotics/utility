@@ -13,19 +13,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _btr_SerialIO_hpp__
-#define _btr_SerialIO_hpp__
+#ifndef _btr_SerialIOTermios_hpp__
+#define _btr_SerialIOTermios_hpp__
 
 // SYSTEM INCLUDES
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <iostream>
 #include <termios.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 // PROJECT INCLUDES
 #include "utility/buff.hpp"
-
-namespace bio = boost::asio;
 
 namespace btr
 {
@@ -33,7 +30,7 @@ namespace btr
 /**
  * The class provides a send/receive interface to a serial port.
  */
-class SerialIO
+class SerialIOTermios
 {
 public:
 
@@ -43,28 +40,40 @@ public:
    * Ctor.
    *
    * @param port - serial IO port
-   * @param baud_rate - baud rate
+   * @param baud_rate - baud rate. It must be one of values specified by in termios.h
+   *  @see http://man7.org/linux/man-pages/man3/termios.3.html
    * @param timeout - serial operation timeout in milliseconds
    */
-  SerialIO(const std::string& port, int baud_rate, int timeout);
+  SerialIOTermios(const std::string& port, int baud_rate = B115200, int timeout = 0);
 
   /**
    * Dtor.
    */
-  ~SerialIO();
+  ~SerialIOTermios();
 
   // OPERATIONS
+
+  /**
+   * Close and open the port.
+   */
+  void reset();
 
   /**
    * Flush not-transmitted and non-read data on the serial port.
    */
   std::error_code flush();
 
-
   /**
    * @return bytes available on the serial port
    */
-  int available();
+  uint32_t available();
+
+  /**
+   * Set the number of bytes to read.
+   *
+   * @param bytes - the byte count
+   */
+  void setReadMinimum(uint32_t bytes);
 
   /**
    * Read data from serial port.
@@ -85,9 +94,12 @@ private:
 
   // ATTRIBUTES
 
+  std::string port_name_;
+  int baud_rate_;
+  int timeout_millis_;
   int port_;
 
-}; // class SerialIO
+}; // class SerialIOTermios
 
 ////////////////////////////////////////////////////////////////////////////////
 // INLINE OPERATIONS
@@ -97,85 +109,98 @@ private:
 
 //=================================== LIFECYCLE ================================
 
-SerialIO::SerialIO(const std::string& port, int baud_rate, int timeout)
-: port_()
+inline SerialIOTermios::SerialIOTermios(
+    const std::string& port_name, int baud_rate, int timeout_millis)
+: port_name_(port_name),
+  baud_rate_(baud_rate),
+  timeout_millis_(timeout_millis),
+  port_(-1)
 {
-  file = open(port.c_str(), O_RDWR | O_NOCTTY);
-
-  if (file < 0) {
-      throw "Failed to open " + port;
-  }
-
-  struct termios options;
-  tcgetattr(file, &options);
-  options.c_cflag = CS8 | CREAD | CLOCAL | B115200;
-  options.c_iflag = IGNPAR | IGNCR;
-  options.c_lflag &= ~ICANON;
-  options.c_cc[VTIME] = timeout / 100; // In tenths of seconds
-  options.c_cc[VMIN] = 0;
-  tcflush(file, TCIOFLUSH);
-  tcsetattr(file, TCSANOW, &options);
+  reset();
 }
 
-SerialIO::~SerialIO()
+inline SerialIOTermios::~SerialIOTermios()
 {
-    close(port_);
+  close(port_);
 }
 
 //=================================== OPERATIONS ===============================
 
-std::error_code SerialIO::flush()
+inline void SerialIOTermios::reset()
+{
+  close(port_);
+
+  port_ = open(port_name_.c_str(), O_RDWR | O_NOCTTY);
+
+  if (port_ < 0) {
+      throw "Failed to open " + port_name_;
+  }
+
+  struct termios options;
+  tcgetattr(port_, &options);
+  options.c_cflag = CS8 | CREAD | CLOCAL | baud_rate_;
+  options.c_iflag = IGNPAR | IGNCR;
+  options.c_lflag &= ~ICANON;
+  options.c_cc[VTIME] = timeout_millis_ / 100; // VTIME is in tenths of seconds
+  options.c_cc[VMIN] = 0;
+  cfsetospeed(&options, baud_rate_);
+  cfsetispeed(&options, baud_rate_);
+  tcflush(port_, TCIOFLUSH);
+  tcsetattr(port_, TCSANOW, &options);
+}
+
+inline std::error_code SerialIOTermios::flush()
 {
   if (0 == tcflush(port_, TCIOFLUSH)) {
-    return std::error_code(0, std::generic_category());
+    return std::error_code();
   } else {
     return std::error_code(errno, std::generic_category());
   }
 }
 
-int SerialIO::available()
+inline uint32_t SerialIOTermios::available()
 {
-  int bytes_avaiable;
+  uint32_t bytes_available;
   ioctl(port_, FIONREAD, &bytes_available);
   return bytes_available;
 }
 
-std::error_code SerialIO::recv(Buff* buff)
+inline void SerialIOTermios::setReadMinimum(uint32_t bytes)
 {
-  int count = 0;
+  struct termios options;
+  tcgetattr(port_, &options);
+  options.c_cc[VTIME] = 1;
+  options.c_cc[VMIN] = bytes;
+  tcsetattr(port_, TCSANOW, &options);
+}
 
-  while (buff->available() > 0) {
-    count = read(port_, buff->write_ptr(), 1);
+inline std::error_code SerialIOTermios::recv(Buff* buff)
+{
+  errno = 0;
+  int count = read(port_, buff->write_ptr(), buff->remaining());
 
-    if (count > 0) {
-      buff->write_ptr()++;
-    } else {
-      break;
-    }
-  }
+  // If count is 0, the call has timed out. If it's more than 0, at least 1 byte is
+  // received. -1 is returned on error, errno is set.
 
-  if (count < 0) {
-    return std::error_code(errno, std::generic_category());
-  } else {
+  if (count >= 0) {
+    buff->write_ptr() += count;
     return std::error_code();
+  } else {
+    return std::error_code(errno, std::generic_category());
   }
 }
 
-std::error_code SerialIO::send(Buff* buff)
+inline std::error_code SerialIOTermios::send(Buff* buff)
 {
-  int count = write(port_, buff.read_ptr(), buff.available());
+  int count = write(port_, buff->read_ptr(), buff->available());
 
-  if (count < 0) {
-    return std::error_code(errno, std::generic_category());
-  } else {
+  if (count >= 0) {
     return std::error_code();
+  } else {
+    return std::error_code(errno, std::generic_category());
   }
 }
-
-///////////////////////////////////// PRIVATE //////////////////////////////////
-
-//=================================== OPERATIONS ===============================
 
 } // namespace btr
 
-#endif // _btr_SerialIO_hpp__
+#endif // _btr_SerialIOTermios_hpp__
