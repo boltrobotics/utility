@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "value_tracker.hpp"
+#include "utility/value_tracker.hpp"
 
 //================================ TEST FIXTURES ===============================
 

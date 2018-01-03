@@ -19,7 +19,7 @@
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
-#include "buff.hpp"
+#include "utility/buff.hpp"
 
 namespace btr
 {

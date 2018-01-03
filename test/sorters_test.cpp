@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "sorters.hpp"
+#include "utility/sorters.hpp"
 
 //================================ TEST FIXTURES ===============================
 
@@ -29,14 +29,14 @@ namespace btr
 template<typename T, size_t size>
 ::testing::AssertionResult ArraysMatch(const T (&expected)[size], const T (&actual)[size])
 {
-	for (size_t i = 0; i < size; ++i) {
-		if (expected[i] != actual[i]) {
-			return ::testing::AssertionFailure()
-                << "actual[" << i << "] (" << actual[i] << ") != expected["
-                << i << "] (" << expected[i] << ")";
-		}
-	}
-	return ::testing::AssertionSuccess();
+  for (size_t i = 0; i < size; ++i) {
+    if (expected[i] != actual[i]) {
+      return ::testing::AssertionFailure()
+        << "actual[" << i << "] (" << actual[i] << ") != expected["
+        << i << "] (" << expected[i] << ")";
+    }
+  }
+  return ::testing::AssertionSuccess();
 }
 
 TEST(SortersTest, testInsertionSort)

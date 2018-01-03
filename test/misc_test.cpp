@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "misc.hpp"
+#include "utility/misc.hpp"
 
 namespace btr
 {

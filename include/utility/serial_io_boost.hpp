@@ -23,7 +23,7 @@
 #include <termios.h>
 
 // PROJECT INCLUDES
-#include "buff.hpp"
+#include "utility/buff.hpp"
 
 namespace bio = boost::asio;
 
@@ -126,12 +126,12 @@ SerialIO::SerialIO(const std::string& port, int baud_rate, int timeout)
   expected_bytes_(0),
   timeout_(timeout)
 {
-    serial_.set_option(bio::serial_port::baud_rate(baud_rate));
+  serial_.set_option(bio::serial_port::baud_rate(baud_rate));
 }
 
 SerialIO::~SerialIO()
 {
-    serial_.close();
+  serial_.close();
 }
 
 //=================================== OPERATIONS ===============================
@@ -148,10 +148,10 @@ std::error_code SerialIO::flush()
 
 std::error_code SerialIO::recv(Buff* buff)
 {
-    io_service_.reset();
-    expected_bytes_ = buff->remaining();
+  io_service_.reset();
+  expected_bytes_ = buff->remaining();
 
-    bio::async_read(
+  bio::async_read(
       serial_,
       bio::buffer(buff->write_ptr(), expected_bytes_),
       boost::bind(
@@ -160,20 +160,20 @@ std::error_code SerialIO::recv(Buff* buff)
         bio::placeholders::error,
         bio::placeholders::bytes_transferred));
 
-    timeAsyncOpr();
+  timeAsyncOpr();
 
-    if (!err_) {
-        buff->write_ptr() += expected_bytes_;
-    }
-    return err_;
+  if (!err_) {
+    buff->write_ptr() += expected_bytes_;
+  }
+  return err_;
 }
 
 std::error_code SerialIO::send(Buff* buff)
 {
-    io_service_.reset();
-    expected_bytes_ = buff->available();
+  io_service_.reset();
+  expected_bytes_ = buff->available();
 
-    bio::async_write(
+  bio::async_write(
       serial_,
       bio::buffer(buff->read_ptr(), expected_bytes_),
       boost::bind(&SerialIO::onOprComplete,
@@ -181,13 +181,13 @@ std::error_code SerialIO::send(Buff* buff)
         bio::placeholders::error,
         bio::placeholders::bytes_transferred));
 
-    timeAsyncOpr();
+  timeAsyncOpr();
 
-    if (!err_) {
-        buff->read_ptr() += expected_bytes_;
-    }
+  if (!err_) {
+    buff->read_ptr() += expected_bytes_;
+  }
 
-    return err_;
+  return err_;
 }
 
 ///////////////////////////////////// PRIVATE //////////////////////////////////
@@ -196,31 +196,31 @@ std::error_code SerialIO::send(Buff* buff)
 
 void SerialIO::timeAsyncOpr()
 {
-    timer_.expires_from_now(boost::posix_time::milliseconds(timeout_));
-    timer_.async_wait(boost::bind(&SerialIO::onTimeout, this, bio::placeholders::error));
-    io_service_.run();
+  timer_.expires_from_now(boost::posix_time::milliseconds(timeout_));
+  timer_.async_wait(boost::bind(&SerialIO::onTimeout, this, bio::placeholders::error));
+  io_service_.run();
 }
 
 void SerialIO::onOprComplete(const boost::system::error_code& err, size_t bytes_transferred)
 {
-    if (err) {
-        err_ = std::make_error_code(static_cast<std::errc>(err.value()));
-    } else if (bytes_transferred != expected_bytes_) {
-        err_ = std::make_error_code(std::errc::message_size);
-    } else {
-        err_.clear();
-    }
+  if (err) {
+    err_ = std::make_error_code(static_cast<std::errc>(err.value()));
+  } else if (bytes_transferred != expected_bytes_) {
+    err_ = std::make_error_code(std::errc::message_size);
+  } else {
+    err_.clear();
+  }
 
-    timer_.cancel();
+  timer_.cancel();
 }
 
 void SerialIO::onTimeout(const boost::system::error_code& error)
 {
-    // When the timer is cancelled, the error is generated.
-    //
-    if (!error) {
-        serial_.cancel(); // timed out
-    }
+  // When the timer is cancelled, the error is generated.
+  //
+  if (!error) {
+    serial_.cancel(); // timed out
+  }
 }
 
 } // namespace btr

@@ -224,7 +224,7 @@ inline uint8_t*& Buff::write_ptr()
 
 inline void Buff::reset()
 {
-  memset(data_, 0, size_);
+  memset(data_, 'x', size_);
   read_ptr_ = data_;
   write_ptr_ = data_;
 }
@@ -297,7 +297,7 @@ inline bool Buff::resize(uint32_t new_size)
     } else {
       write_ptr_ = data_;
     }
-    memset(write_ptr_, 0, remaining());
+    memset(write_ptr_, 'y', remaining());
     return true;
   } else {
     return false;

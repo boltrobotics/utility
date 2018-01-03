@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "wheel_encoder.hpp"
+#include "utility/wheel_encoder.hpp"
 
 namespace btr
 {

@@ -23,7 +23,7 @@
 #include <termios.h>
 
 // PROJECT INCLUDES
-#include "buff.hpp"
+#include "utility/buff.hpp"
 
 namespace bio = boost::asio;
 

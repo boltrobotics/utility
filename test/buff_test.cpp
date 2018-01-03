@@ -20,7 +20,7 @@
 #include <limits>
 
 // PROJECT INCLUDES
-#include "buff.hpp"
+#include "utility/buff.hpp"
 
 namespace btr
 {

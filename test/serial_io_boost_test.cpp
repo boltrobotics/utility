@@ -16,14 +16,12 @@
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
-#include <unistd.h>
-#include <signal.h>
-#include <sstream>
 
 // PROJECT INCLUDES
-#include "serial_io.hpp"
-#include "buff.hpp"
-#include "test_helpers.hpp"
+#include "utility/serial_io_boost.hpp"
+#include "utility/buff.hpp"
+#include "utility/test_helpers.hpp"
+#include "utility/pseudo_tty.hpp"
 
 namespace bsy = boost::system;
 namespace ber = bsy::errc;
@@ -31,55 +29,20 @@ namespace ber = bsy::errc;
 namespace btr
 {
 
-#define PRG "socat"
-#define TTY_SIM_0 "/tmp/ttySIM0"
-#define TTY_SIM_1 "/tmp/ttySIM1"
-#define PTY0 "PTY,link=" TTY_SIM_0 ",raw,echo=0"
-#define PTY1 "PTY,link=" TTY_SIM_1 ",raw,echo=0"
+#define BAUD 115200
 
 //------------------------------------------------------------------------------
 
-class PseudoTTY
-{
-public:
-  PseudoTTY()
-  {
-    switch (child_pid_ = vfork()) {
-      case -1:
-          throw std::runtime_error("Failed to fork pseudo TTY");
-      case 0: // child
-          execlp(PRG, PRG, PTY0, PTY1, (char*) NULL);
-          throw std::runtime_error("Failed to exec: " PRG);
-      default: // parent
-          boost::this_thread::sleep(boost::posix_time::millisec(50));
-          break;
-    }
-  }
-
-  ~PseudoTTY()
-  {
-    if (child_pid_ > 0) {
-        kill(child_pid_, SIGTERM);
-        waitpid(child_pid_, NULL, 0);
-    }
-  }
-
-private:
-  pid_t child_pid_;
-};
-
-//------------------------------------------------------------------------------
-
-class SerialIOTest : public testing::Test
+class SerialIoBoostTest : public testing::Test
 {
 public:
 
   // LIFECYCLE
 
-  SerialIOTest()
+  SerialIoBoostTest()
   : tty_(),
-    act_serial_(TTY_SIM_0, 38400, 100),
-    sim_serial_(TTY_SIM_1, 38400, 100),
+    act_serial_(TTY_SIM_0, BAUD, 100),
+    sim_serial_(TTY_SIM_1, BAUD, 100),
     wbuff_(),
     rbuff_(),
     success_(),
@@ -112,74 +75,9 @@ protected:
 
 //------------------------------------------------------------------------------
 
-struct Term
-{
-  Term()
-  {
-    // O_NDELAY causes "resource temporarily unavailable" when there is no
-    // data.
-    file = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY);
-
-    if (file < 0) {
-        throw "Failed to open device";
-    }
-
-    struct termios options;
-    tcgetattr(file, &options);
-    options.c_cflag = B57600 | CS8 | CREAD | CLOCAL;
-    options.c_iflag = IGNPAR | IGNCR;
-    options.c_lflag &= ~ICANON;
-    options.c_cc[VTIME] = 10; // 1 second
-    options.c_cc[VMIN] = 0;
-    tcflush(file, TCIOFLUSH);
-    tcsetattr(file, TCSANOW, &options);
-  }
-
-  ~Term()
-  {
-    close(file);
-  }
-
-  std::error_code send(Buff& buff)
-  {
-    int count = write(file, buff.read_ptr(), buff.available());
-
-    if (count < 0) {
-        return std::error_code(errno, std::generic_category());
-    } else {
-        return std::error_code();
-    }
-  }
-
-  std::error_code recv(Buff* buff)
-  {
-    int count = 0;
-
-    while (buff->available() > 0) {
-        count = read(file, buff->write_ptr(), 1);
-
-        if (count > 0) {
-            buff->write_ptr()++;
-        } else {
-            break;
-        }
-    }
-
-    if (count < 0) {
-        return std::error_code(errno, std::generic_category());
-    } else {
-        return std::error_code();
-    }
-  }
-
-  int file;
-};
-
-//------------------------------------------------------------------------------
-
 // Tests {
 
-TEST_F(SerialIOTest, ReadWriteOK)
+TEST_F(SerialIoBoostTest, ReadWriteOK)
 {
   std::error_code e = sim_serial_.send(&wbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
@@ -190,7 +88,7 @@ TEST_F(SerialIOTest, ReadWriteOK)
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
-TEST_F(SerialIOTest, Flush)
+TEST_F(SerialIoBoostTest, Flush)
 {
   std::error_code e = sim_serial_.send(&wbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
@@ -211,13 +109,13 @@ TEST_F(SerialIOTest, Flush)
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
-TEST_F(SerialIOTest, ReadTimeout)
+TEST_F(SerialIoBoostTest, ReadTimeout)
 {
   std::error_code e = act_serial_.recv(&rbuff_);
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
 }
 
-TEST_F(SerialIOTest, DISABLED_WriteTimeout)
+TEST_F(SerialIoBoostTest, DISABLED_WriteTimeout)
 {
   // FIXME: Write time-out simulation doesn't work.
   Buff large_buff;

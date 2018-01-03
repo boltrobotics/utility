@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "value_codec.hpp"
-#include "buff.hpp"
+#include "utility/value_codec.hpp"
+#include "utility/buff.hpp"
 
 namespace btr
 {
