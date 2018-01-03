@@ -151,8 +151,10 @@ inline void SerialIOTermios::reset()
 
 inline std::error_code SerialIOTermios::flush()
 {
+  errno = 0;
+
   if (0 == tcflush(port_, TCIOFLUSH)) {
-    return std::error_code();
+    return std::error_code(0, std::generic_category());
   } else {
     return std::error_code(errno, std::generic_category());
   }
@@ -176,7 +178,7 @@ inline void SerialIOTermios::setReadMinimum(uint32_t bytes)
 
 inline std::error_code SerialIOTermios::recv(Buff* buff)
 {
-  std::error_code err;
+  std::error_code err(0, std::generic_category());
   ssize_t count = 0;
 
   do {
@@ -198,10 +200,11 @@ inline std::error_code SerialIOTermios::recv(Buff* buff)
 
 inline std::error_code SerialIOTermios::send(Buff* buff)
 {
+  errno = 0;
   int count = write(port_, buff->read_ptr(), buff->available());
 
   if (count >= 0) {
-    return std::error_code();
+    return std::error_code(0, std::generic_category());
   } else {
     return std::error_code(errno, std::generic_category());
   }

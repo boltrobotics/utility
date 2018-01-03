@@ -45,7 +45,7 @@ public:
     sim_serial_(TTY_SIM_1, BAUD, 100),
     wbuff_(),
     rbuff_(),
-    success_()
+    success_(0, std::generic_category())
   {
     resetBuffers();
   }
