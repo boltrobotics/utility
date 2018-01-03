@@ -86,8 +86,8 @@ TEST_F(BuffTest, extend)
   ASSERT_EQ(uint32_t(0), buff_.available());
   ASSERT_EQ(uint32_t(1), buff_.remaining());
 
-  // Extend so as to have 3 bytes remaining for writing to.
-  buff_.extend(3);
+  // Default extend op adds bytes to existing buffer
+  buff_.extend(3, false);
 
   ASSERT_EQ(uint32_t(0), buff_.available());
   ASSERT_EQ(uint32_t(4), buff_.remaining());
@@ -105,6 +105,34 @@ TEST_F(BuffTest, extend)
   ASSERT_EQ(uint32_t(0), buff_.available());
   ASSERT_EQ(uint32_t(10004), buff_.remaining());
   ASSERT_EQ(uint32_t(10004), buff_.size());
+}
+
+TEST_F(BuffTest, extendMinimal)
+{
+  ASSERT_EQ(uint32_t(1), buff_.size());
+  ASSERT_EQ(uint32_t(0), buff_.available());
+  ASSERT_EQ(uint32_t(1), buff_.remaining());
+
+  // Minimal extend op considers remaining() and adds missing bytes to existing buffer
+  buff_.extend(3, true);
+
+  ASSERT_EQ(uint32_t(0), buff_.available());
+  ASSERT_EQ(uint32_t(3), buff_.remaining());
+  ASSERT_EQ(uint32_t(3), buff_.size());
+
+  bool success = buff_.extend(10000);
+  ASSERT_EQ(true, success);
+
+  buff_.write_ptr() += 3;
+
+  ASSERT_EQ(uint32_t(3), buff_.available());
+  ASSERT_EQ(uint32_t(10000), buff_.remaining());
+  ASSERT_EQ(uint32_t(10000 + 3), buff_.size());
+
+  buff_.reset();
+  ASSERT_EQ(uint32_t(0), buff_.available());
+  ASSERT_EQ(uint32_t(10003), buff_.remaining());
+  ASSERT_EQ(uint32_t(10003), buff_.size());
 }
 
 TEST_F(BuffTest, readWriteSingle)

@@ -74,11 +74,16 @@ public:
    * Extend the buffer by preserving the existing content and read/write
    * positions.
    *
-   * @param bytes_add - the bytes to add to the existing buffer beyond what
-   *      is remaining()
+   * @param bytes - the bytes to add to the existing buffer beyond what
+   *  is remaining() UNLESS minimal parameter is set to true
+   * @param minimial - if true, the flag treat bytes parameter as a target amount of free
+   *  space that the caller requires. The code will use remaining() byte and the missing
+   *  difference between bytes and remaining() for allocation. When the parameter is false,
+   *  the bytes parameter is treated as an additional space (beyond what is remaining()) that
+   *  the caller requires.
    * @return true if operation was successful, false otherwise
    */
-  bool extend(uint32_t bytes_add);
+  bool extend(uint32_t bytes, bool minimal = false);
 
   /**
    * Resize the buffer. The data is preserved only if the new size is greater than
@@ -251,9 +256,20 @@ inline uint32_t Buff::shift()
   return remaining();
 }
 
-inline bool Buff::extend(uint32_t bytes_add)
+inline bool Buff::extend(uint32_t bytes, bool minimal)
 {
-  return resize(size_ + bytes_add);
+  bool success = true;
+
+  if (minimal) {
+    uint32_t bytes_remain = remaining();
+
+    if (bytes > bytes_remain) {
+      success = resize(size_ + (bytes - bytes_remain));
+    }
+  } else {
+    success = resize(size_ + bytes);
+  }
+  return success;
 }
 
 inline bool Buff::resize(uint32_t new_size)
