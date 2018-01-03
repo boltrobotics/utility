@@ -176,18 +176,24 @@ inline void SerialIOTermios::setReadMinimum(uint32_t bytes)
 
 inline std::error_code SerialIOTermios::recv(Buff* buff)
 {
-  errno = 0;
-  int count = read(port_, buff->write_ptr(), buff->remaining());
+  std::error_code err;
+  ssize_t count = 0;
 
-  // If count is 0, the call has timed out. If it's more than 0, at least 1 byte is
-  // received. -1 is returned on error, errno is set.
+  do {
+    errno = 0;
+    count = read(port_, buff->write_ptr(), buff->remaining());
 
-  if (count >= 0) {
-    buff->write_ptr() += count;
-    return std::error_code();
-  } else {
-    return std::error_code(errno, std::generic_category());
-  }
+    if (count > 0) {
+      // At least 1 byte is received, continue reading until received requested bytes
+      buff->write_ptr() += count;
+    } else {
+      // If count is 0, we reached EOF or the call has timed out. -1 is received on error.
+      err = std::error_code(errno, std::generic_category());
+      break;
+    }
+  } while (buff->remaining() > 0);
+
+  return err;
 }
 
 inline std::error_code SerialIOTermios::send(Buff* buff)
