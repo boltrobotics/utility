@@ -98,16 +98,17 @@ inline std::string TestHelpers::toHex(const Buff& buff)
   static const char lut[] = "0123456789ABCDEF";
 
   std::string hex_buff("");
-  uint32_t size = buff.size();
 
-  for (uint32_t i = 0; i < size; i++) {
-    const uint8_t c = buff.data()[i];
+  for (uint32_t i = 0; i < buff.available(); i++) {
+    const uint8_t c = buff.read_ptr()[i];
     hex_buff.push_back(lut[c >> 4]);
     hex_buff.push_back(lut[c & 15]);
     hex_buff.push_back(':');
   }
 
-  hex_buff.pop_back();
+  if (!hex_buff.empty()) {
+    hex_buff.pop_back();
+  }
   return hex_buff;
 }
 
