@@ -98,9 +98,13 @@ inline TestHelpers::~TestHelpers()
 
 inline std::string TestHelpers::toHex(const Buff& buff)
 {
-  std::string hex(buff.available() * 3 - 1, 'x');
-  Misc::toHex(buff.read_ptr(), buff.available(), &hex[0]);
-  return hex;
+  if (buff.available() > 0) {
+    std::vector<char> tmp(buff.available() * 3);
+    Misc::toHex(buff.read_ptr(), buff.available(), &tmp[0], tmp.size());
+    return std::string(&tmp[0]);
+  } else {
+    return std::string();
+  }
 }
 
 template<typename T, uint32_t N>

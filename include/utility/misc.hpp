@@ -110,9 +110,11 @@ public:
    *
    * @param data - raw data
    * @param size - the size of raw data
+   * @param dst_str - the destination buffer
+   * @param dst_size - the size of dst_str
    * @return 0 if converted ok, -1 if strlen(dst_str) is less than size * 3
    */
-  static int toHex(const uint8_t* data, uint32_t size, char* dst_str);
+  static int toHex(const uint8_t* data, uint32_t size, char* dst_str, uint32_t dst_size);
 
 #if 0
   /**
@@ -177,11 +179,9 @@ inline T Misc::modulo(T a, U b)
   return (r < 0 ? r + b : r);
 }
 
-inline int Misc::toHex(const uint8_t* data, uint32_t size, char* dst_str)
+inline int Misc::toHex(const uint8_t* data, uint32_t size, char* dst_str, uint32_t dst_size)
 {
-  size_t len = strlen(dst_str);
-
-  if (size == 0 || len < (size * 3 - 1)) {
+  if (size == 0 || dst_size < (size * 3)) {
     return -1;
   }
 
@@ -191,12 +191,10 @@ inline int Misc::toHex(const uint8_t* data, uint32_t size, char* dst_str)
     const uint8_t c = data[i];
     dst_str[j] = lut[c >> 4];
     dst_str[j + 1] = lut[c & 15];
-
-    if ((j + 2) < (size * 3 - 1)) {
-      dst_str[j + 2] = ':';
-    }
+    dst_str[j + 2] = ':';
   }
 
+  dst_str[dst_size - 1] = '\0';
   return 0;
 }
 
