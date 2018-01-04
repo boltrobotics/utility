@@ -18,6 +18,9 @@
 
 // SYSTEM INCLUDES
 #include <cmath>
+#include <cstring>
+
+// PROJECT INCLUDES
 
 namespace btr
 {
@@ -100,6 +103,28 @@ public:
   template<typename T, typename U>
   static T modulo(T a, U b);
 
+  // OPERATIONS
+
+  /**
+   * Represent the content of buffer in hex.
+   *
+   * @param data - raw data
+   * @param size - the size of raw data
+   * @return 0 if converted ok, -1 if strlen(dst_str) is less than size * 3
+   */
+  static int toHex(const uint8_t* data, uint32_t size, char* dst_str);
+
+#if 0
+  /**
+   * Output an array of values as a comma-delimieted string.
+   *
+   * @param vals - the array
+   * @return string representation
+   */
+  template<typename T, uint32_t N>
+  static void toString(T (&vals)[N]);
+#endif
+
 }; // class Misc
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +176,43 @@ inline T Misc::modulo(T a, U b)
   T r = a % b;
   return (r < 0 ? r + b : r);
 }
+
+inline int Misc::toHex(const uint8_t* data, uint32_t size, char* dst_str)
+{
+  size_t len = strlen(dst_str);
+
+  if (size == 0 || len < (size * 3 - 1)) {
+    return -1;
+  }
+
+  static const char lut[] = "0123456789ABCDEF";
+
+  for (uint32_t i = 0, j = 0; i < size; i++, j += 3) {
+    const uint8_t c = data[i];
+    dst_str[j] = lut[c >> 4];
+    dst_str[j + 1] = lut[c & 15];
+
+    if ((j + 2) < (size * 3 - 1)) {
+      dst_str[j + 2] = ':';
+    }
+  }
+
+  return 0;
+}
+
+#if 0
+template<typename T, uint32_t N>
+inline std::string Misc::toString(T (&vals)[N])
+{
+  std::stringstream ss;
+  ss << vals[0];
+
+  for (uint32_t i = 1; i < N; i++) {
+    ss << "," << vals[i];
+  }
+  return ss.str();
+}
+#endif
 
 } // namespace btr
 

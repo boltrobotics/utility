@@ -20,6 +20,9 @@
 #include <cmath>
 #include <string>
 
+// PROJECT INCLUDES
+#include "utility/misc.hpp"
+
 namespace testing
 {
   namespace internal
@@ -95,21 +98,9 @@ inline TestHelpers::~TestHelpers()
 
 inline std::string TestHelpers::toHex(const Buff& buff)
 {
-  static const char lut[] = "0123456789ABCDEF";
-
-  std::string hex_buff("");
-
-  for (uint32_t i = 0; i < buff.available(); i++) {
-    const uint8_t c = buff.read_ptr()[i];
-    hex_buff.push_back(lut[c >> 4]);
-    hex_buff.push_back(lut[c & 15]);
-    hex_buff.push_back(':');
-  }
-
-  if (!hex_buff.empty()) {
-    hex_buff.pop_back();
-  }
-  return hex_buff;
+  std::string hex(buff.available() * 3 - 1, 'x');
+  Misc::toHex(buff.read_ptr(), buff.available(), &hex[0]);
+  return hex;
 }
 
 template<typename T, uint32_t N>

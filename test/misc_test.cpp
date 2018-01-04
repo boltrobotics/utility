@@ -18,6 +18,8 @@
 
 // PROJECT INCLUDES
 #include "utility/misc.hpp"
+#include "utility/buff.hpp"
+#include "utility/test_helpers.hpp"
 
 namespace btr
 {
@@ -54,6 +56,15 @@ TEST(MiscTest, testModulo)
   ASSERT_EQ(1, Misc::modulo(4, 3));
   ASSERT_EQ(2, Misc::modulo(5, 3));
   ASSERT_EQ(0, Misc::modulo(6, 3));
+}
+
+TEST(MiscTest, toHex)
+{
+  Buff buff(5);
+  buff.writeChunk({'0','1','a','b','c'});
+  std::string output = TestHelpers::toHex(buff);
+
+  ASSERT_EQ("30:31:61:62:63", output);
 }
 
 } // namespace btr
