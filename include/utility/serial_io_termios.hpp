@@ -188,8 +188,12 @@ inline std::error_code SerialIOTermios::recv(Buff* buff)
     if (count > 0) {
       // At least 1 byte is received, continue reading until received requested bytes
       buff->write_ptr() += count;
+    } else if (count == 0) {
+      // If count is 0, we reached EOF or the call has timed out.
+      err = std::error_code(ETIME, std::generic_category());
+      break;
     } else {
-      // If count is 0, we reached EOF or the call has timed out. -1 is received on error.
+      // -1 is received on error.
       err = std::error_code(errno, std::generic_category());
       break;
     }

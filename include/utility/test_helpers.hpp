@@ -91,7 +91,7 @@ public:
 
 inline TestHelpers::~TestHelpers()
 {
-  PRINTF("%s", str().c_str());
+  PRINTF("%s\n", str().c_str());
 }
 
 //=================================== OPERATIONS ===============================
