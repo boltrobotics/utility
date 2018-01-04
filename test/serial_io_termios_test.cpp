@@ -45,7 +45,8 @@ public:
     sim_serial_(TTY_SIM_1, BAUD, 100),
     wbuff_(),
     rbuff_(),
-    success_(0, std::generic_category())
+    success_(0, std::generic_category()),
+    timeout_(ETIME, std::generic_category())
   {
     resetBuffers();
   }
@@ -69,6 +70,7 @@ protected:
   Buff wbuff_;
   Buff rbuff_;
   std::error_code success_;
+  std::error_code timeout_;
 };
 
 //------------------------------------------------------------------------------
@@ -96,8 +98,9 @@ TEST_F(SerialIOTermiosTest, Flush)
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
   std::this_thread::sleep_for(10ms);
+
   e = act_serial_.recv(&rbuff_);
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  ASSERT_EQ(timeout_, e) << " Message: " << e.message();
   ASSERT_EQ(0, rbuff_.available());
 
   resetBuffers();
@@ -114,7 +117,7 @@ TEST_F(SerialIOTermiosTest, Flush)
 TEST_F(SerialIOTermiosTest, ReadTimeout)
 {
   std::error_code e = act_serial_.recv(&rbuff_);
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  ASSERT_EQ(timeout_, e) << " Message: " << e.message();
   ASSERT_EQ(0, rbuff_.available());
 }
 
