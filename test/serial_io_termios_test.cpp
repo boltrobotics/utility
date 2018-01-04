@@ -46,7 +46,8 @@ public:
     wbuff_(),
     rbuff_(),
     success_(0, std::generic_category()),
-    timeout_(ETIME, std::generic_category())
+    timeout_(ETIME, std::generic_category()),
+    no_buff_space_(ENOBUFS, std::generic_category())
   {
     resetBuffers();
   }
@@ -71,6 +72,7 @@ protected:
   Buff rbuff_;
   std::error_code success_;
   std::error_code timeout_;
+  std::error_code no_buff_space_;
 };
 
 //------------------------------------------------------------------------------
@@ -119,6 +121,16 @@ TEST_F(SerialIOTermiosTest, ReadTimeout)
   std::error_code e = act_serial_.recv(&rbuff_);
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
   ASSERT_EQ(0, rbuff_.available());
+}
+
+TEST_F(SerialIOTermiosTest, NoBufferSpace)
+{
+  rbuff_.write_ptr() += rbuff_.remaining();
+  ASSERT_EQ(rbuff_.size(), rbuff_.available());
+  ASSERT_EQ(0, rbuff_.remaining());
+
+  std::error_code e = act_serial_.recv(&rbuff_);
+  ASSERT_EQ(no_buff_space_, e) << " Message: " << e.message();
 }
 
 TEST_F(SerialIOTermiosTest, DISABLED_WriteTimeout)

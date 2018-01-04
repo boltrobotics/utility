@@ -178,6 +178,10 @@ inline void SerialIOTermios::setReadMinimum(uint32_t bytes)
 
 inline std::error_code SerialIOTermios::recv(Buff* buff)
 {
+  if (buff->remaining() == 0) {
+    return std::error_code(ENOBUFS, std::generic_category());
+  }
+
   std::error_code err(0, std::generic_category());
   ssize_t count = 0;
 
