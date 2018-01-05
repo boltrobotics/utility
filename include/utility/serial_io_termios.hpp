@@ -78,9 +78,10 @@ public:
   /**
    * Read data from serial port.
    *
+   * @param buff - the buffer to read into
    * @param bytes - the number of bytes to read
    */
-  std::error_code recv(Buff* buff);
+  std::error_code recv(Buff* buff, uint32_t bytes);
 
   /**
    * Write data to serial port. The function increments buffer->read_ptr() by
@@ -176,22 +177,22 @@ inline void SerialIOTermios::setReadMinimum(uint32_t bytes)
   tcsetattr(port_, TCSANOW, &options);
 }
 
-inline std::error_code SerialIOTermios::recv(Buff* buff)
+inline std::error_code SerialIOTermios::recv(Buff* buff, uint32_t bytes)
 {
-  if (buff->remaining() == 0) {
+  if (buff->remaining() < bytes) {
     return std::error_code(ENOBUFS, std::generic_category());
   }
 
   std::error_code err(0, std::generic_category());
-  ssize_t count = 0;
 
   do {
     errno = 0;
-    count = read(port_, buff->write_ptr(), buff->remaining());
+    ssize_t count = read(port_, buff->write_ptr(), bytes);
 
     if (count > 0) {
       // At least 1 byte is received, continue reading until received requested bytes
       buff->write_ptr() += count;
+      bytes -= count;
     } else if (count == 0) {
       // If count is 0, we reached EOF or the call has timed out.
       err = std::error_code(ETIME, std::generic_category());
@@ -201,7 +202,7 @@ inline std::error_code SerialIOTermios::recv(Buff* buff)
       err = std::error_code(errno, std::generic_category());
       break;
     }
-  } while (buff->remaining() > 0);
+  } while (bytes > 0);
 
   return err;
 }

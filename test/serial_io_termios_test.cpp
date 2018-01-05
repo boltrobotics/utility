@@ -85,7 +85,7 @@ TEST_F(SerialIOTermiosTest, ReadWriteOK)
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
   std::this_thread::sleep_for(10ms);
-  e = act_serial_.recv(&rbuff_);
+  e = act_serial_.recv(&rbuff_, rbuff_.remaining());
 
   ASSERT_EQ(success_, e) << " Message: " << e.message();
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
@@ -101,7 +101,7 @@ TEST_F(SerialIOTermiosTest, Flush)
 
   std::this_thread::sleep_for(10ms);
 
-  e = act_serial_.recv(&rbuff_);
+  e = act_serial_.recv(&rbuff_, rbuff_.remaining());
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
   ASSERT_EQ(0, rbuff_.available());
 
@@ -111,14 +111,14 @@ TEST_F(SerialIOTermiosTest, Flush)
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
   std::this_thread::sleep_for(10ms);
-  e = act_serial_.recv(&rbuff_);
+  e = act_serial_.recv(&rbuff_, rbuff_.remaining());
   ASSERT_EQ(success_, e) << " Message: " << e.message();
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOTermiosTest, ReadTimeout)
 {
-  std::error_code e = act_serial_.recv(&rbuff_);
+  std::error_code e = act_serial_.recv(&rbuff_, rbuff_.remaining());
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
   ASSERT_EQ(0, rbuff_.available());
 }
@@ -129,7 +129,7 @@ TEST_F(SerialIOTermiosTest, NoBufferSpace)
   ASSERT_EQ(rbuff_.size(), rbuff_.available());
   ASSERT_EQ(0, rbuff_.remaining());
 
-  std::error_code e = act_serial_.recv(&rbuff_);
+  std::error_code e = act_serial_.recv(&rbuff_, rbuff_.remaining() + 1);
   ASSERT_EQ(no_buff_space_, e) << " Message: " << e.message();
 }
 
