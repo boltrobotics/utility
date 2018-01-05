@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <thread>
 #include <chrono>
+#include <sys/wait.h>
 
 using namespace std::chrono_literals;
 

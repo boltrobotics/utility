@@ -88,7 +88,8 @@ TEST_F(SerialIOTermiosTest, ReadWriteOK)
   e = act_serial_.recv(&rbuff_, rbuff_.remaining());
 
   ASSERT_EQ(success_, e) << " Message: " << e.message();
-  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
+  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size()));
+  TEST_MSG << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOTermiosTest, Flush)

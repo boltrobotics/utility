@@ -23,26 +23,6 @@
 // PROJECT INCLUDES
 #include "utility/misc.hpp"
 
-namespace testing
-{
-  namespace internal
-  {
-    enum GTestColor {
-      COLOR_DEFAULT,
-      COLOR_RED,
-      COLOR_GREEN,
-      COLOR_YELLOW
-    };
-
-    extern void ColoredPrintf(GTestColor color, const char* fmt, ...);
-  }
-}
-
-#define PRINTF(...)  do { \
-  testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] "); \
-  testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, __VA_ARGS__); \
-} while(0)
-
 namespace btr
 {
 
@@ -91,7 +71,8 @@ public:
 
 inline TestHelpers::~TestHelpers()
 {
-  PRINTF("%s\n", str().c_str());
+  std::cout << "\033[;32m[          ]\033[0m "
+    << "\033[;33m" << str().c_str() << "\033[0m" << std::endl;
 }
 
 //=================================== OPERATIONS ===============================
