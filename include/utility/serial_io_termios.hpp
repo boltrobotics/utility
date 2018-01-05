@@ -44,7 +44,7 @@ public:
    *  @see http://man7.org/linux/man-pages/man3/termios.3.html
    * @param timeout - serial operation timeout in milliseconds
    */
-  SerialIOTermios(const std::string& port, int baud_rate = B115200, int timeout = 0);
+  SerialIOTermios(const std::string& port, int baud_rate = 57600, int timeout = 0);
 
   /**
    * Dtor.
@@ -93,6 +93,16 @@ public:
 
 private:
 
+  // OPERATIONS
+
+  /**
+   * Convert numeric BAUD rate to termios-specific one.
+   *
+   * @param num - the number baud rate
+   * @return termios baud rate
+   */
+  static int getNativeBaud(int num);
+
   // ATTRIBUTES
 
   std::string port_name_;
@@ -117,6 +127,7 @@ inline SerialIOTermios::SerialIOTermios(
   timeout_millis_(timeout_millis),
   port_(-1)
 {
+  baud_rate_ = getNativeBaud(baud_rate);
   reset();
 }
 
@@ -139,13 +150,17 @@ inline void SerialIOTermios::reset()
 
   struct termios options;
   tcgetattr(port_, &options);
-  options.c_cflag = CS8 | CREAD | CLOCAL | baud_rate_;
-  options.c_iflag = IGNPAR | IGNCR;
-  options.c_lflag &= ~ICANON;
-  options.c_cc[VTIME] = timeout_millis_ / 100; // VTIME is in tenths of seconds
-  options.c_cc[VMIN] = 0;
+
+  cfmakeraw(&options);
   cfsetospeed(&options, baud_rate_);
   cfsetispeed(&options, baud_rate_);
+
+  //options.c_cflag = CS8 | CREAD | CLOCAL | baud_rate_;
+  //options.c_iflag = IGNPAR | IGNCR;
+  //options.c_lflag &= ~ICANON;
+  options.c_cc[VTIME] = timeout_millis_ / 100; // VTIME is in tenths of seconds
+  options.c_cc[VMIN] = 0;
+
   tcflush(port_, TCIOFLUSH);
   tcsetattr(port_, TCSANOW, &options);
 }
@@ -217,6 +232,34 @@ inline std::error_code SerialIOTermios::send(Buff* buff)
   } else {
     return std::error_code(errno, std::generic_category());
   }
+}
+
+///////////////////////////////////// PRIVATE //////////////////////////////////
+
+//=================================== OPERATIONS ===============================
+
+inline int SerialIOTermios::getNativeBaud(int num)
+{
+  int baud = B57600;
+
+  switch (num) {
+    case 9600:
+      baud = B9600;
+      break;
+    case 38400:
+      baud = B38400;
+      break;
+    case 57600:
+      baud = B57600;
+      break;
+    case 115200:
+      baud = B115200;
+      break;
+    default:
+      break;
+  };
+
+  return baud;
 }
 
 } // namespace btr
