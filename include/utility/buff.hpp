@@ -33,21 +33,21 @@ class Buff
 {
 public:
 
-  // LIFECYCLE
+// LIFECYCLE
 
   /**
-   * Ctor.
+   * Create a buffer object with the requested,  dynamically allocated memory.
    *
-   * @param size - the initial buffer size
+   * @param capacity - the initial buffer's capacity
    */
-  Buff(uint32_t size = 128);
+  Buff(uint32_t capacity = 128);
 
   /**
    * Dtor.
    */
   ~Buff();
 
-  // ACCESS
+// ACCESS
 
   const uint8_t* data() const;
   const uint8_t* end() const;
@@ -55,7 +55,7 @@ public:
   uint8_t*& read_ptr();
   uint8_t*& write_ptr();
 
-  // OPERATIONS
+// OPERATIONS
 
   /**
    * Nullify allocated memory and set read/write pointers to position 0.
@@ -77,22 +77,42 @@ public:
    * @param bytes - the bytes to add to the existing buffer beyond what
    *  is remaining() UNLESS minimal parameter is set to true
    * @param minimial - if true, the flag treat bytes parameter as a target amount of free
-   *  space that the caller requires. The code will use remaining() byte and the missing
-   *  difference between bytes and remaining() for allocation. When the parameter is false,
-   *  the bytes parameter is treated as an additional space (beyond what is remaining()) that
-   *  the caller requires.
+   *  space that the caller requires. The code will allocate only the difference between
+   *  requested bytes and the remaining() bytes. When the parameter is false, the bytes
+   *  parameter is treated as an additional space (beyond what is remaining()) that the
+   *  caller requires.
+   * @param reserve_mem - if true, allocate more memory if current capacity is insufficient
    * @return true if operation was successful, false otherwise
    */
-  bool extend(uint32_t bytes, bool minimal = false);
+  bool extend(uint32_t bytes, bool minimal = true, bool reserve_mem = true);
 
   /**
-   * Resize the buffer. The data is preserved only if the new size is greater than
-   * or equal to the previous size.
+   * Set new size on the buffer. The size must be less than or equal to capacity.
    *
    * @param new_size - the new size in bytes
+   * @param reserve_mem - if true, allocate more memory if current capacity is insufficient
+   * @return true if operation was successful, false when size is greater than
+   *  capacity
+   */
+  bool resize(uint32_t new_size, bool reserve_mem = true);
+
+  /**
+   * Reserve memory for the buffer. The data is preserved only if the new capacity is
+   * greater than or equal to the previous size.
+   *
+   * IMPORTANT: This call uses expensive dynamic-memory manipulation functions. If this is
+   * a concern, allocate the maximum required number of bytes when creating the buffer, and
+   * then use resize() function instead.
+   *
+   * @param new_capacity - the new capacity in bytes
    * @return true if operation was successful, false otherwise
    */
-  bool resize(uint32_t new_size);
+  bool reserve(uint32_t new_capacity);
+
+  /**
+   * @return the allocated memory size
+   */
+  uint32_t capacity() const;
 
   /**
    * @return the allocated memory size
@@ -144,32 +164,33 @@ public:
    * Write scalar value to the buffer.
    *
    * @param data - the data to write
-   * @parma extend_buff - the flag whether to extend the buffer if there is
-   *  not enough allocated memory
+   * @parma extend_size - the flag whether to extend size if current size is not sufficient
+   * @param reserve_mem - if true, allocate more memory if current capacity is insufficient
    * @return true if the data was written, false otherwise. The failure could
    *  be caused by inability to allocate new memory if extend parameter is true
    *  or insufficient memory if extend parameter is false.
    */
   template<typename T>
-  bool write(T val, bool extend_buff = true);
+  bool write(T val, bool extend_size = true, bool reserve_mem = true);
 
   /**
    * Write array of bytes to the buffer.
    *
    * @param data - the data to write
-   * @parma extend_buff - the flag whether to extend the buffer if there is
-   *  not enough allocated memory
+   * @parma extend_size - the flag whether to extend size if current size is not sufficient
+   * @param reserve_mem - if true, allocate more memory if current capacity is insufficient
    * @return true if the data was written, false otherwise. The failure could
    *  be caused by inability to allocate new memory if extend parameter is true
    *  or insufficient memory if extend parameter is false.
    */
   template<typename T, uint32_t N>
-  bool writeChunk(const T (&vals)[N], bool extend_buff = true);
+  bool writeChunk(const T (&vals)[N], bool extend_size = true, bool reserve_mem = true);
 
 private:
 
-  // ATTRIBUTES
+// ATTRIBUTES
 
+  uint32_t capacity_;
   uint32_t size_;
   uint8_t* data_;
   uint8_t* read_ptr_;
@@ -181,9 +202,10 @@ private:
 // INLINE OPERATIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-inline Buff::Buff(uint32_t size)
-: size_(size),
-  data_((uint8_t*) malloc(size_)),
+inline Buff::Buff(uint32_t capacity)
+: capacity_(capacity),
+  size_(capacity),
+  data_((uint8_t*) malloc(capacity_)),
   read_ptr_(data_),
   write_ptr_(data_)
 {
@@ -192,9 +214,9 @@ inline Buff::Buff(uint32_t size)
 inline Buff::~Buff()
 {
   free(data_);
-  data_ = NULL;
-  read_ptr_ = NULL;
-  write_ptr_ = NULL;
+  data_ = nullptr;
+  read_ptr_ = nullptr;
+  write_ptr_ = nullptr;
 }
 
 inline const uint8_t* Buff::data() const
@@ -224,7 +246,7 @@ inline uint8_t*& Buff::write_ptr()
 
 inline void Buff::reset()
 {
-  memset(data_, 'x', size_);
+  memset(data_, '\0', size_);
   read_ptr_ = data_;
   write_ptr_ = data_;
 }
@@ -256,7 +278,7 @@ inline uint32_t Buff::shift()
   return remaining();
 }
 
-inline bool Buff::extend(uint32_t bytes, bool minimal)
+inline bool Buff::extend(uint32_t bytes, bool minimal, bool reserve_mem)
 {
   bool success = true;
 
@@ -264,35 +286,64 @@ inline bool Buff::extend(uint32_t bytes, bool minimal)
     uint32_t bytes_remain = remaining();
 
     if (bytes > bytes_remain) {
-      success = resize(size_ + (bytes - bytes_remain));
+      success = resize(size_ + (bytes - bytes_remain), reserve_mem);
     }
   } else {
-    success = resize(size_ + bytes);
+    success = resize(size_ + bytes, reserve_mem);
   }
   return success;
 }
 
-inline bool Buff::resize(uint32_t new_size)
+inline bool Buff::resize(uint32_t new_size, bool reserve_mem)
 {
-  if (new_size == 0) {
+  bool result = true;
+
+  if (new_size <= capacity()) {
+    size_ = new_size;
+
+    if (write_ptr() > end()) {
+      write_ptr() = data_ + size_;
+    }
+    if (read_ptr() > end()) {
+      read_ptr() = data_ + size_;
+    }
+  } else {
+    if (reserve_mem) {
+      result = reserve(new_size);
+
+      if (result) {
+        size_ = new_size;
+      }
+    } else {
+      result = false;
+    }
+  }
+  return result;
+}
+
+inline bool Buff::reserve(uint32_t new_capacity)
+{
+  if (new_capacity == 0) {
     return false;
   }
 
   uint32_t read_offset = read_ptr_ - data_;
   uint32_t write_offset = write_ptr_ - data_;
-  uint8_t* data = (uint8_t*) realloc(data_, new_size * sizeof(uint8_t));
+  uint8_t* data = (uint8_t*) realloc(data_, new_capacity * sizeof(uint8_t));
 
-  if (data != NULL) {
-    size_ = new_size;
+  if (data != nullptr) {
+    capacity_ = new_capacity;
+    size_ = (size_ <= capacity_ ? size_ : capacity_);
+
     data_ = data;
     const uint8_t* end = (data_ + size_);
 
-    if ((data_ + read_offset) < end) {
+    if ((data_ + read_offset) <= end) {
       read_ptr_ = data_ + read_offset;
     } else {
       read_ptr_ = data_;
     }
-    if ((data_ + write_offset) < end) {
+    if ((data_ + write_offset) <= end) {
       write_ptr_ = data_ + write_offset;
     } else {
       write_ptr_ = data_;
@@ -302,6 +353,11 @@ inline bool Buff::resize(uint32_t new_size)
   } else {
     return false;
   }
+}
+
+inline uint32_t Buff::capacity() const
+{
+  return capacity_;
 }
 
 inline uint32_t Buff::size() const
@@ -360,14 +416,14 @@ inline void Buff::advanceReadPtr(uint32_t bytes)
 }
 
 template<typename T>
-inline bool Buff::write(T val, bool extend_buff)
+inline bool Buff::write(T val, bool extend_size, bool reserve_mem)
 {
   T vals[] = { val };
-  return writeChunk(vals, extend_buff);
+  return writeChunk(vals, extend_size, reserve_mem);
 }
 
 template<typename T, uint32_t N>
-inline bool Buff::writeChunk(const T (&vals)[N], bool extend_buff)
+inline bool Buff::writeChunk(const T (&vals)[N], bool extend_size, bool reserve_mem)
 {
   bool success = true;
   uint32_t bytes_target = sizeof(T) * N;
@@ -382,14 +438,16 @@ inline bool Buff::writeChunk(const T (&vals)[N], bool extend_buff)
       success = true; // Some usable space is gained
     }
   }
-  if (!success && extend_buff) {
-    success = extend(bytes_target);
+
+  if (!success && extend_size) {
+    success = extend(bytes_target, true, reserve_mem);
   }
   if (success) {
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(vals);
     memcpy(write_ptr(), bytes, bytes_target);
     write_ptr() += bytes_target;
   }
+
   return success;
 }
 
