@@ -102,6 +102,12 @@ public:
    * @param msb - the data is in most-significant byte order 
    */
   template<typename IntType>
+  static IntType getFixedInt(const uint8_t* buff, uint32_t bytes, bool msb = true);
+
+  /**
+   * Call getFixedInt with raw byte array.
+   */
+  template<typename IntType>
   static IntType getFixedInt(Buff* buff, uint32_t bytes, bool msb = true);
 
   /**
@@ -234,22 +240,28 @@ inline IntType ValueCodec::getNBitVarInt(Buff* buff, const IdxType (&bit_map)[N]
 }
 
 template<typename IntType>
-inline IntType ValueCodec::getFixedInt(Buff* buff, uint32_t bytes, bool msb)
+inline IntType ValueCodec::getFixedInt(const uint8_t* buff, uint32_t bytes, bool msb)
 {
   IntType val = 0;
 
   if (msb) {
     for (register uint32_t i = 0; i < bytes; i++) {
-      uint8_t c = buff->read_ptr()[i];
+      uint8_t c = buff[i];
       val = ((val << 8) | c);
     }
   } else {
     for (register int32_t i = int32_t(bytes); --i >= 0; ) {
-      uint8_t c = buff->read_ptr()[i];
+      uint8_t c = buff[i];
       val = ((val << 8) | c);
     }
   }
+  return val;
+}
 
+template<typename IntType>
+inline IntType ValueCodec::getFixedInt(Buff* buff, uint32_t bytes, bool msb)
+{
+  IntType val = getFixedInt<IntType>(buff->read_ptr(), bytes, msb);
   buff->advanceReadPtr(bytes);
   return val;
 }
