@@ -45,6 +45,10 @@ if (TARGET utility)
     set(UTILITY_LIB utility)
 endif()
 
+if (NOT UTILITY_LIB)
+  set(UTILITY_LIB "")
+endif()
+
 add_executable(utility_tests ${SOURCES})
 target_link_libraries(utility_tests ${UTILITY_LIB} gtest boost_system boost_thread)
 
