@@ -9,7 +9,7 @@ endif()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 14)
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall -Wextra -Werror -Os)
 #set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Wextra -Werror")
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)

@@ -19,6 +19,7 @@
 // PROJECT INCLUDES
 #include "utility/value_codec.hpp"
 #include "utility/buff.hpp"
+#include "utility/test_helpers.hpp"
 
 namespace btr
 {
@@ -143,13 +144,15 @@ TEST_F(ValueCodecTest, testSwap)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC};
 
-  uint32_t val = *reinterpret_cast<uint32_t*>(data);
+  char* p = reinterpret_cast<char*>(data);
+  uint32_t val = *reinterpret_cast<uint32_t*>(p);
   ValueCodec::swap(&val);
 
   uint8_t* data2 = reinterpret_cast<uint8_t*>(&val);
 
   for (int i = 0; i < 4; i++)  {
-    ASSERT_EQ(data[i], data2[3 - i]);
+    ASSERT_EQ(data[i], data2[3 - i]) << "Index: " << i <<
+      ", data2: " << TestHelpers::toHex(data2, sizeof(val));
   }
 }
 
