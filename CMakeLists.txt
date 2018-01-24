@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.5)
 project(utility C CXX)
 
+if (NOT OS)
+  set(OS OS_X86)
+  enable_testing()
+endif()
+
 set(CMAKE_CXX_STANDARD 14)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-enable_testing()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(warnings "-Wall -Wextra -Werror")
 
     if (NOT CONFIGURED_ONCE)
@@ -18,4 +21,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
 endif()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+
+if (OS MATCHES OS_X86)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+endif()
