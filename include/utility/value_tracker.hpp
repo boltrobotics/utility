@@ -128,12 +128,13 @@ private:
 
 template<typename T>
 inline ValueTracker<T>::ValueTracker(uint32_t count, uint8_t id)
-: vals_(new T[count]()),
+  :
+  vals_(new T[count]()),
   count_(count),
   pos_(0),
   id_(id)
 {
- }
+}
 
 template<typename T>
 inline ValueTracker<T>::~ValueTracker()
@@ -203,16 +204,21 @@ inline T ValueTracker<T>::delta(uint32_t upper_pos, uint32_t lower_pos) const
 template<typename T>
 inline T ValueTracker<T>::median() const
 {
-  T arr[count_] = {0};
+  T* arr = new T[count_];
   memcpy(arr, vals_, count_ * sizeof(T));
 
   Sorters::insertionSort(arr, count_);
 
+  T result;
+
   if ((count_ % 2) != 0) {
-    return arr[count_ / 2];
+    result = arr[count_ / 2];
   } else {
-    return (arr[count_ / 2] + arr[(count_ / 2) - 1]) / 2;
+    result = (arr[count_ / 2] + arr[(count_ / 2) - 1]) / 2;
   }
+
+  delete [] arr;
+  return result;
 }
 
 template<typename T>

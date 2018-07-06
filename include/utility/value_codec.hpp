@@ -214,7 +214,7 @@ inline IntType ValueCodec::getNBitVarInt(Buff* buff, const IdxType (&bit_map)[N]
 {
   IntType val = 0;
 
-  for (register uint32_t i = 0; i < N; i++) {
+  for (uint32_t i = 0; i < N; i++) {
     uint8_t c = buff->read_ptr()[i];
 
     // @see valuce_codec_test.cpp to clarify the logic here
@@ -245,12 +245,12 @@ inline IntType ValueCodec::getFixedInt(const uint8_t* buff, uint32_t bytes, bool
   IntType val = 0;
 
   if (msb) {
-    for (register uint32_t i = 0; i < bytes; i++) {
+    for (uint32_t i = 0; i < bytes; i++) {
       uint8_t c = buff[i];
       val = ((val << 8) | c);
     }
   } else {
-    for (register int32_t i = int32_t(bytes); --i >= 0; ) {
+    for (int32_t i = int32_t(bytes); --i >= 0; ) {
       uint8_t c = buff[i];
       val = ((val << 8) | c);
     }
@@ -316,9 +316,9 @@ template<typename IntType>
 inline void ValueCodec::swap(IntType* val)
 {
   uint8_t* bytes = reinterpret_cast<uint8_t*>(val);
-  register int j = sizeof(IntType) - 1;
+  int j = sizeof(IntType) - 1;
 
-  for (register int i = 0; i < j; i++, j--) {
+  for (int i = 0; i < j; i++, j--) {
     uint8_t tmp = bytes[i];
     bytes[i] = bytes[j];
     bytes[j] = tmp;

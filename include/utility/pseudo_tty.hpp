@@ -21,6 +21,7 @@
 #include <thread>
 #include <chrono>
 #include <sys/wait.h>
+#include <signal.h>
 
 using namespace std::chrono_literals;
 
