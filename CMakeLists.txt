@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.11)
 project(utility C CXX)
 
 if (NOT OS)
@@ -6,11 +6,16 @@ if (NOT OS)
   enable_testing()
 endif()
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
+
+set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 set(CMAKE_CXX_STANDARD 14)
 add_compile_options(-Wall -Wextra -Werror -Os)
-#set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Wextra -Werror")
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
 
