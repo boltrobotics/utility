@@ -104,9 +104,19 @@ public:
   static T modulo(T a, U b);
 
   /**
+   * Shift the decimal point in a floating-point number by the specified number of places
+   * to the right.
+   *
+   * @param input - input variable
+   * @param dec_places - the number of places to shift by
+   * @return the resulting integer
+   */
+  template<typename IntType, typename FloatType>
+  static IntType shiftfint(FloatType input, uint8_t dec_places);
+
+  /**
    * Break input value into integer and fractional parts. Multiply the fractional
-   * part by the supplied number. Finally, cast the resulting values into target
-   * types.
+   * part by the supplied number. After, cast the resulting values into target types.
    *
    * @param input - input variable
    * @param intpart - the integer part of the result
@@ -189,13 +199,21 @@ inline T Misc::modulo(T a, U b)
   return (r < 0 ? r + b : r);
 }
 
+template<typename IntType, typename FloatType>
+inline IntType Misc::shiftfint(FloatType input, uint8_t dec_places)
+{
+  IntType output = static_cast<IntType>(round(input * pow(10, dec_places)));
+  return output;
+}
+
 template<typename FractPartType, typename FloatType, typename IntPartType>
 inline FractPartType Misc::modfint(FloatType input, IntPartType* int_part, uint8_t dec_places)
 {
   double int_tmp = 0;
   double fract_tmp = modf(input, &int_tmp);
-  FractPartType fract_part = static_cast<FractPartType>(round(fract_tmp * pow(10, dec_places)));
+
   *int_part = static_cast<IntPartType>(int_tmp);
+  FractPartType fract_part = shiftfint<FractPartType>(fract_tmp, dec_places);
   return fract_part;
 }
 

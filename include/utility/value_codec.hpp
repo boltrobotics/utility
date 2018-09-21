@@ -134,6 +134,16 @@ public:
   static void setFixedInt(Buff* buff, IntType val, bool msb = true);
 
   /**
+   * Encode an floating-point number as an integer by shifting decimal point to the right.
+   *
+   * @param buff - the buffer to store encoded value
+   * @param val - the value to encode
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   */
+  template<typename IntType, typename FloatType>
+  static void encodeShiftf(Buff* buff, FloatType val, uint8_t dec_places, bool msb = true);
+
+  /**
    * Encode an integer and fractional parts of a floating-point number into two integers
    *
    * @param buff - the buffer to store encoded value
@@ -302,6 +312,13 @@ inline void ValueCodec::setFixedInt(Buff* buff, IntType val, bool msb)
     }
   }
   buff->write(val);
+}
+
+template<typename IntType, typename FloatType>
+inline void ValueCodec::encodeShiftf(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
+{
+  IntType output = Misc::shiftfint<IntType, FloatType>(val, dec_places);
+  setFixedInt(buff, output, msb);
 }
 
 template<typename FloatType, typename IntPartType, typename FractPartType>
