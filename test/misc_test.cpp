@@ -67,4 +67,32 @@ TEST(MiscTest, toHex)
   ASSERT_EQ("30:31:61:62:63", output);
 }
 
+TEST(MiscTest, testModfint)
+{
+  double input = Misc::PI;
+  uint8_t int_part = 0;
+  uint8_t fract_part = Misc::modfint<uint8_t>(input, &int_part, 2);
+  ASSERT_EQ(3, int_part);
+  ASSERT_EQ(14, fract_part);
+
+  fract_part = Misc::modfint<uint8_t>(Misc::PI, &int_part, 1);
+  ASSERT_EQ(3, int_part);
+  ASSERT_EQ(1, fract_part);
+
+  fract_part = Misc::modfint<uint8_t>(Misc::PI, &int_part, 0);
+  ASSERT_EQ(3, int_part);
+  ASSERT_EQ(0, fract_part);
+
+  input = 65535.65536;
+  fract_part = Misc::modfint<uint8_t>(input, &int_part, 5);
+  ASSERT_EQ(255, int_part);
+  ASSERT_EQ(0, fract_part);
+
+  input = 65536.65535;
+  uint16_t int_part16 = 0;
+  uint16_t fract_part16 = Misc::modfint<uint16_t>(input, &int_part16, 5);
+  ASSERT_EQ(0, int_part16);
+  ASSERT_EQ(65535, fract_part16);
+}
+
 } // namespace btr

@@ -1,4 +1,4 @@
-/* Copyright (C) 2017 Bolt Robotics <info@boltrobotics.com>
+/* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,7 +103,17 @@ public:
   template<typename T, typename U>
   static T modulo(T a, U b);
 
-  // OPERATIONS
+  /**
+   * Break input value into integer and fractional parts. Multiply the fractional
+   * part by the supplied number. Finally, cast the resulting values into target
+   * types.
+   *
+   * @param input - input variable
+   * @param intpart - the integer part of the result
+   * @return the fractional part of the result multiplied and cast to target value
+   */
+  template<typename T, typename U, typename V>
+  static T modfint(U input, V* intpart, uint8_t decimal_places);
 
   /**
    * Represent the content of buffer in hex.
@@ -177,6 +187,16 @@ inline T Misc::modulo(T a, U b)
 {
   T r = a % b;
   return (r < 0 ? r + b : r);
+}
+
+template<typename T, typename U, typename V>
+inline T Misc::modfint(U input, V* int_part, uint8_t decimal_places)
+{
+  U intpart_tmp = 0;
+  U fract_part_tmp = modf(input, &intpart_tmp);
+  T fract_part = round(fract_part_tmp * pow(10, decimal_places));
+  *int_part = static_cast<V>(intpart_tmp);
+  return fract_part;
 }
 
 inline int Misc::toHex(const uint8_t* data, uint32_t size, char* dst_str, uint32_t dst_size)
