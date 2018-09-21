@@ -77,7 +77,8 @@ TEST_F(BuffTest, reserve)
 
   ASSERT_EQ(true, success);
   ASSERT_TRUE(buff_.data() != nullptr);
-  ASSERT_TRUE(buff_.data() == data);
+  // Data may have moved to a different memory location
+  //ASSERT_TRUE(buff_.data() == data);
   ASSERT_EQ(uint32_t(4), buff_.capacity());
   ASSERT_EQ(uint32_t(1), buff_.size());
   ASSERT_EQ(uint32_t(1), buff_.available());
