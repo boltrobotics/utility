@@ -189,13 +189,13 @@ inline T Misc::modulo(T a, U b)
   return (r < 0 ? r + b : r);
 }
 
-template<typename T, typename U, typename V>
-inline T Misc::modfint(U input, V* int_part, uint8_t decimal_places)
+template<typename FractPartType, typename FloatType, typename IntPartType>
+inline FractPartType Misc::modfint(FloatType input, IntPartType* int_part, uint8_t dec_places)
 {
-  U intpart_tmp = 0;
-  U fract_part_tmp = modf(input, &intpart_tmp);
-  T fract_part = round(fract_part_tmp * pow(10, decimal_places));
-  *int_part = static_cast<V>(intpart_tmp);
+  double int_tmp = 0;
+  double fract_tmp = modf(input, &int_tmp);
+  FractPartType fract_part = static_cast<FractPartType>(round(fract_tmp * pow(10, dec_places)));
+  *int_part = static_cast<IntPartType>(int_tmp);
   return fract_part;
 }
 

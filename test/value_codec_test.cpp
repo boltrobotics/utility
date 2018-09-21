@@ -85,8 +85,7 @@ TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
 
   buff_.writeChunk(data);
   int64_t val64 = 0;
-  int success = ValueCodec::getFixedInt(
-      &buff_, &val64, sizeof(int64_t), false);
+  int success = ValueCodec::getFixedInt(&buff_, &val64, sizeof(int64_t), false);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int64_t(-506097522914230529), val64);
@@ -322,6 +321,44 @@ TEST_F(ValueCodecTest, testSetFixedIntNegative)
   success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
+}
+
+template<typename IntType, typename FractType>
+void decodeModf(Buff* buff, IntType int_part_expected, FractType fract_part_expected)
+{
+  // Decode integer part
+  IntType int_part_actual = 0;
+  int success = ValueCodec::getFixedInt(buff, &int_part_actual, sizeof(IntType), true);
+  ASSERT_EQ(ValueCodec::SUCCESS, success);
+  ASSERT_EQ(int_part_expected, int_part_actual);
+
+  // Decode fractional part
+  FractType fract_part_actual = 0;
+  success = ValueCodec::getFixedInt(buff, &fract_part_actual, sizeof(FractType), true);
+  ASSERT_EQ(ValueCodec::SUCCESS, success);
+  ASSERT_EQ(fract_part_expected, fract_part_actual);
+}
+
+TEST_F(ValueCodecTest, testEncodeModf)
+{
+  double val = Misc::PI;
+
+  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 2, true);
+  decodeModf<uint8_t, uint8_t>(&buff_, 3, 14);
+
+  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 1, true);
+  decodeModf<uint8_t, uint8_t>(&buff_, 3, 1);
+
+  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 0, true);
+  decodeModf<uint8_t, uint8_t>(&buff_, 3, 0);
+
+  val = 65535.65536;
+  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 5, true);
+  decodeModf<uint8_t, uint8_t>(&buff_, 255, 0);
+
+  val = 65536.65535;
+  ValueCodec::encodeModf<double, uint16_t, uint16_t>(&buff_, val, 5, true);
+  decodeModf<uint16_t, uint16_t>(&buff_, 0, 65535);
 }
 
 } // namespace btr

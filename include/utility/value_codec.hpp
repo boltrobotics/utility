@@ -20,6 +20,7 @@
 
 // PROJECT INCLUDES
 #include "utility/buff.hpp"
+#include "utility/misc.hpp"
 
 namespace btr
 {
@@ -123,14 +124,24 @@ public:
   static int getFixedInt(Buff* buff, IntType* val, uint32_t bytes, bool msb = true);
 
   /**
-   * Encode a number in different host order.
+   * Encode a fixed-size integer.
    *
    * @param buff - the buffer to store encoded value
-   * @param num - the value to encode
+   * @param val - the value to encode
    * @param msb - if true, encode in MSB order, otherwise in LSB
    */
   template<typename IntType>
   static void setFixedInt(Buff* buff, IntType val, bool msb = true);
+
+  /**
+   * Encode an integer and fractional parts of a floating-point number into two integers
+   *
+   * @param buff - the buffer to store encoded value
+   * @param val - the value to encode
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   */
+  template<typename FloatType, typename IntPartType, typename FractPartType>
+  static void encodeModf(Buff* buff, FloatType val, uint8_t dec_places, bool msb = true);
 
   /**
    * Check if the provided data can be converted into requested number.
@@ -291,6 +302,16 @@ inline void ValueCodec::setFixedInt(Buff* buff, IntType val, bool msb)
     }
   }
   buff->write(val);
+}
+
+template<typename FloatType, typename IntPartType, typename FractPartType>
+inline void ValueCodec::encodeModf(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
+{
+  IntPartType int_part = 0;
+  FractPartType fract_part = Misc::modfint<FractPartType, FloatType, IntPartType>(
+      val, &int_part, dec_places);
+  setFixedInt(buff, int_part, msb);
+  setFixedInt(buff, fract_part, msb);
 }
 
 inline int ValueCodec::check(Buff* buff, uint32_t target_size, uint32_t source_size)
