@@ -74,14 +74,15 @@ public:
    * Extend the buffer by preserving the existing content and read/write
    * positions.
    *
-   * @param bytes - the bytes to add to the existing buffer beyond what
-   *  is remaining() UNLESS minimal parameter is set to true
-   * @param minimial - if true, the flag treat bytes parameter as a target amount of free
-   *  space that the caller requires. The code will allocate only the difference between
-   *  requested bytes and the remaining() bytes. When the parameter is false, the bytes
-   *  parameter is treated as an additional space (beyond what is remaining()) that the
-   *  caller requires.
-   * @param reserve_mem - if true, allocate more memory if current capacity is insufficient
+   * @param bytes - two different cases:
+   *  1. The number of bytes to add to the existing buffer, regardless of current free bytes
+   *  2. The number of free bytes that the client requires, the function determines if it needs to
+   *    extend the buffer at all and by how much using delta of required and remaining() bytes
+   * @param minimial - if true, execute case #2 described above. Otherwise, When the parameter is
+   *  false, execute case #1 above.
+   * @param reserve_mem - if true, allocate more memory if current capacity is insufficient for the
+   *  requested buffer size. Otherwise, return false to indicate that the new requested size
+   *  exceeds allocated and available buffer space.
    * @return true if operation was successful, false otherwise
    */
   bool extend(uint32_t bytes, bool minimal = true, bool reserve_mem = true);
