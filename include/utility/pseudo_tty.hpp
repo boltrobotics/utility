@@ -17,11 +17,6 @@
 #define _btr_PseudoTTY_hpp__
 
 // SYSTEM INCLUDES
-#include <unistd.h>
-#include <thread>
-#include <chrono>
-#include <sys/wait.h>
-#include <signal.h>
 
 using namespace std::chrono_literals;
 
@@ -35,13 +30,14 @@ namespace btr
 #define PTY1 "PTY,link=" TTY_SIM_1 ",raw,echo=0"
 
 /**
- * The class provides a send/receive interface to a serial port.
+ * The class opens send and receive interfaces to a serial port upon constructing an instance.
+ * The serial port is to close when the instance gets destroyed.
  */
 class PseudoTTY
 {
 public:
 
-  // LIFECYCLE
+// LIFECYCLE
 
   /**
    * Forks a child process.
@@ -55,41 +51,10 @@ public:
 
 private:
 
-  // ATTRIBUTES
+// ATTRIBUTES
 
   pid_t child_pid_;
-
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// INLINE OPERATIONS
-////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////// PUBLIC ///////////////////////////////////
-
-//=================================== LIFECYCLE ================================
-
-inline PseudoTTY::PseudoTTY()
-{
-  switch (child_pid_ = vfork()) {
-    case -1:
-        throw std::runtime_error("Failed to fork pseudo TTY");
-    case 0: // child
-        execlp(PRG, PRG, PTY0, PTY1, (char*) NULL);
-        throw std::runtime_error("Failed to exec: " PRG);
-    default: // parent
-        std::this_thread::sleep_for(50ms);
-        break;
-  }
-}
-
-inline PseudoTTY::~PseudoTTY()
-{
-  if (child_pid_ > 0) {
-      kill(child_pid_, SIGTERM);
-      waitpid(child_pid_, NULL, 0);
-  }
-}
 
 } // namespace btr
 
