@@ -51,7 +51,7 @@ public:
   {
     uint8_t h[] =  { 'h','e','l','l','o' };
     wbuff_.resize(sizeof(h));
-    wbuff_.writeChunk(h);
+    wbuff_.write(h, sizeof(h) / sizeof(uint8_t));
     // Don't expect to receive endline character(s)
     rbuff_.resize(wbuff_.size());
   }

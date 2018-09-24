@@ -61,7 +61,8 @@ TEST(MiscTest, testModulo)
 TEST(MiscTest, toHex)
 {
   Buff buff(5);
-  buff.writeChunk({'0','1','a','b','c'});
+  uint8_t input[] = {'0','1','a','b','c'};
+  buff.write(input, 5);
   std::string output = TestHelpers::toHex(buff);
 
   ASSERT_EQ("30:31:61:62:63", output);

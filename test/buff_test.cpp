@@ -206,7 +206,7 @@ TEST_F(BuffTest, readWriteSingle)
   uint8_t output[3] = { 0 };
 
   for (uint8_t i = 0; i < 3; i++) {
-    ASSERT_EQ(true, buff_.read(&output[i]));
+    ASSERT_EQ(true, buff_.read(&output[i], true));
   }
   for (uint8_t i = 0; i < 3; i++) {
     ASSERT_EQ((i + 1), output[i]);
@@ -217,16 +217,16 @@ TEST_F(BuffTest, readWriteSingle)
   ASSERT_EQ(uint32_t(0), buff_.remaining());
 }
 
-TEST_F(BuffTest, readWriteChunk)
+TEST_F(BuffTest, readWrite)
 {
   buff_.reserve(7);
 
   uint8_t input1[] = { 1, 2, 3 };
-  bool result = buff_.writeChunk(input1);
+  bool result = buff_.write(input1, sizeof(input1));
   ASSERT_EQ(true, result);
 
   uint8_t input2[] = { 4, 5, 6 };
-  result = buff_.writeChunk(input2);
+  result = buff_.write(input2, sizeof(input2));
   ASSERT_EQ(true, result);
 
   ASSERT_EQ(uint32_t(6), buff_.available());
@@ -234,8 +234,8 @@ TEST_F(BuffTest, readWriteChunk)
   ASSERT_EQ(uint32_t(6), buff_.size());
   ASSERT_EQ(uint32_t(7), buff_.capacity());
 
-  uint8_t output[3] = { 0 };
-  ASSERT_EQ(true, buff_.readChunk(output));
+  uint8_t output[3] = { 0, 0, 0 };
+  ASSERT_EQ(true, buff_.read(output, sizeof(output), true));
 
   for (uint8_t i = 0; i < sizeof(output); i++) {
     ASSERT_EQ(input1[i], output[i]);
@@ -245,7 +245,7 @@ TEST_F(BuffTest, readWriteChunk)
   ASSERT_EQ(uint32_t(0), buff_.remaining());
   ASSERT_EQ(uint32_t(6), buff_.size());
 
-  ASSERT_EQ(true, buff_.readChunk(output));
+  ASSERT_EQ(true, buff_.read(output, 3, true));
 
   for (uint8_t i = 0; i < sizeof(output); i++) {
     ASSERT_EQ(input2[i], output[i]);
@@ -262,7 +262,7 @@ TEST_F(BuffTest, shiftOnWrite)
   buff_.reserve(2);
 
   const uint8_t chunk[] = { '2', '2' };
-  bool success = buff_.writeChunk(chunk, false);
+  bool success = buff_.write(chunk, 2, false);
 
   // It wasn't successful because it couldn't extend the size (note ASSERT_NE)
   ASSERT_NE(true, success);
@@ -273,7 +273,7 @@ TEST_F(BuffTest, shiftOnWrite)
   // Size: 1 + 2 = 3
   success = buff_.extend(2, false, true);
   ASSERT_EQ(true, success);
-  success = buff_.writeChunk(chunk, false);
+  success = buff_.write(chunk, 2, false);
   ASSERT_EQ(true, success);
 
   ASSERT_EQ(uint32_t(1), buff_.remaining());
@@ -292,7 +292,7 @@ TEST_F(BuffTest, shiftOnWrite)
   const uint8_t* data = buff_.data();
   const uint8_t chunk3[] = { '3', '3', '3' };
   // During this call, already consumed data will be shifted (discarded)
-  success = buff_.writeChunk(chunk3, false, false);
+  success = buff_.write(chunk3, 3, false, false);
 
   // No extension or reallocation was required
   ASSERT_EQ(true, success);
@@ -312,7 +312,7 @@ TEST_F(BuffTest, shiftOnWrite)
   // During this call, total 5 bytes in the buffer is required (4 new + 1 unconsumed). We
   // request to extend minimally (account for consumed 2 bytes) and reserve more memory for
   // the total amount.
-  success = buff_.writeChunk(chunk4, true, true);
+  success = buff_.write(chunk4, 4, true, true);
 
   ASSERT_EQ(true, success);
   ASSERT_EQ(uint32_t(0), buff_.consumed());

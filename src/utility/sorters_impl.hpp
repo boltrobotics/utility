@@ -1,4 +1,4 @@
-/* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
+/* Copyright (C) 2017 Bolt Robotics <info@boltrobotics.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _btr_Sorters_hpp_
-#define _btr_Sorters_hpp_
+#ifndef _btr_SortersImpl_hpp_
+#define _btr_SortersImpl_hpp_
 
 // SYSTEM INCLUDES
-#include <cinttypes>
+
+// PROJECT INCLUDES
 
 namespace btr
 {
@@ -27,14 +28,14 @@ namespace btr
  *
  * IMPORTANT: Implementation has to be compatible with AVR platform.
  */
-class Sorters
+class SortersImpl
 {
 public:
 
   // LIFECYCLE
 
-  Sorters() = delete;
-  ~Sorters() = delete;
+  SortersImpl() = delete;
+  ~SortersImpl() = delete;
 
   // OPERATIONS
 
@@ -42,14 +43,33 @@ public:
    * Sort array in-place using insertion sort.
    *
    * @param arr the elements to sort
-   * @param size the number of elements
    */
-  static void insertionSort(uint16_t* arr, uint32_t size);
+  template<typename T>
+  static void insertionSort(T* arr, uint32_t size);
 
 private:
 
-}; // class Sorters
+}; // class SortersImpl
+
+////////////////////////////////////////////////////////////////////////////////
+// INLINE OPERATIONS
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+inline void SortersImpl::insertionSort(T* arr, uint32_t size)
+{
+  for (uint32_t i = 1; i < size; i++) {
+    uint32_t j = i;
+
+    while (j > 0 && arr[j - 1] > arr[j]) {
+      T tmp = arr[j];
+      arr[j] = arr[j - 1];
+      arr[j - 1] = tmp;
+      j--;
+    }
+  }
+}
 
 } // namespace btr
 
-#endif // _btr_Sorters_hpp_
+#endif // _btr_SortersImpl_hpp_

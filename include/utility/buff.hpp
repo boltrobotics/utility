@@ -1,4 +1,4 @@
-/* Copyright (C) 2017 Bolt Robotics <info@boltrobotics.com>
+/* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
 #define _btr_Buff_hpp_
 
 // SYSTEM INCLUDES
-#include <stdlib.h>
-#include <string.h>
 #include <inttypes.h>
 
 namespace btr
@@ -54,6 +52,31 @@ public:
   const uint8_t* read_ptr() const;
   uint8_t*& read_ptr();
   uint8_t*& write_ptr();
+
+  /**
+   * @return the allocated memory size
+   */
+  uint32_t capacity() const;
+
+  /**
+   * @return the allocated memory size
+   */
+  uint32_t size() const;
+
+  /**
+   * @return the number of bytes between position 0 and read pointer.
+   */
+  uint32_t consumed() const;
+
+  /**
+   * @return the content length
+   */
+  uint32_t available() const;
+
+  /**
+   * @return the bytes in buffer available for writing
+   */
+  uint32_t remaining() const;
 
 // OPERATIONS
 
@@ -111,29 +134,11 @@ public:
   bool reserve(uint32_t new_capacity);
 
   /**
-   * @return the allocated memory size
+   * Advance read position.
+   *
+   * @param bytes - the number of bytes to advance read pointer
    */
-  uint32_t capacity() const;
-
-  /**
-   * @return the allocated memory size
-   */
-  uint32_t size() const;
-
-  /**
-   * @return the number of bytes between position 0 and read pointer.
-   */
-  uint32_t consumed() const;
-
-  /**
-   * @return the content length
-   */
-  uint32_t available() const;
-
-  /**
-   * @return the bytes in buffer available for writing
-   */
-  uint32_t remaining() const;
+  void advanceReadPtr(uint32_t bytes);
 
   /**
    * Read a single byte of content.
@@ -142,27 +147,20 @@ public:
    * @param advance - the flag indicating to advance read position
    * @return false if no data is avalable
    */
-  template<typename T>
-  bool read(T* v, bool advance = true);
+  bool read(uint8_t* v, bool advance);
 
   /**
    * Read a chunk of content.
    *
    * @param v - the storage for the data
+   * @param N - the number of data bytes
+   * @param advance - the flag indicating to advance read position
    * @return false if not enough data is avalable, true otherwise
    */
-  template<typename T, uint32_t N>
-  bool readChunk(T (&vals)[N], bool advance = true);
+  bool read(uint8_t* vals, uint32_t N, bool advance);
 
   /**
-   * Advance read position.
-   *
-   * @param bytes - the number of bytes to advance read pointer
-   */
-  void advanceReadPtr(uint32_t bytes);
-
-  /**
-   * Write scalar value to the buffer.
+   * Write a scalar value to the buffer.
    *
    * @param data - the data to write
    * @parma extend_size - the flag whether to extend size if current size is not sufficient
@@ -171,8 +169,9 @@ public:
    *  be caused by inability to allocate new memory if extend parameter is true
    *  or insufficient memory if extend parameter is false.
    */
-  template<typename T>
-  bool write(T val, bool extend_size = true, bool reserve_mem = true);
+  bool write(uint8_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(uint16_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(int16_t val, bool extend_size = true, bool reserve_mem = true);
 
   /**
    * Write array of bytes to the buffer.
@@ -184,10 +183,27 @@ public:
    *  be caused by inability to allocate new memory if extend parameter is true
    *  or insufficient memory if extend parameter is false.
    */
-  template<typename T, uint32_t N>
-  bool writeChunk(const T (&vals)[N], bool extend_size = true, bool reserve_mem = true);
+  bool write(const uint8_t* vals, uint32_t N, bool extend_size = true, bool reserve_mem = true);
 
 private:
+
+// OPERATIONS
+
+  /**
+   * Implementation.
+   */
+
+  template<typename T>
+  bool readImpl(T* val, bool advance);
+
+  template<typename T>
+  bool readImpl(T* vals, uint32_t N, bool advance);
+
+  template<typename T>
+  bool writeImpl(T val, bool extend_size, bool reserve_mem);
+
+  template<typename T>
+  bool writeImpl(const T* vals, uint32_t N, bool extend_size, bool reserve_mem);
 
 // ATTRIBUTES
 
@@ -198,259 +214,6 @@ private:
   uint8_t* write_ptr_;
 
 }; // class Buff
-
-////////////////////////////////////////////////////////////////////////////////
-// INLINE OPERATIONS
-////////////////////////////////////////////////////////////////////////////////
-
-inline Buff::Buff(uint32_t capacity)
-: capacity_(capacity),
-  size_(capacity),
-  data_((uint8_t*) malloc(capacity_)),
-  read_ptr_(data_),
-  write_ptr_(data_)
-{
-}
-
-inline Buff::~Buff()
-{
-  free(data_);
-  data_ = nullptr;
-  read_ptr_ = nullptr;
-  write_ptr_ = nullptr;
-}
-
-inline const uint8_t* Buff::data() const
-{
-  return data_;
-}
-
-inline const uint8_t* Buff::end() const
-{
-  return (data_ + size_);
-}
-
-inline const uint8_t* Buff::read_ptr() const
-{
-  return read_ptr_;
-}
-
-inline uint8_t*& Buff::read_ptr()
-{
-  return read_ptr_;
-}
-
-inline uint8_t*& Buff::write_ptr()
-{
-  return write_ptr_;
-}
-
-inline void Buff::reset()
-{
-  memset(data_, '\0', size_);
-  read_ptr_ = data_;
-  write_ptr_ = data_;
-}
-
-inline uint32_t Buff::shift()
-{
-  // Check if at least one byte was consumed so as to shift the data down to
-  // the begining of the buffer.
-  //
-  uint32_t bytes_consumed = consumed();
-
-  if (bytes_consumed > 0) {
-    uint32_t bytes_avail = available();
-
-    if (bytes_consumed >= bytes_avail) {
-      memcpy(data_, read_ptr(), bytes_avail);
-    } else {
-      uint8_t* next = data_;
-
-      while (available() > 0) {
-        *next = *read_ptr();
-        next++;
-        read_ptr()++;
-      }
-    }
-    read_ptr() = data_;
-    write_ptr() = data_ + bytes_avail;
-  }
-  return remaining();
-}
-
-inline bool Buff::extend(uint32_t bytes, bool minimal, bool reserve_mem)
-{
-  bool success = true;
-
-  if (minimal) {
-    uint32_t bytes_remain = remaining();
-
-    if (bytes > bytes_remain) {
-      success = resize(size_ + (bytes - bytes_remain), reserve_mem);
-    }
-  } else {
-    success = resize(size_ + bytes, reserve_mem);
-  }
-  return success;
-}
-
-inline bool Buff::resize(uint32_t new_size, bool reserve_mem)
-{
-  bool result = true;
-
-  if (new_size <= capacity()) {
-    size_ = new_size;
-
-    if (write_ptr() > end()) {
-      write_ptr() = data_ + size_;
-    }
-    if (read_ptr() > end()) {
-      read_ptr() = data_ + size_;
-    }
-  } else {
-    if (reserve_mem) {
-      result = reserve(new_size);
-
-      if (result) {
-        size_ = new_size;
-      }
-    } else {
-      result = false;
-    }
-  }
-  return result;
-}
-
-inline bool Buff::reserve(uint32_t new_capacity)
-{
-  if (new_capacity == 0) {
-    return false;
-  }
-
-  uint32_t read_offset = read_ptr_ - data_;
-  uint32_t write_offset = write_ptr_ - data_;
-  uint8_t* data = (uint8_t*) realloc(data_, new_capacity * sizeof(uint8_t));
-
-  if (data != nullptr) {
-    capacity_ = new_capacity;
-    size_ = (size_ <= capacity_ ? size_ : capacity_);
-
-    data_ = data;
-    const uint8_t* end = (data_ + size_);
-
-    if ((data_ + read_offset) <= end) {
-      read_ptr_ = data_ + read_offset;
-    } else {
-      read_ptr_ = data_;
-    }
-    if ((data_ + write_offset) <= end) {
-      write_ptr_ = data_ + write_offset;
-    } else {
-      write_ptr_ = data_;
-    }
-    memset(write_ptr_, 'y', remaining());
-    return true;
-  } else {
-    return false;
-  }
-}
-
-inline uint32_t Buff::capacity() const
-{
-  return capacity_;
-}
-
-inline uint32_t Buff::size() const
-{
-  return size_;
-}
-
-inline uint32_t Buff::consumed() const
-{
-  return (read_ptr() - data());
-}
-
-inline uint32_t Buff::available() const
-{
-  return (write_ptr_ - read_ptr_);
-}
-
-inline uint32_t Buff::remaining() const
-{
-  return ((data_ + size_) - write_ptr_);
-}
-
-template<typename T>
-inline bool Buff::read(T* v, bool advance)
-{
-  if (available() > 0) {
-    *v = *read_ptr();
-
-    if (advance) {
-      advanceReadPtr(1);
-    }
-    return true;
-  } else {
-    return false;
-  }
-}
-
-template<typename T, uint32_t N>
-inline bool Buff::readChunk(T (&vals)[N], bool advance)
-{
-  if (available() >= N) {
-    memcpy(vals, read_ptr(), N);
-
-    if (advance) {
-      advanceReadPtr(N);
-    }
-    return true;
-  } else {
-    return false;
-  }
-}
-
-inline void Buff::advanceReadPtr(uint32_t bytes)
-{
-  read_ptr() += bytes;
-}
-
-template<typename T>
-inline bool Buff::write(T val, bool extend_size, bool reserve_mem)
-{
-  T vals[] = { val };
-  return writeChunk(vals, extend_size, reserve_mem);
-}
-
-template<typename T, uint32_t N>
-inline bool Buff::writeChunk(const T (&vals)[N], bool extend_size, bool reserve_mem)
-{
-  bool success = true;
-  uint32_t bytes_target = sizeof(T) * N;
-  uint32_t bytes_remain = remaining();
-
-  if (bytes_remain < bytes_target) {
-    bytes_remain = shift();
-
-    if (bytes_remain < bytes_target) {
-      success = false;
-    } else {
-      success = true; // Some usable space is gained
-    }
-  }
-
-  if (!success && extend_size) {
-    success = extend(bytes_target, true, reserve_mem);
-  }
-  if (success) {
-    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(vals);
-    memcpy(write_ptr(), bytes, bytes_target);
-    write_ptr() += bytes_target;
-  }
-
-  return success;
-}
 
 } // namespace btr
 
