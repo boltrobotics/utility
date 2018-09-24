@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(utility)
 
-add_compile_options(-Wall -Wextra -Werror)
-
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 include(init)
 
