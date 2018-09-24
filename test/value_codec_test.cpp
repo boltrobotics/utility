@@ -323,42 +323,42 @@ TEST_F(ValueCodecTest, testSetFixedIntNegative)
   ASSERT_EQ(num, val);
 }
 
-template<typename IntType, typename FractType>
-void decodeModf(Buff* buff, IntType int_part_expected, FractType fract_part_expected)
+template<typename OutType>
+void decodeModf(Buff* buff, OutType ipart_expected, OutType fpart_expected, int line)
 {
   // Decode integer part
-  IntType int_part_actual = 0;
-  int success = ValueCodec::getFixedInt(buff, &int_part_actual, sizeof(IntType), true);
-  ASSERT_EQ(ValueCodec::SUCCESS, success);
-  ASSERT_EQ(int_part_expected, int_part_actual);
+  OutType ipart_actual = 0;
+  int success = ValueCodec::getFixedInt(buff, &ipart_actual, sizeof(OutType), true);
+  ASSERT_EQ(ValueCodec::SUCCESS, success) << "Line: " << line;
+  ASSERT_EQ(ipart_expected, ipart_actual) << "Line: " << line;
 
   // Decode fractional part
-  FractType fract_part_actual = 0;
-  success = ValueCodec::getFixedInt(buff, &fract_part_actual, sizeof(FractType), true);
-  ASSERT_EQ(ValueCodec::SUCCESS, success);
-  ASSERT_EQ(fract_part_expected, fract_part_actual);
+  OutType fpart_actual = 0;
+  success = ValueCodec::getFixedInt(buff, &fpart_actual, sizeof(OutType), true);
+  ASSERT_EQ(ValueCodec::SUCCESS, success) << "Line: " << line;
+  ASSERT_EQ(fpart_expected, fpart_actual) << "Line: " << line;
 }
 
 TEST_F(ValueCodecTest, testEncodeModf)
 {
   double val = Misc::PI;
 
-  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 2, true);
-  decodeModf<uint8_t, uint8_t>(&buff_, 3, 14);
+  ValueCodec::encodeModf<double, uint8_t>(&buff_, val, 2, true);
+  decodeModf<uint8_t>(&buff_, 3, 14, __LINE__);
 
-  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 1, true);
-  decodeModf<uint8_t, uint8_t>(&buff_, 3, 1);
+  ValueCodec::encodeModf<double, uint8_t>(&buff_, val, 1, true);
+  decodeModf<uint8_t>(&buff_, 3, 1, __LINE__);
 
-  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 0, true);
-  decodeModf<uint8_t, uint8_t>(&buff_, 3, 0);
+  ValueCodec::encodeModf<double, uint8_t>(&buff_, val, 0, true);
+  decodeModf<uint8_t>(&buff_, 3, 0, __LINE__);
 
   val = 65535.65536;
-  ValueCodec::encodeModf<double, uint8_t, uint8_t>(&buff_, val, 5, true);
-  decodeModf<uint8_t, uint8_t>(&buff_, 255, 0);
+  ValueCodec::encodeModf<double, uint8_t>(&buff_, val, 5, true);
+  decodeModf<uint8_t>(&buff_, 255, 0, __LINE__);
 
   val = 65536.65535;
-  ValueCodec::encodeModf<double, uint16_t, uint16_t>(&buff_, val, 5, true);
-  decodeModf<uint16_t, uint16_t>(&buff_, 0, 65535);
+  ValueCodec::encodeModf<double, uint16_t>(&buff_, val, 5, true);
+  decodeModf<uint16_t>(&buff_, 0, 65535, __LINE__);
 }
 
 } // namespace btr

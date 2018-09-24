@@ -150,8 +150,8 @@ public:
    * @param val - the value to encode
    * @param msb - if true, encode in MSB order, otherwise in LSB
    */
-  template<typename FloatType, typename IntPartType, typename FractPartType>
-  static void encodeModf(Buff* buff, FloatType val, uint8_t dec_places, bool msb = true);
+  template<typename InType, typename OutType>
+  static void encodeModf(Buff* buff, InType val, uint8_t dec_places, bool msb = true);
 
   /**
    * Check if the provided data can be converted into requested number.
@@ -317,18 +317,18 @@ inline void ValueCodec::setFixedInt(Buff* buff, IntType val, bool msb)
 template<typename IntType, typename FloatType>
 inline void ValueCodec::encodeShiftf(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
 {
-  IntType output = Misc::shiftfint<IntType, FloatType>(val, dec_places);
+  IntType output = Misc::shiftfint(val, dec_places);
   setFixedInt(buff, output, msb);
 }
 
-template<typename FloatType, typename IntPartType, typename FractPartType>
-inline void ValueCodec::encodeModf(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
+template<typename InType, typename OutType>
+inline void ValueCodec::encodeModf(Buff* buff, InType val, uint8_t dec_places, bool msb)
 {
-  IntPartType int_part = 0;
-  FractPartType fract_part = Misc::modfint<FractPartType, FloatType, IntPartType>(
-      val, &int_part, dec_places);
-  setFixedInt(buff, int_part, msb);
-  setFixedInt(buff, fract_part, msb);
+  OutType ipart = 0;
+  OutType fpart = 0;
+  Misc::modfint(val, &ipart, &fpart, dec_places);
+  setFixedInt(buff, ipart, msb);
+  setFixedInt(buff, fpart, msb);
 }
 
 inline int ValueCodec::check(Buff* buff, uint32_t target_size, uint32_t source_size)

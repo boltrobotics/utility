@@ -26,25 +26,25 @@ namespace btr
 
 TEST(MiscTest, testTranslatePosition)
 {
-  EXPECT_EQ(uint8_t(0), Misc::translate<int16_t>(-1.5, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(uint8_t(30), Misc::translate<int16_t>(-1.0, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(uint8_t(90), Misc::translate<int16_t>(0.0, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(uint8_t(150), Misc::translate<int16_t>(1.0, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(uint8_t(180), Misc::translate<int16_t>(1.5, -1.5, 1.5, 0, 180));
+  EXPECT_EQ(int16_t(0), (int16_t) Misc::translate(-1.5, -1.5, 1.5, 0, 180));
+  EXPECT_EQ(int16_t(30), (int16_t) Misc::translate(-1.0, -1.5, 1.5, 0, 180));
+  EXPECT_EQ(int16_t(90), (int16_t) Misc::translate(0.0, -1.5, 1.5, 0, 180));
+  EXPECT_EQ(int16_t(150), (int16_t) Misc::translate(1.0, -1.5, 1.5, 0, 180));
+  EXPECT_EQ(int16_t(180), (int16_t) Misc::translate(1.5, -1.5, 1.5, 0, 180));
 
-  EXPECT_DOUBLE_EQ(-1.5, Misc::translate<double>(0, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(-1.0, Misc::translate<double>(30, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(0.0, Misc::translate<double>(90, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(1.0, Misc::translate<double>(150, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(1.5, Misc::translate<double>(180, 0, 180, -1.5, 1.5));
+  EXPECT_DOUBLE_EQ(-1.5, Misc::translate(0, 0, 180, -1.5, 1.5));
+  EXPECT_DOUBLE_EQ(-1.0, Misc::translate(30, 0, 180, -1.5, 1.5));
+  EXPECT_DOUBLE_EQ(0.0, Misc::translate(90, 0, 180, -1.5, 1.5));
+  EXPECT_DOUBLE_EQ(1.0, Misc::translate(150, 0, 180, -1.5, 1.5));
+  EXPECT_DOUBLE_EQ(1.5, Misc::translate(180, 0, 180, -1.5, 1.5));
 }
 
 TEST(MiscTest, testTranslatePwm)
 {
-  EXPECT_DOUBLE_EQ(-255, Misc::translate<int16_t>(-1.0, -1.0, 0, -255, -65));
-  EXPECT_DOUBLE_EQ(-67, Misc::translate<int16_t>(-.012, -1.0, 0, -255, -65));
-  EXPECT_DOUBLE_EQ(67, Misc::translate<int16_t>(0.012, 0, 1.0, 65, 255));
-  EXPECT_DOUBLE_EQ(255, Misc::translate<int16_t>(1.0, 0, 1.0, 65, 255));
+  EXPECT_DOUBLE_EQ(-255, (int16_t) Misc::translate(-1.0, -1.0, 0, -255, -65));
+  EXPECT_DOUBLE_EQ(-67, (int16_t) Misc::translate(-.012, -1.0, 0, -255, -65));
+  EXPECT_DOUBLE_EQ(67, (int16_t) Misc::translate(0.012, 0, 1.0, 65, 255));
+  EXPECT_DOUBLE_EQ(255, (int16_t) Misc::translate(1.0, 0, 1.0, 65, 255));
 }
 
 TEST(MiscTest, testModulo)
@@ -72,26 +72,29 @@ TEST(MiscTest, testModfint)
 {
   double input = Misc::PI;
   uint8_t int_part = 0;
-  uint8_t fract_part = Misc::modfint<uint8_t>(input, &int_part, 2);
+  uint8_t fract_part = 0;
+
+  Misc::modfint(input, &int_part, &fract_part, 2);
   ASSERT_EQ(3, int_part);
   ASSERT_EQ(14, fract_part);
 
-  fract_part = Misc::modfint<uint8_t>(Misc::PI, &int_part, 1);
+  Misc::modfint(input, &int_part, &fract_part, 1);
   ASSERT_EQ(3, int_part);
   ASSERT_EQ(1, fract_part);
 
-  fract_part = Misc::modfint<uint8_t>(Misc::PI, &int_part, 0);
+  Misc::modfint(input, &int_part, &fract_part, 0);
   ASSERT_EQ(3, int_part);
   ASSERT_EQ(0, fract_part);
 
   input = 65535.65536;
-  fract_part = Misc::modfint<uint8_t>(input, &int_part, 5);
+  Misc::modfint(input, &int_part, &fract_part, 5);
   ASSERT_EQ(255, int_part);
   ASSERT_EQ(0, fract_part);
 
   input = 65536.65535;
   uint16_t int_part16 = 0;
-  uint16_t fract_part16 = Misc::modfint<uint16_t>(input, &int_part16, 5);
+  uint16_t fract_part16 = 0;
+  Misc::modfint(input, &int_part16, &fract_part16, 5);
   ASSERT_EQ(0, int_part16);
   ASSERT_EQ(65535, fract_part16);
 }
