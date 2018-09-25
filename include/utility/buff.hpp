@@ -171,7 +171,12 @@ public:
    */
   bool write(uint8_t val, bool extend_size = true, bool reserve_mem = true);
   bool write(uint16_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(uint32_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(uint64_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(int8_t val, bool extend_size = true, bool reserve_mem = true);
   bool write(int16_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(int32_t val, bool extend_size = true, bool reserve_mem = true);
+  bool write(int64_t val, bool extend_size = true, bool reserve_mem = true);
 
   /**
    * Write array of bytes to the buffer.

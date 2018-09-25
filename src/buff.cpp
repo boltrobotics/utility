@@ -235,7 +235,32 @@ bool Buff::write(uint16_t val, bool extend_size, bool reserve_mem)
   return writeImpl(val, extend_size, reserve_mem);
 }
 
+bool Buff::write(uint32_t val, bool extend_size, bool reserve_mem)
+{
+  return writeImpl(val, extend_size, reserve_mem);
+}
+
+bool Buff::write(uint64_t val, bool extend_size, bool reserve_mem)
+{
+  return writeImpl(val, extend_size, reserve_mem);
+}
+
+bool Buff::write(int8_t val, bool extend_size, bool reserve_mem)
+{
+  return writeImpl(val, extend_size, reserve_mem);
+}
+
 bool Buff::write(int16_t val, bool extend_size, bool reserve_mem)
+{
+  return writeImpl(val, extend_size, reserve_mem);
+}
+
+bool Buff::write(int32_t val, bool extend_size, bool reserve_mem)
+{
+  return writeImpl(val, extend_size, reserve_mem);
+}
+
+bool Buff::write(int64_t val, bool extend_size, bool reserve_mem)
 {
   return writeImpl(val, extend_size, reserve_mem);
 }

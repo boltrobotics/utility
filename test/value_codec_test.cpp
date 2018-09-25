@@ -50,7 +50,7 @@ TEST_F(ValueCodecTest, testGetFixedIntMsbOK)
 
   buff_.write(data, sizeof(data));
   int64_t val64 = 0;
-  int success = ValueCodec::getFixedInt(&buff_, &val64, sizeof(int64_t), true);
+  int success = ValueCodec::fixedInt(&buff_, &val64, sizeof(val64), true);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int64_t(-1), val64);
@@ -58,21 +58,21 @@ TEST_F(ValueCodecTest, testGetFixedIntMsbOK)
 
   buff_.write(data, sizeof(data));
   int32_t val32 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &val32, sizeof(int32_t), true);
+  success = ValueCodec::fixedInt(&buff_, &val32, sizeof(val32), true);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int64_t(-1), val32);
   ASSERT_EQ(uint32_t(4), buff_.available());
 
   uint8_t uval8 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &uval8, sizeof(uint8_t), true);
+  success = ValueCodec::fixedInt(&buff_, &uval8, sizeof(uval8), true);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint8_t(255), uval8);
   ASSERT_EQ(uint32_t(3), buff_.available());
 
   uint16_t uval16 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &uval16, sizeof(uint16_t), true);
+  success = ValueCodec::fixedInt(&buff_, &uval16, sizeof(uval16), true);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(65535), uval16);
@@ -85,7 +85,7 @@ TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
 
   buff_.write(data, sizeof(data));
   int64_t val64 = 0;
-  int success = ValueCodec::getFixedInt(&buff_, &val64, sizeof(int64_t), false);
+  int success = ValueCodec::fixedInt(&buff_, &val64, sizeof(int64_t), false);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int64_t(-506097522914230529), val64);
@@ -93,21 +93,21 @@ TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
 
   buff_.write(data, sizeof(data));
   int32_t val32 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &val32, sizeof(int32_t), false);
+  success = ValueCodec::fixedInt(&buff_, &val32, sizeof(int32_t), false);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int64_t(-50462977), val32);
   ASSERT_EQ(uint32_t(4), buff_.available());
 
   uint8_t uval8 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &uval8, sizeof(uint8_t), false);
+  success = ValueCodec::fixedInt(&buff_, &uval8, sizeof(uint8_t), false);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint8_t(251), uval8);
   ASSERT_EQ(uint32_t(3), buff_.available());
 
   uint16_t uval16 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &uval16, sizeof(uint16_t), false);
+  success = ValueCodec::fixedInt(&buff_, &uval16, sizeof(uint16_t), false);
 
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(63994), uval16);
@@ -120,12 +120,12 @@ TEST_F(ValueCodecTest, testGetFixedIntBad)
 
   buff_.write(data, sizeof(data));
   int64_t val64 = 0;
-  int success = ValueCodec::getFixedInt(&buff_, &val64, sizeof(int64_t), false);
+  int success = ValueCodec::fixedInt(&buff_, &val64, sizeof(int64_t), false);
   ASSERT_EQ(ValueCodec::SMALL_BUFF, success);
   ASSERT_EQ(uint32_t(4), buff_.available());
 
   int16_t val16 = 0;
-  success = ValueCodec::getFixedInt(&buff_, &val16, sizeof(val16) + 1, true);
+  success = ValueCodec::fixedInt(&buff_, &val16, sizeof(val16) + 1, true);
   ASSERT_EQ(ValueCodec::SMALL_VALUE, success);
   ASSERT_EQ(uint32_t(4), buff_.available());
 }
@@ -160,34 +160,37 @@ TEST_F(ValueCodecTest, testGetNBitVarInt)
   // Bits are all 1s
   //
   buff_.write(ARRAY(0xFF), 1);
-  uint8_t v1 = ValueCodec::getNBitVarInt<uint8_t>(&buff_, ARRAY(0x86));
+  uint8_t v1 = 0;
+  ValueCodec::varIntNBits(&buff_, &v1, ARRAY(0x86), 1);
   ASSERT_EQ(uint8_t(0b111111), v1);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write(ARRAY(0xFF), 1);
-  uint8_t v2 = ValueCodec::getNBitVarInt<uint8_t>(&buff_, ARRAY(0x2));
+  uint8_t v2 = 0;
+  ValueCodec::varIntNBits(&buff_, &v2, ARRAY(0x2), 1);
   ASSERT_EQ(uint8_t(0b11), v2);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write(ARRAY(0x1F, 0xFF), 2);
-  uint16_t v3 = ValueCodec::getNBitVarInt<uint16_t>(&buff_, ARRAY(0x05, 0x88));
+  uint16_t v3 = 0;
+  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x88), 2);
   ASSERT_EQ(uint16_t(0b1111111111111), v3);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   // Mixed bits
   //
   buff_.write(ARRAY(0xAC), 1);
-  v1 = ValueCodec::getNBitVarInt<uint8_t>(&buff_, ARRAY(0x86));
+  ValueCodec::varIntNBits(&buff_, &v1, ARRAY(0x86), 1);
   ASSERT_EQ(uint8_t(0b101011), v1);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write(ARRAY(0xAE), 1);
-  v2 = ValueCodec::getNBitVarInt<uint8_t>(&buff_, ARRAY(0x2));
+  ValueCodec::varIntNBits(&buff_, &v2, ARRAY(0x2), 1);
   ASSERT_EQ(uint8_t(0b10), v2);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write(ARRAY(0x17, 0x19), 2);
-  v3 = ValueCodec::getNBitVarInt<uint16_t>(&buff_, ARRAY(0x05, 0x88));
+  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x88), 2);
   ASSERT_EQ(uint16_t(0b1011100011001), v3);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
@@ -195,7 +198,7 @@ TEST_F(ValueCodecTest, testGetNBitVarInt)
   // because all 8 bits are requested.
   //
   buff_.write(ARRAY(0x17, 0x19), 2);
-  v3 = ValueCodec::getNBitVarInt<uint16_t>(&buff_, ARRAY(0x05, 0x08));
+  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x08), 2);
   ASSERT_EQ(uint16_t(0b1011100011001), v3);
   ASSERT_EQ(uint32_t(0), buff_.available());
 }
@@ -204,21 +207,21 @@ TEST_F(ValueCodecTest, testGet7BitVarInt)
 {
   buff_.write(ARRAY(0x0F), 1);
   uint8_t v1 = 0;
-  int success = ValueCodec::get7BitVarInt(&buff_, &v1);
+  int success = ValueCodec::varInt7Bits(&buff_, &v1);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint8_t(0xF), v1);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write(ARRAY(0x8F, 0x7F), 2);
   uint16_t v2 = 0;
-  success = ValueCodec::get7BitVarInt(&buff_, &v2);
+  success = ValueCodec::varInt7Bits(&buff_, &v2);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(0x7FF), v2);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write(ARRAY(0x82, 0x88, 0x1, 0x3), 4);
   uint16_t v3 = 0;
-  success = ValueCodec::get7BitVarInt(&buff_, &v3);
+  success = ValueCodec::varInt7Bits(&buff_, &v3);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(0x421), v3);
   ASSERT_EQ(uint32_t(1), buff_.available());
@@ -229,14 +232,14 @@ TEST_F(ValueCodecTest, testGetVarIntBad)
   // Buffer is small and high bit is set.
   buff_.write(ARRAY(0x82), 1);
   uint16_t v1 = 0;
-  int success = ValueCodec::get7BitVarInt(&buff_, &v1);
+  int success = ValueCodec::varInt7Bits(&buff_, &v1);
   ASSERT_EQ(ValueCodec::SMALL_BUFF, success);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   // High bit is not set.
   buff_.write(ARRAY(0x82, 0x88, 0x81, 0x3), 4);
   uint16_t v2 = 0;
-  success = ValueCodec::get7BitVarInt(&buff_, &v2);
+  success = ValueCodec::varInt7Bits(&buff_, &v2);
   ASSERT_EQ(ValueCodec::SMALL_VALUE, success);
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
@@ -249,35 +252,35 @@ TEST_F(ValueCodecTest, testSetFixedIntPositive)
   // If this host is little-endian, the number is encoded in lSB, 0x0204
   buff_.write(num);
   // Decode in MSB
-  int success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
+  int success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(0x0204), val);
 
   // If this host is little-endian, the number is encoded in LSB, 0x0204
   buff_.write(num);
   // Decode in LSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), false);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
 
   // If this host is little-endian, the number is encoded in MSB, 0x0402
-  ValueCodec::setFixedInt(&buff_, num, true);
+  ValueCodec::fixedInt(&buff_, num, true);
   // Decode in MSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
 
   // If this host is little-endian, the number is encoded in LSB, 0x0204
-  ValueCodec::setFixedInt(&buff_, num, false);
+  ValueCodec::fixedInt(&buff_, num, false);
   // Decode in MSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(0x0204), val);
 
   // If this host is little-endian, the number is encoded in LSB, 0x0204
-  ValueCodec::setFixedInt(&buff_, num, false);
+  ValueCodec::fixedInt(&buff_, num, false);
   // Decode in MSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), false);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
 }
@@ -290,35 +293,35 @@ TEST_F(ValueCodecTest, testSetFixedIntNegative)
   // If this host is little-endian, the number is encoded in lSB, -0x0204
   buff_.write(num);
   // Decode in MSB
-  int success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
+  int success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int16_t(-0x0105), val);
 
   // If this host is little-endian, the number is encoded in LSB, -0x0204
   buff_.write(num);
   // Decode in LSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), false);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
 
   // If this host is little-endian, the number is encoded in MSB, -0x0402
-  ValueCodec::setFixedInt(&buff_, num, true);
+  ValueCodec::fixedInt(&buff_, num, true);
   // Decode in MSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
 
   // If this host is little-endian, the number is encoded in LSB, -0x0204
-  ValueCodec::setFixedInt(&buff_, num, false);
+  ValueCodec::fixedInt(&buff_, num, false);
   // Decode in MSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), true);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(int16_t(-0x0105), val);
 
   // If this host is little-endian, the number is encoded in LSB, -0x0204
-  ValueCodec::setFixedInt(&buff_, num, false);
+  ValueCodec::fixedInt(&buff_, num, false);
   // Decode in MSB
-  success = ValueCodec::getFixedInt(&buff_, &val, sizeof(val), false);
+  success = ValueCodec::fixedInt(&buff_, &val, sizeof(val), false);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(num, val);
 }
@@ -328,13 +331,13 @@ void decodeModf(Buff* buff, OutType ipart_expected, OutType fpart_expected, int 
 {
   // Decode integer part
   OutType ipart_actual = 0;
-  int success = ValueCodec::getFixedInt(buff, &ipart_actual, sizeof(OutType), true);
+  int success = ValueCodec::fixedInt(buff, &ipart_actual, sizeof(OutType), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success) << "Line: " << line;
   ASSERT_EQ(ipart_expected, ipart_actual) << "Line: " << line;
 
   // Decode fractional part
   OutType fpart_actual = 0;
-  success = ValueCodec::getFixedInt(buff, &fpart_actual, sizeof(OutType), true);
+  success = ValueCodec::fixedInt(buff, &fpart_actual, sizeof(OutType), true);
   ASSERT_EQ(ValueCodec::SUCCESS, success) << "Line: " << line;
   ASSERT_EQ(fpart_expected, fpart_actual) << "Line: " << line;
 }
