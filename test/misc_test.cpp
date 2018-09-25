@@ -26,25 +26,42 @@ namespace btr
 
 TEST(MiscTest, testTranslatePosition)
 {
-  EXPECT_EQ(int16_t(0), (int16_t) Misc::translate(-1.5, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(int16_t(30), (int16_t) Misc::translate(-1.0, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(int16_t(90), (int16_t) Misc::translate(0.0, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(int16_t(150), (int16_t) Misc::translate(1.0, -1.5, 1.5, 0, 180));
-  EXPECT_EQ(int16_t(180), (int16_t) Misc::translate(1.5, -1.5, 1.5, 0, 180));
+  int16_t v = 0;
+  Misc::translate(-1.5, -1.5, 1.5, 0, 180, &v);
+  EXPECT_EQ(0, v);
+  Misc::translate(-1.0, -1.5, 1.5, 0, 180, &v);
+  EXPECT_EQ(30, v);
+  Misc::translate(0.0, -1.5, 1.5, 0, 180, &v);
+  EXPECT_EQ(90, v);
+  Misc::translate(1.0, -1.5, 1.5, 0, 180, &v);
+  EXPECT_EQ(150, v);
+  Misc::translate(1.5, -1.5, 1.5, 0, 180, &v);
+  EXPECT_EQ(180, v);
 
-  EXPECT_DOUBLE_EQ(-1.5, Misc::translate(0, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(-1.0, Misc::translate(30, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(0.0, Misc::translate(90, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(1.0, Misc::translate(150, 0, 180, -1.5, 1.5));
-  EXPECT_DOUBLE_EQ(1.5, Misc::translate(180, 0, 180, -1.5, 1.5));
+  double d = 0.0;
+  Misc::translate(0, 0, 180, -1.5, 1.5, &d);
+  EXPECT_DOUBLE_EQ(-1.5, d);
+  Misc::translate(30, 0, 180, -1.5, 1.5, &d);
+  EXPECT_DOUBLE_EQ(-1.0, d);
+  Misc::translate(90, 0, 180, -1.5, 1.5, &d);
+  EXPECT_DOUBLE_EQ(0.0, d);
+  Misc::translate(150, 0, 180, -1.5, 1.5, &d);
+  EXPECT_DOUBLE_EQ(1.0, d);
+  Misc::translate(180, 0, 180, -1.5, 1.5, &d);
+  EXPECT_DOUBLE_EQ(1.5, d);
 }
 
 TEST(MiscTest, testTranslatePwm)
 {
-  EXPECT_DOUBLE_EQ(-255, (int16_t) Misc::translate(-1.0, -1.0, 0, -255, -65));
-  EXPECT_DOUBLE_EQ(-67, (int16_t) Misc::translate(-.012, -1.0, 0, -255, -65));
-  EXPECT_DOUBLE_EQ(67, (int16_t) Misc::translate(0.012, 0, 1.0, 65, 255));
-  EXPECT_DOUBLE_EQ(255, (int16_t) Misc::translate(1.0, 0, 1.0, 65, 255));
+  int16_t v;
+  Misc::translate(-1.0, -1.0, 0, -255, -65, &v);
+  EXPECT_DOUBLE_EQ(-255, v);
+  Misc::translate(-.012, -1.0, 0, -255, -65, &v);
+  EXPECT_DOUBLE_EQ(-67, v);
+  Misc::translate(0.012, 0, 1.0, 65, 255, &v);
+  EXPECT_DOUBLE_EQ(67, v);
+  Misc::translate(1.0, 0, 1.0, 65, 255, &v);
+  EXPECT_DOUBLE_EQ(255, v);
 }
 
 TEST(MiscTest, testModulo)

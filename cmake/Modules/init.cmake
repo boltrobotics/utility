@@ -19,7 +19,21 @@ set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 set(CMAKE_CXX_STANDARD 14)
 
 ####################################################################################################
-# Unit tests {
+# Cross-compilation {
+
+set(BOARD_FAMILY $ENV{BOARD_FAMILY})
+
+if (NOT BOARD_FAMILY)
+  message(STATUS "Setting default BOARD_FAMILY to x86 (options: stm32 | arduino | x86")
+  set(BOARD_FAMILY "x86")
+endif()
+
+add_definitions(-D${BOARD_FAMILY})
+
+# }
+
+####################################################################################################
+# Unit testing {
 
 if (NOT ENABLE_TESTS)
   set(ENABLE_TESTS ON)

@@ -17,7 +17,7 @@
 #define _btr_Sorters_hpp_
 
 // SYSTEM INCLUDES
-#include <cinttypes>
+#include <inttypes.h>
 
 namespace btr
 {
@@ -42,13 +42,32 @@ public:
    * Sort array in-place using insertion sort.
    *
    * @param arr the elements to sort
-   * @param size the number of elements
    */
-  static void insertionSort(uint16_t* arr, uint32_t size);
-
-private:
+  template<typename T>
+  static void insertionSort(T* arr, uint32_t size);
 
 }; // class Sorters
+
+/////////////////////////////////////////////// INLINE /////////////////////////////////////////////
+
+/////////////////////////////////////////////// PUBLIC /////////////////////////////////////////////
+
+//============================================= OPERATIONS =========================================
+
+template<typename T>
+inline void Sorters::insertionSort(T* arr, uint32_t size)
+{
+  for (uint32_t i = 1; i < size; i++) {
+    uint32_t j = i;
+
+    while (j > 0 && arr[j - 1] > arr[j]) {
+      T tmp = arr[j];
+      arr[j] = arr[j - 1];
+      arr[j - 1] = tmp;
+      j--;
+    }
+  }
+}
 
 } // namespace btr
 

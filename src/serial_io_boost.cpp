@@ -13,6 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+#if defined(x86)
+
 // SYSTEM INCLUDES
 #include <boost/bind.hpp>
 
@@ -138,3 +140,5 @@ void SerialIOBoost::onTimeout(const boost::system::error_code& error)
 }
 
 } // namespace btr
+
+#endif // defined(x86)

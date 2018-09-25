@@ -18,6 +18,8 @@
 
 // SYSTEM INCLUDES
 #include <inttypes.h>
+#include <cmath>
+#include <cstring>
 
 // PROJECT INCLUDES
 
@@ -50,15 +52,16 @@ public:
   /**
    * Translate a value from one range to the value in another.
    *
-   * @param value - the position to translate
+   * @param val - the position to translate
    * @param left_min - minimum value of input range
    * @param left_max - maximum value of input range
    * @param right_min - minimum value of output range
    * @param right_max - maximum value of output range
-   * @return the translated value
+   * @param output - the translated value
    */
-  static double translate(
-    double value, double left_min, double left_max, double right_min, double right_max);
+  template<typename T>
+  static void translate(
+    double value, double left_min, double left_max, double right_min, double right_max, T* output);
 
   /**
    * Get a sign of the provided value.
@@ -66,21 +69,8 @@ public:
    * @param val - the value to get the sign of
    * @return - 1 if the value is positive, -1 otherwise
    */
-  static int8_t sign(int16_t val);
-
-  /**
-   * Convert angle in degrees to radians.
-   *
-   * @param degrees - the angle in degrees
-   */
-  static double toRadians(uint8_t degrees);
-
-  /**
-   * Convert angle in radians to degrees.
-   *
-   * @param radians - the angle in radians
-   */
-  static double toDegrees(double radians);
+  template <typename T>
+  static int8_t sign(T val);
 
   /**
    * Calculate angle delta squared.
@@ -97,7 +87,22 @@ public:
    * @param a - left parameter
    * @param b - right parameter
    */
-  static int16_t modulo(int16_t a, int16_t b);
+  template<typename T, typename U>
+  static T modulo(T a, U b);
+
+  /**
+   * Convert angle in degrees to radians.
+   *
+   * @param degrees - the angle in degrees
+   */
+  static double toRadians(uint8_t degrees);
+
+  /**
+   * Convert angle in radians to degrees.
+   *
+   * @param radians - the angle in radians
+   */
+  static double toDegrees(double radians);
 
   /**
    * Represent the content of buffer in hex.
@@ -118,7 +123,8 @@ public:
    * @param decimal_places - the number of places to shift by
    * @return the resulting integer
    */
-  static void shiftfint(double input, uint16_t* output, uint8_t decimal_places);
+  template<typename InType, typename OutType>
+  static void shiftfint(InType input, OutType* output, uint8_t decimal_places);
 
   /**
    * Break input value into integer and fractional parts. Multiply the fractional
@@ -129,33 +135,108 @@ public:
    * @param fpart - fractional part of the result
    * @param decimal_places - the number of decimal places in fractional part
    */
-  static void modfint(double input, uint8_t* ipart, uint8_t* fpart, uint8_t decimal_places);
-  static void modfint(double input, uint16_t* ipart, uint16_t* fpart, uint8_t decimal_places);
-
-private:
-
-// OPERATIONS
-
-  /**
-   * Internal implementation.
-   */
-  template<typename T>
-  static T translateImpl(
-    double value, double left_min, double left_max, double right_min, double right_max);
-
-  template <typename T>
-  static int8_t signImpl(T val);
-
-  template<typename T, typename U>
-  static T moduloImpl(T a, U b);
-
   template<typename InType, typename OutType>
-  static void shiftfintImpl(InType input, OutType* output, uint8_t decimal_places);
-
-  template<typename InType, typename OutType>
-  static void modfintImpl(InType input, OutType* ipart, OutType* fpart, uint8_t decimal_places);
+  static void modfint(InType input, OutType* ipart, OutType* fpart, uint8_t decimal_places);
 
 }; // class Misc
+
+/////////////////////////////////////////////// INLINE /////////////////////////////////////////////
+
+/////////////////////////////////////////////// PUBLIC /////////////////////////////////////////////
+
+//============================================= OPERATIONS =========================================
+
+template<typename T>
+inline void Misc::translate(
+    double value,
+    double left_min,
+    double left_max,
+    double right_min,
+    double right_max,
+    T* output)
+{
+  double left_range = left_max - left_min;
+  double right_range = right_max - right_min;
+  double value_scaled = (value - left_min) / left_range;
+  *output = static_cast<T>(right_min + (value_scaled * right_range));
+}
+
+template <typename T>
+inline int8_t Misc::sign(T val)
+{
+  return (T(0) < val) - (val < T(0));
+}
+
+inline double Misc::delta(double angle1, double angle2)
+{
+  return std::pow((angle1 - angle2), 2);
+}
+
+template<typename T, typename U>
+inline T Misc::modulo(T a, U b)
+{
+  T r = a % b;
+  return (r < 0 ? r + b : r);
+}
+
+inline double Misc::toRadians(uint8_t angle)
+{
+  return (angle * PI / 180);
+}
+
+inline double Misc::toDegrees(double rad)
+{
+  return (rad * 180 / PI);
+}
+
+inline int Misc::toHex(const uint8_t* data, uint32_t size, char* dst_str, uint32_t dst_size)
+{
+  if (size == 0 || dst_size < (size * 3)) {
+    return -1;
+  }
+
+  static const char lut[] = "0123456789ABCDEF";
+
+  for (uint32_t i = 0, j = 0; i < size; i++, j += 3) {
+    const uint8_t c = data[i];
+    dst_str[j] = lut[c >> 4];
+    dst_str[j + 1] = lut[c & 15];
+    dst_str[j + 2] = ':';
+  }
+
+  dst_str[dst_size - 1] = '\0';
+  return 0;
+}
+
+#if 0
+template<typename T, uint32_t N>
+inline std::string Misc::toString(T (&vals)[N])
+{
+  std::stringstream ss;
+  ss << vals[0];
+
+  for (uint32_t i = 1; i < N; i++) {
+    ss << "," << vals[i];
+  }
+  return ss.str();
+}
+#endif
+
+template<typename InType, typename OutType>
+inline void Misc::shiftfint(InType input, OutType* output, uint8_t dec_places)
+{
+  *output = round(input * pow(10, dec_places));
+}
+
+template<typename InType, typename OutType>
+inline void Misc::modfint(InType input, OutType* ipart, OutType* fpart, uint8_t dec_places)
+{
+  double ipart_tmp = 0;
+  double fpart_tmp = modf(input, &ipart_tmp);
+
+  *ipart = static_cast<OutType>(ipart_tmp);
+  shiftfint(fpart_tmp, fpart, dec_places);
+}
 
 } // namespace btr
 

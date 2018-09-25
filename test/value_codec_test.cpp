@@ -15,6 +15,7 @@
 
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
+#include <iostream>
 
 // PROJECT INCLUDES
 #include "utility/value_codec.hpp"
@@ -33,7 +34,8 @@ public:
   // LIFECYCLE
 
   ValueCodecTest()
-  : buff_(32)
+  :
+    buff_(32)
   {
   }
 
@@ -46,9 +48,9 @@ public:
 
 TEST_F(ValueCodecTest, testGetFixedIntMsbOK)
 {
-  uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; 
+  uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-  buff_.write(data, sizeof(data));
+  buff_.write(data);
   int64_t val64 = 0;
   int success = ValueCodec::fixedInt(&buff_, &val64, sizeof(val64), true);
 
@@ -56,7 +58,7 @@ TEST_F(ValueCodecTest, testGetFixedIntMsbOK)
   ASSERT_EQ(int64_t(-1), val64);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(data, sizeof(data));
+  buff_.write(data);
   int32_t val32 = 0;
   success = ValueCodec::fixedInt(&buff_, &val32, sizeof(val32), true);
 
@@ -83,7 +85,7 @@ TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
 
-  buff_.write(data, sizeof(data));
+  buff_.write(data);
   int64_t val64 = 0;
   int success = ValueCodec::fixedInt(&buff_, &val64, sizeof(int64_t), false);
 
@@ -91,7 +93,7 @@ TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
   ASSERT_EQ(int64_t(-506097522914230529), val64);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(data, sizeof(data));
+  buff_.write(data);
   int32_t val32 = 0;
   success = ValueCodec::fixedInt(&buff_, &val32, sizeof(int32_t), false);
 
@@ -118,7 +120,7 @@ TEST_F(ValueCodecTest, testGetFixedIntBad)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC};
 
-  buff_.write(data, sizeof(data));
+  buff_.write(data);
   int64_t val64 = 0;
   int success = ValueCodec::fixedInt(&buff_, &val64, sizeof(int64_t), false);
   ASSERT_EQ(ValueCodec::SMALL_BUFF, success);
@@ -155,71 +157,71 @@ TEST_F(ValueCodecTest, testSwap)
   }
 }
 
-TEST_F(ValueCodecTest, testGetNBitVarInt)
+TEST_F(ValueCodecTest, testVarIntNBits)
 {
   // Bits are all 1s
   //
-  buff_.write(ARRAY(0xFF), 1);
+  buff_.write((uint8_t) 0xFF);
   uint8_t v1 = 0;
-  ValueCodec::varIntNBits(&buff_, &v1, ARRAY(0x86), 1);
-  ASSERT_EQ(uint8_t(0b111111), v1);
-  ASSERT_EQ(uint32_t(0), buff_.available());
+  ValueCodec::varIntNBits(&buff_, &v1, ARRAY(0x86), true);
+  ASSERT_EQ(0b111111, v1);
+  ASSERT_EQ(0, buff_.available());
 
-  buff_.write(ARRAY(0xFF), 1);
+  buff_.write((uint8_t) 0xFF);
   uint8_t v2 = 0;
-  ValueCodec::varIntNBits(&buff_, &v2, ARRAY(0x2), 1);
+  ValueCodec::varIntNBits(&buff_, &v2, ARRAY(0x2), true);
   ASSERT_EQ(uint8_t(0b11), v2);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(ARRAY(0x1F, 0xFF), 2);
+  buff_.write(ARRAY(0x1F, 0xFF));
   uint16_t v3 = 0;
-  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x88), 2);
+  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x88), true);
   ASSERT_EQ(uint16_t(0b1111111111111), v3);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   // Mixed bits
   //
-  buff_.write(ARRAY(0xAC), 1);
-  ValueCodec::varIntNBits(&buff_, &v1, ARRAY(0x86), 1);
+  buff_.write((uint8_t) 0xAC);
+  ValueCodec::varIntNBits(&buff_, &v1, ARRAY(0x86), true);
   ASSERT_EQ(uint8_t(0b101011), v1);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(ARRAY(0xAE), 1);
-  ValueCodec::varIntNBits(&buff_, &v2, ARRAY(0x2), 1);
+  buff_.write((uint8_t) 0xAE);
+  ValueCodec::varIntNBits(&buff_, &v2, ARRAY(0x2), true);
   ASSERT_EQ(uint8_t(0b10), v2);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(ARRAY(0x17, 0x19), 2);
-  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x88), 2);
+  buff_.write(ARRAY(0x17, 0x19));
+  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x88), true);
   ASSERT_EQ(uint16_t(0b1011100011001), v3);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   // Second by has high bit clear. Result should be identical to the previous
   // because all 8 bits are requested.
   //
-  buff_.write(ARRAY(0x17, 0x19), 2);
-  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x08), 2);
+  buff_.write(ARRAY(0x17, 0x19));
+  ValueCodec::varIntNBits(&buff_, &v3, ARRAY(0x05, 0x08), true);
   ASSERT_EQ(uint16_t(0b1011100011001), v3);
   ASSERT_EQ(uint32_t(0), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testGet7BitVarInt)
+TEST_F(ValueCodecTest, testVarInt7Bits)
 {
-  buff_.write(ARRAY(0x0F), 1);
+  buff_.write(ARRAY(0x0F));
   uint8_t v1 = 0;
   int success = ValueCodec::varInt7Bits(&buff_, &v1);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint8_t(0xF), v1);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(ARRAY(0x8F, 0x7F), 2);
+  buff_.write(ARRAY(0x8F, 0x7F));
   uint16_t v2 = 0;
   success = ValueCodec::varInt7Bits(&buff_, &v2);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
   ASSERT_EQ(uint16_t(0x7FF), v2);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
-  buff_.write(ARRAY(0x82, 0x88, 0x1, 0x3), 4);
+  buff_.write(ARRAY(0x82, 0x88, 0x1, 0x3));
   uint16_t v3 = 0;
   success = ValueCodec::varInt7Bits(&buff_, &v3);
   ASSERT_EQ(ValueCodec::SUCCESS, success);
@@ -227,17 +229,17 @@ TEST_F(ValueCodecTest, testGet7BitVarInt)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testGetVarIntBad)
+TEST_F(ValueCodecTest, testVarInt7BitsBad)
 {
   // Buffer is small and high bit is set.
-  buff_.write(ARRAY(0x82), 1);
+  buff_.write(ARRAY(0x82));
   uint16_t v1 = 0;
   int success = ValueCodec::varInt7Bits(&buff_, &v1);
   ASSERT_EQ(ValueCodec::SMALL_BUFF, success);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   // High bit is not set.
-  buff_.write(ARRAY(0x82, 0x88, 0x81, 0x3), 4);
+  buff_.write(ARRAY(0x82, 0x88, 0x81, 0x3));
   uint16_t v2 = 0;
   success = ValueCodec::varInt7Bits(&buff_, &v2);
   ASSERT_EQ(ValueCodec::SMALL_VALUE, success);
