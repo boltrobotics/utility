@@ -1,20 +1,16 @@
-include(project_setup)
 include(gtest)
 
 include_directories(
+  ${gtest_INC_DIR}
   ${PROJECT_SOURCE_DIR}/include
 )
 
-add_compile_options(-Wall -Wextra -Werror)
 file(GLOB SOURCES "*.cpp")
-add_executable(utility_tests ${SOURCES})
+list(LENGTH SOURCES SOURCES_LEN)
 
-if (APPLE OR WIN32)
-  #target_link_libraries(utility_tests ${UTILITY_LIB} gtest boost_system-mt boost_thread-mt)
-  target_link_libraries(utility_tests utility ${GTEST_LIBRARIES} ${Boost_LIBRARIES})
-else ()
-  #target_link_libraries(utility_tests ${UTILITY_LIB} gtest boost_system boost_thread)
-  target_link_libraries(utility_tests utility ${GTEST_LIBRARIES} ${Boost_LIBRARIES})
+if (SOURCES_LEN GREATER 0)
+  add_compile_options(-Wall -Wextra -Werror)
+  add_executable(${PROJECT_NAME}_tests ${SOURCES})
+  target_link_libraries(${PROJECT_NAME}_tests ${gtest_LIB_NAME} ${Boost_LIBRARIES} ${PROJECT_NAME})
+  add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
 endif ()
-
-add_test(NAME utility_tests COMMAND utility_tests)

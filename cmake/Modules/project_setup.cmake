@@ -134,15 +134,19 @@ function(add_project)
   find_package_handle_standard_args(${p_PREFIX} REQUIRED_VARS
     ${p_PREFIX}_INC_DIR ${p_PREFIX}_LIB_DIR)
 
-  if (NOT ${p_PREFIX}_${CMAKE_BUILD_TYPE}_ALREADY_ADDED)
+  if (NOT TARGET ${p_PREFIX})
+    #if (NOT ${p_PREFIX}_${CMAKE_BUILD_TYPE}_ALREADY_ADDED)
+    set(${p_PREFIX}_${CMAKE_BUILD_TYPE}_ALREADY_ADDED 1)
     set(${p_PREFIX}_${CMAKE_BUILD_TYPE}_ALREADY_ADDED 1 PARENT_SCOPE)
 
     # Add subdirectory only if there is no custom command to build third-party project
     #
     if (NOT p_BUILD_CMD)
       add_subdirectory("${${p_PREFIX}_SOURCE_DIR}" "${${p_PREFIX}_BINARY_DIR}")
+      message(STATUS "${p_PREFIX} sudbdirectory added to build")
+    else ()
+      message(STATUS "${p_PREFIX} uses custom build command: ${p_BUILD_CMD}")
     endif ()
-
   else ()
     message(STATUS "${p_PREFIX} already added to build")
   endif()
