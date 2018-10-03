@@ -318,6 +318,43 @@ TEST_F(ValueCodecTest, testSetFixedIntNegative)
   ASSERT_EQ(num, val);
 }
 
+TEST_F(ValueCodecTest, testEncodeFloatToInt)
+{
+  double v = Misc::PI;
+
+  ValueCodec::encodeFloatToInt<uint16_t>(&buff_, v, 2, true);
+  uint8_t expected[] = { 0x1, 0x3A };
+
+  for (uint8_t i = 0; i < 2; i++) {
+    ASSERT_EQ(expected[i], buff_.data()[i]);
+  }
+
+  buff_.reset();
+  v = 2.1;
+  ValueCodec::encodeFloatToInt<uint16_t>(&buff_, v, 3, true);
+  uint8_t expected2[] = { 0x8, 0x34 };
+
+  for (uint8_t i = 0; i < 2; i++) {
+    ASSERT_EQ(expected2[i], buff_.data()[i]) << TestHelpers::toHex(buff_);
+  }
+}
+
+TEST_F(ValueCodecTest, testDecodeIntToFloat)
+{
+  uint8_t raw[] = { 0x1, 0x3A }; // 314
+  double v = 0;
+  ValueCodec::decodeIntToFloat(raw, 2, &v, 2, true);
+  ASSERT_EQ(3.14, v);
+
+  uint8_t raw2[] = { 0x8, 0x34 }; // 2100
+  ValueCodec::decodeIntToFloat(raw2, 2, &v, 3, true);
+  ASSERT_EQ(2.1, v);
+
+  uint8_t raw3[] = { 0xFF, 0xFF }; // 65535
+  ValueCodec::decodeIntToFloat(raw3, 2, &v, 5, true);
+  ASSERT_EQ(0.65535, v);
+}
+
 template<typename OutType>
 void decodeIntPartsToFloat(Buff* buff, OutType ipart_expected, OutType fpart_expected, int line)
 {

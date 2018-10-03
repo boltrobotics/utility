@@ -125,8 +125,9 @@ public:
    * @param msb - if true, encode in MSB order, otherwise in LSB
    * @return -1 on error, 0 otherwise
    */
-  template<typename T, typename FloatType>
-  static int decodeIntToFloat(Buff* buff, FloatType* val, uint8_t dec_places, bool msb);
+  template<typename T>
+  static int decodeIntToFloat(
+      const uint8_t* buff, uint8_t bytes, T* val, uint8_t dec_places, bool msb);
 
   /**
    * Encode an integer and fractional parts of a floating-point number into two integers.
@@ -311,18 +312,14 @@ inline void ValueCodec::encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_
   encodeFixedInt(buff, output, msb);
 }
 
-template<typename T, typename FloatType>
-inline int ValueCodec::decodeIntToFloat(Buff* buff, FloatType* val, uint8_t dec_places, bool msb)
+template<typename T>
+inline int ValueCodec::decodeIntToFloat(
+    const uint8_t* buff, uint8_t bytes, T* val, uint8_t dec_places, bool msb)
 {
-  T int_val;
-  decodeFixedInt(buff, &int_val, sizeof(T), msb);
-
-  //TODO
-  //T output = round(val * pow(10, dec_places));
-  (void)int_val;
-  (void)val;
-  (void)dec_places;
-  return -1;
+  uint64_t int_val;
+  decodeFixedInt(buff, &int_val, bytes, msb);
+  *val = int_val / pow(10, dec_places);
+  return 0;
 }
 
 template<typename T, typename FloatType>
@@ -333,10 +330,9 @@ inline void ValueCodec::encodeFloatToIntParts(
   double fpart_tmp = modf(val, &ipart_tmp);
 
   T ipart = static_cast<T>(ipart_tmp);
-  T fpart = round(fpart_tmp * pow(10, dec_places));
-
   encodeFixedInt(buff, ipart, msb);
-  encodeFixedInt(buff, fpart, msb);
+
+  encodeFloatToInt<T>(buff, fpart_tmp, dec_places, msb);
 }
 
 template<typename T, typename FloatType>
@@ -392,6 +388,7 @@ inline void ValueCodec::swap(T* val)
     bytes[j] = tmp;
   }
 }
+
 
 } // namespace btr
 
