@@ -102,29 +102,6 @@ public:
    */
   static int toHex(const uint8_t* data, uint32_t size, char* dst_str, uint32_t dst_size);
 
-  /**
-   * Shift the decimal point in a floating-point number by the specified number of places
-   * to the right.
-   *
-   * @param input - input variable
-   * @param decimal_places - the number of places to shift by
-   * @return the resulting integer
-   */
-  template<typename InType, typename OutType>
-  static void shiftfint(InType input, OutType* output, uint8_t decimal_places);
-
-  /**
-   * Break input value into integer and fractional parts. Multiply the fractional
-   * part by the supplied number. After, cast the resulting values into target types.
-   *
-   * @param input - input value
-   * @param ipart - integer part of the result
-   * @param fpart - fractional part of the result
-   * @param decimal_places - the number of decimal places in fractional part
-   */
-  template<typename InType, typename OutType>
-  static void modfint(InType input, OutType* ipart, OutType* fpart, uint8_t decimal_places);
-
 }; // class Misc
 
 /////////////////////////////////////////////// INLINE /////////////////////////////////////////////
@@ -208,22 +185,6 @@ inline std::string Misc::toString(T (&vals)[N])
   return ss.str();
 }
 #endif
-
-template<typename InType, typename OutType>
-inline void Misc::shiftfint(InType input, OutType* output, uint8_t dec_places)
-{
-  *output = round(input * pow(10, dec_places));
-}
-
-template<typename InType, typename OutType>
-inline void Misc::modfint(InType input, OutType* ipart, OutType* fpart, uint8_t dec_places)
-{
-  double ipart_tmp = 0;
-  double fpart_tmp = modf(input, &ipart_tmp);
-
-  *ipart = static_cast<OutType>(ipart_tmp);
-  shiftfint(fpart_tmp, fpart, dec_places);
-}
 
 } // namespace btr
 

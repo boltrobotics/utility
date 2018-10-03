@@ -4,6 +4,7 @@
 #define _btr_ValueCodec_hpp_
 
 // SYSTEM INCLUDES
+#include <cmath>
 
 // PROJECT INCLUDES
 #include "utility/buff.hpp"
@@ -20,12 +21,6 @@ namespace btr
 class ValueCodec
 {
 public:
-
-  enum Result {
-    SUCCESS     = 0,
-    SMALL_BUFF  = 1,
-    SMALL_VALUE = 2
-  };
 
 // LIFECYCLE
 
@@ -55,7 +50,7 @@ public:
    * @return the value from Result enum
    */
   template<typename T>
-  static int varInt7Bits(Buff* buff, T* val);
+  static int decodeVarInt7Bits(Buff* buff, T* val);
 
   /**
    * Compose an integer of type T from the bits of the buffer.
@@ -74,7 +69,7 @@ public:
    * @param move_ptr - move buff's read pointer by N bytes
    */
   template<typename T, uint32_t N>
-  static void varIntNBits(Buff* buff, T* val, const uint8_t (&bit_map)[N], bool move_ptr);
+  static void decodeVarIntNBits(Buff* buff, T* val, const uint8_t (&bit_map)[N], bool move_ptr);
 
   /**
    * Extract an integer of type T using only n bytes from the buffer.
@@ -88,65 +83,82 @@ public:
    * @param msb - the data is in most-significant byte order
    */
   template<typename T>
-  static void fixedInt(const uint8_t* buff, T* val, uint32_t bytes, bool msb);
+  static void decodeFixedInt(const uint8_t* buff, T* val, uint32_t bytes, bool msb);
 
   /**
-   * Check buffer and source/target sizes, then call fixedInt()
+   * Check buffer and source/target sizes, then call toFixedInt()
    *
-   * @param buff - data container
+   * @param buff - buffer to store encoded value
    * @param val - target value
    * @parma bytes - the number of bytes that the integer occupies
    * @param msb - the data is in most-significant byte order 
    * @return the values returned by check()
    */
   template<typename T>
-  static int fixedInt(Buff* buff, T* val, uint32_t bytes, bool msb);
+  static int decodeFixedInt(Buff* buff, T* val, uint32_t bytes, bool msb);
 
   /**
-   * Encode a fixed-size integer.
+   * Encode a fixed-size integer into a raw buffer.
    *
-   * @param buff - the buffer to store encoded value
+   * @param buff - buffer to store encoded value
    * @param val - the value to encode
    * @param msb - if true, encode in MSB order, otherwise in LSB
    */
   template<typename T>
-  static void fixedInt(Buff* buff, T val, bool msb);
+  static void encodeFixedInt(Buff* buff, T val, bool msb);
 
   /**
-   * Encode an floating-point number as an integer by shifting decimal point to the right.
+   * Encode a floating-point number as an integer by shifting decimal point to the right.
+   *
+   * @param buff - buffer to store encoded value
+   * @param val - value to encode
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   */
+  template<typename T, typename FloatType>
+  static void encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_places, bool msb);
+
+  /**
+   * Decode an integer into a floating-point number by shifting decimal point to the left.
+   *
+   * @param buff - buffer to read an integer from
+   * @param val - value to store the result
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   * @return -1 on error, 0 otherwise
+   */
+  template<typename T, typename FloatType>
+  static int decodeIntToFloat(Buff* buff, FloatType* val, uint8_t dec_places, bool msb);
+
+  /**
+   * Encode an integer and fractional parts of a floating-point number into two integers.
    *
    * @param buff - the buffer to store encoded value
    * @param val - the value to encode
    * @param msb - if true, encode in MSB order, otherwise in LSB
    */
   template<typename T, typename FloatType>
-  static void encodeShiftf(Buff* buff, FloatType val, uint8_t dec_places, bool msb);
+  static void encodeFloatToIntParts(Buff* buff, FloatType val, uint8_t dec_places, bool msb);
 
   /**
-   * Encode an integer and fractional parts of a floating-point number into two integers
+   * Decode two consecutive integers into integer and fractional parts of a floating-point number.
+   * Combine integer parts into a floating point number.
    *
-   * @param buff - the buffer to store encoded value
-   * @param val - the value to encode
-   * @param msb - if true, encode in MSB order, otherwise in LSB
+   * @param buff - buffer to retrieve the integers from
+   * @param val - value to store decoding result
+   * @param msb - if true, decode in MSB order, otherwise in LSB
    */
-  template<typename InType, typename OutType>
-  static void encodeModf(Buff* buff, InType val, uint8_t dec_places, bool msb);
+  template<typename T, typename FloatType>
+  static int decodeIntPartsToFloat(Buff* buff, FloatType* val, uint8_t dec_places, bool msb);
 
   /**
    * Check if the provided data can be converted into requested number.
    *
    * @param buff - the data container
    * @param target_size - byte-size of target number (e.g. uint32_t == 4 bytes)
-   * @param source_size - amount of bytes to use for conversion to the target
-   *      number
-   *
-   * @return one of the Result values:
-   *      SMALL_BUFF - if buff->available() is less than source_size. Not
-   *          enough raw bytes in the buffer
-   *      SMALL_VALUE - if target_size is less than source size. If the
-   *          requested amount of bytes is converted to a number, the
-   *          target integer type needs to be larger
-   *      SUCCESS - if all conditions above are met
+   * @param source_size - amount of bytes to use for conversion to the target number
+   * @return 0 on success, otherwise -1 on error, errno will be set to
+   *  ENOBUFS - If there is not enough raw bytes in the buffer (< source_size)
+   *  EOVERFLOW - if target_size is less than source size. If the requested amount of bytes is
+   *        converted to a number, the target integer type needs to be larger
    */
   static int check(Buff* buff, uint32_t target_size, uint32_t source_size);
 
@@ -181,16 +193,18 @@ inline uint8_t ValueCodec::mask(uint8_t bits)
 }
 
 template<typename T>
-inline int ValueCodec::varInt7Bits(Buff* buff, T* val)
+inline int ValueCodec::decodeVarInt7Bits(Buff* buff, T* val)
 {
-  int success = SMALL_VALUE;
+  int rc = -1;
+  int err = EOVERFLOW;
+
   uint8_t bits = 7;
   uint8_t bit_map[] = { bits };
   int8_t bits_remain = sizeof(T) * 8;
 
   for (; bits_remain >= 0; bits_remain -= bits) {
     if (buff->available() == 0) { 
-      success = SMALL_BUFF;
+      err = ENOBUFS;
       break;
     }
 
@@ -200,20 +214,24 @@ inline int ValueCodec::varInt7Bits(Buff* buff, T* val)
 
     uint8_t byte = *buff->read_ptr();
     uint8_t v = 0;
-    varIntNBits(buff, &v, bit_map, true);
+    decodeVarIntNBits(buff, &v, bit_map, true);
     *val = ((*val << bit_map[0]) | v);
 
     if ((byte & 0x80) == 0) {
-      success = SUCCESS;
+      rc = 0;
       break;
     }
   }
 
-  return success;
+  if (rc != 0) {
+    errno = err;
+  }
+  return rc;
 }
 
 template<typename T, uint32_t N>
-inline void ValueCodec::varIntNBits(Buff* buff, T* val, const uint8_t (&bit_map)[N], bool move_ptr)
+inline void ValueCodec::decodeVarIntNBits(
+    Buff* buff, T* val, const uint8_t (&bit_map)[N], bool move_ptr)
 {
   *val = 0;
 
@@ -242,7 +260,7 @@ inline void ValueCodec::varIntNBits(Buff* buff, T* val, const uint8_t (&bit_map)
 }
 
 template<typename T>
-inline void ValueCodec::fixedInt(const uint8_t* buff, T* val, uint32_t bytes, bool msb)
+inline void ValueCodec::decodeFixedInt(const uint8_t* buff, T* val, uint32_t bytes, bool msb)
 {
   *val = 0;
 
@@ -260,19 +278,19 @@ inline void ValueCodec::fixedInt(const uint8_t* buff, T* val, uint32_t bytes, bo
 }
 
 template<typename T>
-inline int ValueCodec::fixedInt(Buff* buff, T* val, uint32_t bytes, bool msb)
+inline int ValueCodec::decodeFixedInt(Buff* buff, T* val, uint32_t bytes, bool msb)
 {
-  int success = check(buff, sizeof(T), bytes);
+  int rc = check(buff, sizeof(T), bytes);
 
-  if (success == SUCCESS) {
-    fixedInt(buff->read_ptr(), val, bytes, msb);
+  if (0 == rc) {
+    decodeFixedInt(buff->read_ptr(), val, bytes, msb);
     buff->advanceReadPtr(bytes);
   }
-  return success;
+  return rc;
 }
 
 template<typename T>
-inline void ValueCodec::fixedInt(Buff* buff, T val, bool msb)
+inline void ValueCodec::encodeFixedInt(Buff* buff, T val, bool msb)
 {
   if (isLittleEndian()) {
     if (msb) {
@@ -287,33 +305,72 @@ inline void ValueCodec::fixedInt(Buff* buff, T val, bool msb)
 }
 
 template<typename T, typename FloatType>
-inline void ValueCodec::encodeShiftf(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
+inline void ValueCodec::encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
 {
-  T output = 0;
-  Misc::shiftfint(val, &output, dec_places);
-  fixedInt(buff, output, msb);
+  T output = round(val * pow(10, dec_places));
+  encodeFixedInt(buff, output, msb);
 }
 
-template<typename InType, typename OutType>
-inline void ValueCodec::encodeModf(Buff* buff, InType val, uint8_t dec_places, bool msb)
+template<typename T, typename FloatType>
+inline int ValueCodec::decodeIntToFloat(Buff* buff, FloatType* val, uint8_t dec_places, bool msb)
 {
-  OutType ipart = 0;
-  OutType fpart = 0;
-  Misc::modfint(val, &ipart, &fpart, dec_places);
-  fixedInt(buff, ipart, msb);
-  fixedInt(buff, fpart, msb);
+  T int_val;
+  decodeFixedInt(buff, &int_val, sizeof(T), msb);
+
+  //TODO
+  //T output = round(val * pow(10, dec_places));
+  (void)int_val;
+  (void)val;
+  (void)dec_places;
+  return -1;
+}
+
+template<typename T, typename FloatType>
+inline void ValueCodec::encodeFloatToIntParts(
+    Buff* buff, FloatType val, uint8_t dec_places, bool msb)
+{
+  double ipart_tmp = 0;
+  double fpart_tmp = modf(val, &ipart_tmp);
+
+  T ipart = static_cast<T>(ipart_tmp);
+  T fpart = round(fpart_tmp * pow(10, dec_places));
+
+  encodeFixedInt(buff, ipart, msb);
+  encodeFixedInt(buff, fpart, msb);
+}
+
+template<typename T, typename FloatType>
+inline int ValueCodec::decodeIntPartsToFloat(
+    Buff* buff, FloatType* val, uint8_t dec_places, bool msb)
+{
+  T ipart;
+  if (-1 == decodeFixedInt(buff, &ipart, sizeof(T), msb)) {
+    return -1;
+  }
+
+  T fpart;
+  if (-1 == decodeFixedInt(buff, &fpart, sizeof(T), msb)) {
+    return -1;
+  }
+
+  // TODO finish off
+  (void)dec_places;
+  *val = ipart + fpart;
+  return -1;
 }
 
 inline int ValueCodec::check(Buff* buff, uint32_t target_size, uint32_t source_size)
 {
-  int success = SUCCESS;
+  int rc = 0;
 
   if (buff->available() < source_size) {
-    success = SMALL_BUFF;
+    rc = -1;
+    errno = ENOBUFS;
   } else if (source_size > target_size) {
-    success = SMALL_VALUE;
+    rc = -1;
+    errno = EOVERFLOW;
   }
-  return success;
+  return rc;
 }
 
 inline bool ValueCodec::isLittleEndian()
