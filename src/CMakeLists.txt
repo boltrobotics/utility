@@ -6,4 +6,6 @@ if (SOURCES_LEN GREATER 0)
     ${PROJECT_SOURCE_DIR}/include
   )
   add_library(utility STATIC ${SOURCES})
+else ()
+  message(STATUS "${PROJECT_NAME} has no sources to build")
 endif()
