@@ -1,3 +1,9 @@
+# Currently, unit testing is done on x86 platform. If a parent project uses cross-compiler that
+# doesn't support x86 libraries, the build will fail. Threfore, temporarily change BOARD_FAMILY
+# to x86.
+
+set(BOARD_FAMILY "x86")
+
 include(gtest)
 
 include_directories(
@@ -5,7 +11,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include
 )
 
-file(GLOB SOURCES "*.cpp")
+file(GLOB SOURCES "*.cpp" "${BOARD_FAMILY}/*.cpp")
 list(LENGTH SOURCES SOURCES_LEN)
 
 if (SOURCES_LEN GREATER 0)

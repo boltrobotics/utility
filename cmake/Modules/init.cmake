@@ -24,7 +24,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(BOARD_FAMILY $ENV{BOARD_FAMILY})
 
 if (NOT BOARD_FAMILY)
-  message(STATUS "Setting default BOARD_FAMILY to x86 (options: stm32 | avr | x86)")
+  message(STATUS "Setting default BOARD_FAMILY to x86 (options: x86 | arm | avr)")
   set(BOARD_FAMILY "x86")
 endif()
 

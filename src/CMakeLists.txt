@@ -1,4 +1,4 @@
-file(GLOB SOURCES "*.cpp")
+file(GLOB SOURCES "*.cpp" "${BOARD_FAMILY}/*.cpp")
 list(LENGTH SOURCES SOURCES_LEN)
 
 if (SOURCES_LEN GREATER 0)

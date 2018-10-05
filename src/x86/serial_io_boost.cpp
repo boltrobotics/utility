@@ -1,12 +1,10 @@
 /* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com> */
 
-#if defined(x86)
-
 // SYSTEM INCLUDES
 #include <boost/bind.hpp>
 
 // PROJECT INCLUDES
-#include "utility/serial_io_boost.hpp"  // class implemented
+#include "utility/x86/serial_io_boost.hpp"  // class implemented
 #include "utility/buff.hpp"
 
 namespace btr
@@ -127,5 +125,3 @@ void SerialIOBoost::onTimeout(const boost::system::error_code& error)
 }
 
 } // namespace btr
-
-#endif // defined(x86)

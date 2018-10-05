@@ -1,7 +1,5 @@
 /* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com> */
 
-#if defined(x86)
-
 // SYSTEM INCLUDES
 #include <termios.h>
 #include <unistd.h>
@@ -9,7 +7,7 @@
 #include <sys/ioctl.h>
 
 // PROJECT INCLUDES
-#include "utility/serial_io_termios.hpp"  // class implemented
+#include "utility/x86/serial_io_termios.hpp"  // class implemented
 #include "utility/buff.hpp"
 
 namespace btr
@@ -168,5 +166,3 @@ int SerialIOTermios::getNativeBaud(int num)
 }
 
 } // namespace btr
-
-#endif // defined(x86)
