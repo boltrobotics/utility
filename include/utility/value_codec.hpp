@@ -5,6 +5,7 @@
 
 // SYSTEM INCLUDES
 #include <cmath>
+#include <cerrno>
 
 // PROJECT INCLUDES
 #include "utility/buff.hpp"
