@@ -1,7 +1,7 @@
 /* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com> */
 
-#ifndef _btr_Node_hpp_
-#define _btr_Node_hpp_
+#ifndef _btr_AvlTree_hpp_
+#define _btr_AvlTree_hpp_
 
 // SYSTEM INCLUDES
 
@@ -13,44 +13,25 @@ namespace btr
 /**
  * The class represents a node in AVL self-balancing binary search tree.
  */
-class Node
+template<typename NodeType>
+class AvlTree
 {
 public:
 
-// LIFECYCLE
-
-  /**
-    * Ctor.
-    */
-  Node(int key);
-
-  /**
-    * Dtor.
-    */
-  virtual ~Node() = default;
-
 // OPERATIONS
 
-  virtual Node* clone(int key) = 0;
-  virtual void release(Node* node) = 0;
-
-  static Node* rotateRight(Node* node);
-  static Node* rotateLeft(Node* node);
-  static Node* insert(Node* node, int key);
-  static Node* erase(Node* root, int key);
-  static Node* minKeyNode(Node* node);
-  static int balance(Node* node);
-  static int height(Node* node);
+  static NodeType* rotateRight(NodeType* node);
+  static NodeType* rotateLeft(NodeType* node);
+  static NodeType* insert(NodeType* node, int key);
+  static NodeType* erase(NodeType* root, int key);
+  static int balance(NodeType* node);
+  static int height(NodeType* node);
   static int max(int v1, int v2);
+  static void traverseInOrder(NodeType* node);
+  static NodeType* searchMin(NodeType* node);
+  static NodeType* search(NodeType* root, int key);
 
-// ATTRIBUTES
-
-  int key_;
-  int height_;
-  Node* left_;
-  Node* right_;
-
-}; // class Node
+}; // class AvlTree
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                              INLINE
@@ -59,21 +40,13 @@ public:
 /////////////////////////////////////////////// PUBLIC /////////////////////////////////////////////
 
 //============================================= LIFECYCLE ==========================================
-
-Node::Node(int key) :
-  key_(key),
-  height_(1),
-  left_(nullptr),
-  right_(nullptr)
-{
-}
-
 //============================================= OPERATIONS =========================================
 
-Node* Node::rotateRight(Node* node)
+template<typename NodeType>
+NodeType* AvlTree<NodeType>::rotateRight(NodeType* node)
 {
-  Node* left = node->left_;
-  Node* left_right = left->right_;
+  NodeType* left = node->left_;
+  NodeType* left_right = left->right_;
 
   left->right_ = node;
   node->left_ = left_right;
@@ -84,10 +57,11 @@ Node* Node::rotateRight(Node* node)
   return left;
 }
 
-Node* Node::rotateLeft(Node* node)
+template<typename NodeType>
+NodeType* AvlTree<NodeType>::rotateLeft(NodeType* node)
 {
-  Node* right = node->right_;
-  Node* right_left = left->left_;
+  NodeType* right = node->right_;
+  NodeType* right_left = right->left_;
 
   right->left_ = node;
   node->right_ = right_left;
@@ -98,15 +72,16 @@ Node* Node::rotateLeft(Node* node)
   return right;
 }
 
-Node* Node::insert(Node* node, int key)
+template<typename NodeType>
+NodeType* AvlTree<NodeType>::insert(NodeType* node, int key)
 {
   if (nullptr == node) {
-    return clone(key);
+    return new NodeType(key);
   }
 
   if (key < node->key_) {
     node->left_ = insert(node->left_, key);
-  } else if (key > node->key) {
+  } else if (key > node->key_) {
     node->right_ = insert(node->right_, key);
   } else {
     return node;
@@ -137,7 +112,8 @@ Node* Node::insert(Node* node, int key)
   return node;
 }
 
-Node* Node::erase(Node* root, int key)
+template<typename NodeType>
+NodeType* AvlTree<NodeType>::erase(NodeType* root, int key)
 {
   if (nullptr == root) {
     return root;
@@ -150,7 +126,7 @@ Node* Node::erase(Node* root, int key)
   } else {
 
     if ((nullptr == root->left_) || (nullptr == root->right_)) {
-      Node* temp = root->left_ ? root->left_ : root->right_;
+      NodeType* temp = root->left_ ? root->left_ : root->right_;
 
       if (temp == NULL) {
         temp = root;
@@ -159,10 +135,10 @@ Node* Node::erase(Node* root, int key)
         *root = *temp; // copy
       }
 
-      release(temp);
+      delete temp;
 
     } else {
-      Node* temp = minKeyNode(root->right_);
+      NodeType* temp = searchMin(root->right_);
       root->key_ = temp->key_;
       root->right_ = erase(root->right_, temp->key_);
     }
@@ -183,7 +159,7 @@ Node* Node::erase(Node* root, int key)
     return rotateRight(root);
   }
 
-  if (b < -1)
+  if (b < -1) {
     if (balance(root->right_) > 0) {
       root->right_ = rotateRight(root->right_);
     }
@@ -193,9 +169,40 @@ Node* Node::erase(Node* root, int key)
   return root;
 }
 
-Node* Node::minKeyNode(Node* node)
+template<typename NodeType>
+int AvlTree<NodeType>::balance(NodeType* node)
 {
-    Node* current = node;
+  return (nullptr == node ? 0 : height(node->left_) - height(node->right_));
+}
+
+template<typename NodeType>
+int AvlTree<NodeType>::height(NodeType* node)
+{
+  return (nullptr == node ? 0 : node->height_);
+}
+
+template<typename NodeType>
+int AvlTree<NodeType>::max(int v1, int v2)
+{
+  return (v1 > v2 ? v1 : v2);
+}
+
+template<typename NodeType>
+void AvlTree<NodeType>::traverseInOrder(NodeType* node)
+{
+  if (nullptr == node) {
+    return;
+  }
+
+  traverseInOrder(node->left_);
+  node->onTraverse();
+  traverseInOrder(node->right_);
+}
+
+template<typename NodeType>
+NodeType* AvlTree<NodeType>::searchMin(NodeType* node)
+{
+    NodeType* current = node;
 
     while (nullptr != current->left_) {
         current = current->left_;
@@ -203,19 +210,17 @@ Node* Node::minKeyNode(Node* node)
     return current;
 }
 
-int Node::balance(Node* node)
+template<typename NodeType>
+NodeType* AvlTree<NodeType>::search(NodeType* root, int key)
 {
-  return (nullptr == node ? 0 : height(node->left_) - height(node->right_));
-}
+  if (nullptr == root || root->key_ == key) {
+    return root;
+  }
 
-int Node::height(Node* node)
-{
-  return (nullptr == node ? 0 : node->height_);
-}
-
-int Node::max(int v1, int v2)
-{
-  return (v1 > v2 ? v1 : v2);
+  if (root->key_ < key) {
+    return search(root->right_, key);
+  }
+  return search(root->left_, key);
 }
 
 /////////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
@@ -224,4 +229,4 @@ int Node::max(int v1, int v2)
 
 } // namespace btr
 
-#endif // _btr_Node_hpp_
+#endif // _btr_AvlTree_hpp_
