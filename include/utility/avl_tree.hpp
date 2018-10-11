@@ -98,8 +98,9 @@ public:
   void root(N* root);
   N* rotateRight(N* node);
   N* rotateLeft(N* node);
-  N* insert(N* node, K key);
-  N* erase(N* root, K key);
+  N* insert(K key);
+  N* search(K key);
+  N* erase(K key);
   void eraseBranch(N* node);
 
   static H balance(N* node);
@@ -110,6 +111,22 @@ public:
   static N* search(N* root, K key);
 
 private:
+
+// OPERATIONS
+
+  /**
+   * Insert a new node at the node position.
+   *
+   * @return new root
+   */
+  N* insert(N* node, K key);
+
+  /**
+   * Erase a node at the node position.
+   *
+   * @return new root
+   */
+  N* erase(N* root, K key);
 
 // ATTRIBUTES
 
@@ -235,122 +252,25 @@ inline N* AvlTree<N, K, H>::rotateLeft(N* node)
 }
 
 template<typename N, typename K, typename H>
-inline N* AvlTree<N, K, H>::insert(N* node, K key)
+inline N* AvlTree<N, K, H>::insert(K key)
 {
-  if (nullptr == node) {
-    node = new N(key);
-    root_ = node;
-    return node;
-  }
-
-  if (key < node->key()) {
-    node->left(insert(node->left(), key));
-  } else if (key > node->key()) {
-    node->right(insert(node->right(), key));
-  } else {
-    root_ = node;
-    return node;
-  }
-
-  node->height(max(height(node->left()), height(node->right())) + 1);
-
-  H b = balance(node);
-
-  if (b > 1) {
-    if (nullptr != node->left()) {
-      if (key < node->left()->key()) {
-        node = rotateRight(node);
-      } else if (key > node->left()->key()) {
-        node->left(rotateLeft(node->left()));
-        node = rotateRight(node);
-      }
-    }
-  } else if (b < -1) {
-    if (nullptr != node->right()) {
-      if (key > node->right()->key()) {
-        node = rotateLeft(node);
-      } else if (key < node->right()->key()) {
-        node->right(rotateRight(node->right()));
-        node = rotateLeft(node);
-      }
-    }
-  }
-
-  root_ = node;
-  return node;
+  N* n = insert(root_, key);
+  root_ = n;
+  return n;
 }
 
 template<typename N, typename K, typename H>
-inline N* AvlTree<N, K, H>::erase(N* root, K key)
+N* AvlTree<N, K, H>::search(K key)
 {
-  if (nullptr == root) {
-    return nullptr;
-  }
+  return search(root_, key);
+}
 
-  if (key < root->key()) {
-    root->left(erase(root->left(), key));
-  } else if (key > root->key()) {
-    root->right(erase(root->right(), key));
-  } else {
-    // Erase root node
-    //
-    if ((nullptr == root->left()) || (nullptr == root->right())) {
-      N* temp = root->left() ? root->left() : root->right();
-
-      if (nullptr == temp) {
-        // No child nodes
-        temp = root;
-        root = nullptr;
-      } else {
-        // Shallow copy data members from the one child node
-        *root = *temp;
-      }
-
-      delete temp;
-
-    } else {
-      // Root has both child nodes. Back up the data of root-to-delete so as to reuse its
-      // allocated memory chunk.
-      N* root_left = root->left();
-      N* root_right = root->right();
-      H height = root->height();
-
-      N* temp = searchMin(root->right());
-
-      // Shallow-copy data and restore left/right/height.
-      *root = *temp;
-      root->left(root_left);
-      root->right(root_right);
-      root->height(height);
-
-      root->right(erase(root->right(), temp->key()));
-    }
-  }
-
-  if (nullptr == root) {
-    return nullptr;
-  }
-
-  root->height(max(height(root->left()), height(root->right())) + 1);
-
-  H b = balance(root);
-
-  if (b > 1) {
-    if (balance(root->left()) < 0) {
-      root->left(rotateLeft(root->left()));
-    }
-    return rotateRight(root);
-  }
-
-  if (b < -1) {
-    if (balance(root->right()) > 0) {
-      root->right(rotateRight(root->right()));
-    }
-    return rotateLeft(root);
-  }
-
-  root_ = root;
-  return root;
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::erase(K key)
+{
+  N* n = erase(root_, key);
+  root_ = n;
+  return n;
 }
 
 template<typename N, typename K, typename H>
@@ -426,6 +346,122 @@ N* AvlTree<N, K, H>::search(N* root, K key)
 /////////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
 
 //============================================= OPERATIONS =========================================
+
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::insert(N* node, K key)
+{
+  if (nullptr == node) {
+    node = new N(key);
+    return node;
+  }
+
+  if (key < node->key()) {
+    node->left(insert(node->left(), key));
+  } else if (key > node->key()) {
+    node->right(insert(node->right(), key));
+  } else {
+    // Invalid condition as keys are the same. No new node is inserted.
+    return node;
+  }
+
+  node->height(max(height(node->left()), height(node->right())) + 1);
+
+  H b = balance(node);
+
+  if (b > 1) {
+    if (nullptr != node->left()) {
+      if (key < node->left()->key()) {
+        node = rotateRight(node);
+      } else if (key > node->left()->key()) {
+        node->left(rotateLeft(node->left()));
+        node = rotateRight(node);
+      }
+    }
+  } else if (b < -1) {
+    if (nullptr != node->right()) {
+      if (key > node->right()->key()) {
+        node = rotateLeft(node);
+      } else if (key < node->right()->key()) {
+        node->right(rotateRight(node->right()));
+        node = rotateLeft(node);
+      }
+    }
+  }
+
+  return node;
+}
+
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::erase(N* root, K key)
+{
+  if (nullptr == root) {
+    return nullptr;
+  }
+
+  if (key < root->key()) {
+    root->left(erase(root->left(), key));
+  } else if (key > root->key()) {
+    root->right(erase(root->right(), key));
+  } else {
+    // Erase root node
+    //
+    if ((nullptr == root->left()) || (nullptr == root->right())) {
+      N* temp = root->left() ? root->left() : root->right();
+
+      if (nullptr == temp) {
+        // No child nodes
+        temp = root;
+        root = nullptr;
+      } else {
+        // Shallow copy data members from the one child node
+        *root = *temp;
+      }
+
+      delete temp;
+
+    } else {
+      // Root has both child nodes. Back up the data of root-to-delete so as to reuse its
+      // allocated memory chunk.
+      N* root_left = root->left();
+      N* root_right = root->right();
+      H height = root->height();
+
+      N* temp = searchMin(root->right());
+
+      // Shallow-copy data and restore left/right/height.
+      *root = *temp;
+      root->left(root_left);
+      root->right(root_right);
+      root->height(height);
+
+      root->right(erase(root->right(), temp->key()));
+    }
+  }
+
+  if (nullptr == root) {
+    return nullptr;
+  }
+
+  root->height(max(height(root->left()), height(root->right())) + 1);
+
+  H b = balance(root);
+
+  if (b > 1) {
+    if (balance(root->left()) < 0) {
+      root->left(rotateLeft(root->left()));
+    }
+    return rotateRight(root);
+  }
+
+  if (b < -1) {
+    if (balance(root->right()) > 0) {
+      root->right(rotateRight(root->right()));
+    }
+    return rotateLeft(root);
+  }
+
+  return root;
+}
 
 } // namespace btr
 

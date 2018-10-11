@@ -50,27 +50,24 @@ public:
 
   AvlTreeTest() :
     tree_(),
-    root_(nullptr),
     observer_(0),
     keys_()
   {
     keys_ = { 1, 9, 3, 7 };
 
     for (auto key : keys_) {
-      root_ = tree_.insert(root_, key);
+      tree_.insert(key);
     }
   }
 
   ~AvlTreeTest()
   {
     tree_.eraseBranch(tree_.root());
-    root_ = nullptr;
   }
 
 // ATTRIBUTES
 
   AvlTree<Server> tree_;
-  Server* root_;
   Server observer_;
   std::vector<uint16_t> keys_;
 };
@@ -89,9 +86,7 @@ TEST_F(AvlTreeTest, traverseInOrder)
 
 TEST_F(AvlTreeTest, search)
 {
-  ASSERT_EQ(3, root_->key());
   ASSERT_EQ(3, tree_.root()->key());
-  ASSERT_TRUE(root_ == tree_.root());
 
   for (auto key : keys_) {
     Server* n = tree_.search(tree_.root(), key);
@@ -111,11 +106,11 @@ TEST_F(AvlTreeTest, erase)
 
   // After deleting root node 3, node 7 becomes root. We expect data members to be copied over
   // from 3 to 7.
-  Server* e_node = tree_.erase(tree_.root(), 3);
+  Server* e_node = tree_.erase(3);
   s_node = tree_.search(tree_.root(), 3);
   ASSERT_TRUE(nullptr == s_node);
 
-  e_node = tree_.erase(tree_.root(), 9);
+  e_node = tree_.erase(9);
   s_node = tree_.search(tree_.root(), 9);
   ASSERT_TRUE(nullptr == s_node);
 
@@ -130,10 +125,8 @@ TEST_F(AvlTreeTest, erase)
 
 TEST_F(AvlTreeTest, eraseBranch)
 {
-  ASSERT_EQ(root_, tree_.root());
-  tree_.eraseBranch(root_);
+  tree_.eraseBranch(tree_.root());
   ASSERT_TRUE(nullptr == tree_.root());
-  root_ = nullptr;
 }
 
 } // namespace btr

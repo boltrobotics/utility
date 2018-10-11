@@ -55,6 +55,7 @@ public:
 // ACCESS
 
   const uint8_t* data() const;
+  uint8_t* data();
   const uint8_t* end() const;
   const uint8_t* read_ptr() const;
   uint8_t*& read_ptr();
@@ -228,6 +229,11 @@ inline Buff::~Buff()
 //============================================= ACCESS =============================================
 
 inline const uint8_t* Buff::data() const
+{
+  return data_;
+}
+
+inline uint8_t* Buff::data()
 {
   return data_;
 }
