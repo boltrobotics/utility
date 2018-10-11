@@ -21,7 +21,7 @@ public:
 
 // LIFECYCLE
 
-  Server(int key) :
+  Server(uint16_t key) :
     NodeBase(key)
   {}
 
@@ -37,7 +37,7 @@ public:
 
 // ATTRIBUTES
 
-  std::vector<int> keys_;
+  std::vector<uint16_t> keys_;
 };
 
 //------------------------------------------------------------------------------
@@ -51,8 +51,20 @@ public:
   AvlTreeTest() :
     tree_(),
     root_(nullptr),
-    observer_(0)
+    observer_(0),
+    keys_()
   {
+    keys_ = { 1, 9, 3, 7 };
+
+    for (auto key : keys_) {
+      root_ = tree_.insert(root_, key);
+    }
+  }
+
+  ~AvlTreeTest()
+  {
+    tree_.eraseBranch(tree_.root());
+    root_ = nullptr;
   }
 
 // ATTRIBUTES
@@ -60,52 +72,35 @@ public:
   AvlTree<Server> tree_;
   Server* root_;
   Server observer_;
+  std::vector<uint16_t> keys_;
 };
 
 //------------------------------------------------------------------------------
 
 TEST_F(AvlTreeTest, traverseInOrder)
 {
-  int keys[] = { 1, 9, 3, 7 };
-
-  for (uint8_t i = 0; i < sizeof(keys)/sizeof(int); i++) {
-    root_ = tree_.insert(root_, keys[i]);
-  }
-
   tree_.traverseInOrder(tree_.root(), &observer_);
 
-  ASSERT_EQ(keys[0], observer_.keys_[0]);
-  ASSERT_EQ(keys[2], observer_.keys_[1]);
-  ASSERT_EQ(keys[3], observer_.keys_[2]);
-  ASSERT_EQ(keys[1], observer_.keys_[3]);
+  ASSERT_EQ(keys_[0], observer_.keys_[0]);
+  ASSERT_EQ(keys_[2], observer_.keys_[1]);
+  ASSERT_EQ(keys_[3], observer_.keys_[2]);
+  ASSERT_EQ(keys_[1], observer_.keys_[3]);
 }
 
 TEST_F(AvlTreeTest, search)
 {
-  int keys[] = { 1, 9, 3, 7 };
-
-  for (uint8_t i = 0; i < sizeof(keys)/sizeof(int); i++) {
-    root_ = tree_.insert(root_, keys[i]);
-  }
-
   ASSERT_EQ(3, root_->key());
   ASSERT_EQ(3, tree_.root()->key());
   ASSERT_TRUE(root_ == tree_.root());
 
-  for (uint8_t i = 0; i < sizeof(keys)/sizeof(int); i++) {
-    Server* n = tree_.search(tree_.root(), keys[i]);
-    ASSERT_TRUE(nullptr != n) << "Key: " << keys[i] << std::endl;
+  for (auto key : keys_) {
+    Server* n = tree_.search(tree_.root(), key);
+    ASSERT_TRUE(nullptr != n) << "Key: " << key << std::endl;
   }
 }
 
 TEST_F(AvlTreeTest, erase)
 {
-  int keys[] = { 1, 9, 3, 7 };
-
-  for (uint8_t i = 0; i < sizeof(keys)/sizeof(int); i++) {
-    root_ = tree_.insert(root_, keys[i]);
-  }
-
   Server* s_node = tree_.search(tree_.root(), 3);
   ASSERT_TRUE(nullptr != s_node);
   ASSERT_TRUE(tree_.root() == s_node);
@@ -131,6 +126,14 @@ TEST_F(AvlTreeTest, erase)
   ASSERT_TRUE(nullptr == s_node->right());
   ASSERT_EQ(91, s_node->keys_[0]);
   ASSERT_EQ(88, s_node->keys_[1]);
+}
+
+TEST_F(AvlTreeTest, eraseBranch)
+{
+  ASSERT_EQ(root_, tree_.root());
+  tree_.eraseBranch(root_);
+  ASSERT_TRUE(nullptr == tree_.root());
+  root_ = nullptr;
 }
 
 } // namespace btr

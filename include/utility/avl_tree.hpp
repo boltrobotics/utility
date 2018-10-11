@@ -11,7 +11,7 @@ namespace btr
 /**
  *
  */
-template <typename NodeType>
+template <typename N>
 class NodeObserver
 {
 public:
@@ -23,15 +23,17 @@ public:
 
 // OPERATIONS
 
-  virtual void onTraverse(NodeType* node) = 0;
+  virtual void onTraverse(N* node) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Base class that aggregates common variables and encapsulates access to them.
+ *
+ * WARNING: make sure H is SIGNED integer
  */
-template <typename NodeType>
+template <typename N, typename K = uint16_t, typename H = int16_t>
 class NodeBase
 {
 public:
@@ -43,7 +45,7 @@ public:
    *
    * @param key - node key
    */
-  NodeBase(int key);
+  NodeBase(K key);
 
   /**
    * Dtor.
@@ -52,31 +54,33 @@ public:
 
 // OPERATIONS
 
-  int key() const;
-  void key(int k);
-  int height() const;
-  void height(int height);
-  NodeType* left();
-  void left(NodeType* node);
-  NodeType* right();
-  void right(NodeType* node);
+  K key() const;
+  void key(K k);
+  H height() const;
+  void height(H height);
+  N* left();
+  void left(N* node);
+  N* right();
+  void right(N* node);
 
 private:
 
 // ATTRIBUTES
 
-  int key_;
-  int height_;
-  NodeType* left_;
-  NodeType* right_;
+  K key_;
+  H height_;
+  N* left_;
+  N* right_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * The class represents an AVL self-balancing binary search tree.
+ *
+ * WARNING: make sure H is SIGNED integer
  */
-template<typename NodeType>
+template <typename N, typename K = uint16_t, typename H = int16_t>
 class AvlTree
 {
 public:
@@ -90,25 +94,26 @@ public:
 
 // OPERATIONS
 
-  NodeType* root();
-  void root(NodeType* root);
-  NodeType* rotateRight(NodeType* node);
-  NodeType* rotateLeft(NodeType* node);
-  NodeType* insert(NodeType* node, int key);
-  NodeType* erase(NodeType* root, int key);
+  N* root();
+  void root(N* root);
+  N* rotateRight(N* node);
+  N* rotateLeft(N* node);
+  N* insert(N* node, K key);
+  N* erase(N* root, K key);
+  void eraseBranch(N* node);
 
-  static int balance(NodeType* node);
-  static int height(NodeType* node);
-  static int max(int v1, int v2);
-  static void traverseInOrder(NodeType* node, NodeObserver<NodeType>* o);
-  static NodeType* searchMin(NodeType* node);
-  static NodeType* search(NodeType* root, int key);
+  static H balance(N* node);
+  static H height(N* node);
+  static H max(H v1, H v2);
+  static void traverseInOrder(N* node, NodeObserver<N>* o);
+  static N* searchMin(N* node);
+  static N* search(N* root, K key);
 
 private:
 
 // ATTRIBUTES
 
-  NodeType* root_;
+  N* root_;
 
 }; // class AvlTree
 
@@ -120,8 +125,8 @@ private:
 
 //============================================= LIFECYCLE ==========================================
 
-template<typename NodeType>
-inline NodeBase<NodeType>::NodeBase(int key) :
+template<typename N, typename K, typename H>
+inline NodeBase<N, K, H>::NodeBase(K key) :
   key_(key),
   height_(1),
   left_(nullptr),
@@ -129,79 +134,79 @@ inline NodeBase<NodeType>::NodeBase(int key) :
 {
 }
 
-template<typename NodeType>
-inline AvlTree<NodeType>::AvlTree() :
+template<typename N, typename K, typename H>
+inline AvlTree<N, K, H>::AvlTree() :
   root_(nullptr)
 {
 }
 
 //============================================= OPERATIONS =========================================
 
-template<typename NodeType>
-inline int NodeBase<NodeType>::key() const
+template<typename N, typename K, typename H>
+inline K NodeBase<N, K, H>::key() const
 {
   return key_;
 }
 
-template<typename NodeType>
-inline void NodeBase<NodeType>::key(int key)
+template<typename N, typename K, typename H>
+inline void NodeBase<N, K, H>::key(K key)
 {
   key_ = key;
 }
 
-template<typename NodeType>
-inline int NodeBase<NodeType>::height() const
+template<typename N, typename K, typename H>
+inline H NodeBase<N, K, H>::height() const
 {
   return height_;
 }
 
-template<typename NodeType>
-inline void NodeBase<NodeType>::height(int height)
+template<typename N, typename K, typename H>
+inline void NodeBase<N, K, H>::height(H height)
 {
   height_ = height;
 }
 
-template<typename NodeType>
-inline NodeType* NodeBase<NodeType>::left()
+template<typename N, typename K, typename H>
+inline N* NodeBase<N, K, H>::left()
 {
   return left_;
 }
 
-template<typename NodeType>
-inline void NodeBase<NodeType>::left(NodeType* node)
+template<typename N, typename K, typename H>
+inline void NodeBase<N, K, H>::left(N* node)
 {
   left_ = node;
 }
 
-template<typename NodeType>
-inline NodeType* NodeBase<NodeType>::right()
+template<typename N, typename K, typename H>
+inline N* NodeBase<N, K, H>::right()
 {
   return right_;
 }
 
-template<typename NodeType>
-inline void NodeBase<NodeType>::right(NodeType* node)
+template<typename N, typename K, typename H>
+inline void NodeBase<N, K, H>::right(N* node)
 {
   right_ = node;
 }
 
-template<typename NodeType>
-inline NodeType* AvlTree<NodeType>::root()
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::root()
 {
   return root_;
 }
 
-template<typename NodeType>
-inline void AvlTree<NodeType>::root(NodeType* root)
+template<typename N, typename K, typename H>
+inline void AvlTree<N, K, H>::root(N* root)
 {
   root_ = root;
 }
 
-template<typename NodeType>
-inline NodeType* AvlTree<NodeType>::rotateRight(NodeType* node)
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::rotateRight(N* node)
 {
-  NodeType* left = node->left();
-  NodeType* left_right = left->right();
+  N* left = node->left();
+  N* left_right = left->right();
 
   left->right(node);
   node->left(left_right);
@@ -213,11 +218,11 @@ inline NodeType* AvlTree<NodeType>::rotateRight(NodeType* node)
   return left;
 }
 
-template<typename NodeType>
-inline NodeType* AvlTree<NodeType>::rotateLeft(NodeType* node)
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::rotateLeft(N* node)
 {
-  NodeType* right = node->right();
-  NodeType* right_left = right->left();
+  N* right = node->right();
+  N* right_left = right->left();
 
   right->left(node);
   node->right(right_left);
@@ -229,11 +234,11 @@ inline NodeType* AvlTree<NodeType>::rotateLeft(NodeType* node)
   return right;
 }
 
-template<typename NodeType>
-inline NodeType* AvlTree<NodeType>::insert(NodeType* node, int key)
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::insert(N* node, K key)
 {
   if (nullptr == node) {
-    node = new NodeType(key);
+    node = new N(key);
     root_ = node;
     return node;
   }
@@ -249,21 +254,25 @@ inline NodeType* AvlTree<NodeType>::insert(NodeType* node, int key)
 
   node->height(max(height(node->left()), height(node->right())) + 1);
 
-  int b = balance(node);
+  H b = balance(node);
 
   if (b > 1) {
-    if (key < node->left()->key()) {
-      node = rotateRight(node);
-    } else if (key > node->left()->key()) {
-      node->left(rotateLeft(node->left()));
-      node = rotateRight(node);
+    if (nullptr != node->left()) {
+      if (key < node->left()->key()) {
+        node = rotateRight(node);
+      } else if (key > node->left()->key()) {
+        node->left(rotateLeft(node->left()));
+        node = rotateRight(node);
+      }
     }
   } else if (b < -1) {
-    if (key > node->right()->key()) {
-      node = rotateLeft(node);
-    } else if (key < node->right()->key()) {
-      node->right(rotateRight(node->right()));
-      node = rotateLeft(node);
+    if (nullptr != node->right()) {
+      if (key > node->right()->key()) {
+        node = rotateLeft(node);
+      } else if (key < node->right()->key()) {
+        node->right(rotateRight(node->right()));
+        node = rotateLeft(node);
+      }
     }
   }
 
@@ -271,8 +280,8 @@ inline NodeType* AvlTree<NodeType>::insert(NodeType* node, int key)
   return node;
 }
 
-template<typename NodeType>
-inline NodeType* AvlTree<NodeType>::erase(NodeType* root, int key)
+template<typename N, typename K, typename H>
+inline N* AvlTree<N, K, H>::erase(N* root, K key)
 {
   if (nullptr == root) {
     return nullptr;
@@ -286,7 +295,7 @@ inline NodeType* AvlTree<NodeType>::erase(NodeType* root, int key)
     // Erase root node
     //
     if ((nullptr == root->left()) || (nullptr == root->right())) {
-      NodeType* temp = root->left() ? root->left() : root->right();
+      N* temp = root->left() ? root->left() : root->right();
 
       if (nullptr == temp) {
         // No child nodes
@@ -302,11 +311,11 @@ inline NodeType* AvlTree<NodeType>::erase(NodeType* root, int key)
     } else {
       // Root has both child nodes. Back up the data of root-to-delete so as to reuse its
       // allocated memory chunk.
-      NodeType* root_left = root->left();
-      NodeType* root_right = root->right();
-      int height = root->height();
+      N* root_left = root->left();
+      N* root_right = root->right();
+      H height = root->height();
 
-      NodeType* temp = searchMin(root->right());
+      N* temp = searchMin(root->right());
 
       // Shallow-copy data and restore left/right/height.
       *root = *temp;
@@ -324,7 +333,7 @@ inline NodeType* AvlTree<NodeType>::erase(NodeType* root, int key)
 
   root->height(max(height(root->left()), height(root->right())) + 1);
 
-  int b = balance(root);
+  H b = balance(root);
 
   if (b > 1) {
     if (balance(root->left()) < 0) {
@@ -344,41 +353,56 @@ inline NodeType* AvlTree<NodeType>::erase(NodeType* root, int key)
   return root;
 }
 
-template<typename NodeType>
-int AvlTree<NodeType>::balance(NodeType* node)
+template<typename N, typename K, typename H>
+void AvlTree<N, K, H>::eraseBranch(N* node)
+{
+  if (nullptr == node) {
+    return;
+  }
+
+  eraseBranch(node->left());
+  eraseBranch(node->right());
+  delete node;
+
+  if (root_ == node) {
+    root_ = nullptr;
+  }
+}
+
+template<typename N, typename K, typename H>
+H AvlTree<N, K, H>::balance(N* node)
 {
   return (nullptr == node ? 0 : height(node->left()) - height(node->right()));
 }
 
-template<typename NodeType>
-int AvlTree<NodeType>::height(NodeType* node)
+template<typename N, typename K, typename H>
+H AvlTree<N, K, H>::height(N* node)
 {
   return (nullptr == node ? 0 : node->height());
 }
 
-template<typename NodeType>
-int AvlTree<NodeType>::max(int v1, int v2)
+template<typename N, typename K, typename H>
+H AvlTree<N, K, H>::max(H v1, H v2)
 {
   return (v1 > v2 ? v1 : v2);
 }
 
-template<typename NodeType>
-void AvlTree<NodeType>::traverseInOrder(NodeType* node, NodeObserver<NodeType>* o)
+template<typename N, typename K, typename H>
+void AvlTree<N, K, H>::traverseInOrder(N* node, NodeObserver<N>* o)
 {
   if (nullptr == node) {
     return;
   }
 
   traverseInOrder(node->left(), o);
-  //node->onTraverse();
   o->onTraverse(node);
   traverseInOrder(node->right(), o);
 }
 
-template<typename NodeType>
-NodeType* AvlTree<NodeType>::searchMin(NodeType* node)
+template<typename N, typename K, typename H>
+N* AvlTree<N, K, H>::searchMin(N* node)
 {
-    NodeType* current = node;
+    N* current = node;
 
     while (nullptr != current->left()) {
         current = current->left();
@@ -386,8 +410,8 @@ NodeType* AvlTree<NodeType>::searchMin(NodeType* node)
     return current;
 }
 
-template<typename NodeType>
-NodeType* AvlTree<NodeType>::search(NodeType* root, int key)
+template<typename N, typename K, typename H>
+N* AvlTree<N, K, H>::search(N* root, K key)
 {
   if (nullptr == root || root->key() == key) {
     return root;
