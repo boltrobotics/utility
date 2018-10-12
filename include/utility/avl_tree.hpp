@@ -92,6 +92,11 @@ public:
    */
   AvlTree();
 
+  /**
+   * Erase all branches on destruction.
+   */
+  ~AvlTree();
+
 // OPERATIONS
 
   N* root();
@@ -155,6 +160,12 @@ template<typename N, typename K, typename H>
 inline AvlTree<N, K, H>::AvlTree() :
   root_(nullptr)
 {
+}
+
+template<typename N, typename K, typename H>
+inline AvlTree<N, K, H>::~AvlTree()
+{
+  eraseBranch(root_);
 }
 
 //============================================= OPERATIONS =========================================
