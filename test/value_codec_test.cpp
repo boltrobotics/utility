@@ -33,7 +33,7 @@ public:
 
 //=================================== TESTS ====================================
 
-TEST_F(ValueCodecTest, getFixedIntMsbOK)
+TEST_F(ValueCodecTest, decodeFixedIntMsbOK)
 {
   uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -68,7 +68,7 @@ TEST_F(ValueCodecTest, getFixedIntMsbOK)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, getFixedIntLsbOK)
+TEST_F(ValueCodecTest, decodeFixedIntLsbOK)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
 
@@ -103,7 +103,7 @@ TEST_F(ValueCodecTest, getFixedIntLsbOK)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, getFixedIntBad)
+TEST_F(ValueCodecTest, decodeFixedIntBad)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC};
 
@@ -376,11 +376,12 @@ TEST_F(ValueCodecTest, encodeFloatToInt)
 
   buff_.reset();
   v = 2.1;
-  ValueCodec::encodeFloatToInt<uint16_t>(&buff_, v, 3, true);
+  uint8_t* buff = buff_.data();
+  ValueCodec::encodeFloatToInt<uint16_t>(buff, v, 3, true);
   uint8_t expected2[] = { 0x8, 0x34 };
 
   for (uint8_t i = 0; i < 2; i++) {
-    ASSERT_EQ(expected2[i], buff_.data()[i]) << TestHelpers::toHex(buff_);
+    ASSERT_EQ(expected2[i], buff[i]) << TestHelpers::toHex(buff_);
   }
 }
 

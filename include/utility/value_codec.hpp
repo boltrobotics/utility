@@ -119,6 +119,8 @@ public:
    */
   template<typename T, typename FloatType>
   static void encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_places, bool msb);
+  template<typename T, typename FloatType>
+  static void encodeFloatToInt(uint8_t* buff, FloatType val, uint8_t dec_places, bool msb);
 
   /**
    * Decode an integer into a floating-point number by shifting decimal point to the left.
@@ -319,6 +321,13 @@ inline void ValueCodec::encodeFixedInt(uint8_t* buff, T val, bool msb)
 
 template<typename T, typename FloatType>
 inline void ValueCodec::encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
+{
+  T output = round(val * pow(10, dec_places));
+  encodeFixedInt(buff, output, msb);
+}
+
+template<typename T, typename FloatType>
+inline void ValueCodec::encodeFloatToInt(uint8_t* buff, FloatType val, uint8_t dec_places, bool msb)
 {
   T output = round(val * pow(10, dec_places));
   encodeFixedInt(buff, output, msb);
