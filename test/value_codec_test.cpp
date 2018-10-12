@@ -33,7 +33,7 @@ public:
 
 //=================================== TESTS ====================================
 
-TEST_F(ValueCodecTest, testGetFixedIntMsbOK)
+TEST_F(ValueCodecTest, getFixedIntMsbOK)
 {
   uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -68,7 +68,7 @@ TEST_F(ValueCodecTest, testGetFixedIntMsbOK)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
+TEST_F(ValueCodecTest, getFixedIntLsbOK)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
 
@@ -103,7 +103,7 @@ TEST_F(ValueCodecTest, testGetFixedIntLsbOK)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testGetFixedIntBad)
+TEST_F(ValueCodecTest, getFixedIntBad)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC};
 
@@ -120,7 +120,7 @@ TEST_F(ValueCodecTest, testGetFixedIntBad)
   ASSERT_EQ(uint32_t(4), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testLittleEndian)
+TEST_F(ValueCodecTest, littleEndian)
 {
   int16_t number = 0x0001;
   char* ptr = (char*) &number;
@@ -129,7 +129,7 @@ TEST_F(ValueCodecTest, testLittleEndian)
   ASSERT_EQ(expected, ValueCodec::isLittleEndian());
 }
 
-TEST_F(ValueCodecTest, testSwap)
+TEST_F(ValueCodecTest, swap)
 {
   uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC};
 
@@ -145,7 +145,7 @@ TEST_F(ValueCodecTest, testSwap)
   }
 }
 
-TEST_F(ValueCodecTest, testVarIntNBits)
+TEST_F(ValueCodecTest, varIntNBits)
 {
   // Bits are all 1s
   //
@@ -193,7 +193,7 @@ TEST_F(ValueCodecTest, testVarIntNBits)
   ASSERT_EQ(uint32_t(0), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testVarInt7Bits)
+TEST_F(ValueCodecTest, varInt7Bits)
 {
   buff_.write(ARRAY(0x0F));
   uint8_t v1 = 0;
@@ -217,7 +217,7 @@ TEST_F(ValueCodecTest, testVarInt7Bits)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testVarInt7BitsBad)
+TEST_F(ValueCodecTest, varInt7BitsBad)
 {
   // Buffer is small and high bit is set.
   buff_.write(ARRAY(0x82));
@@ -236,7 +236,7 @@ TEST_F(ValueCodecTest, testVarInt7BitsBad)
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 
-TEST_F(ValueCodecTest, testSetFixedIntPositive)
+TEST_F(ValueCodecTest, encodeFixedIntPositive)
 {
   const uint16_t num = 0x0402;
   uint16_t val = 0;
@@ -277,7 +277,52 @@ TEST_F(ValueCodecTest, testSetFixedIntPositive)
   ASSERT_EQ(num, val);
 }
 
-TEST_F(ValueCodecTest, testSetFixedIntNegative)
+TEST_F(ValueCodecTest, encodeFixedIntRawBuff)
+{
+  const uint16_t num = 0x0402;
+  uint16_t val = 0;
+  uint8_t* buffc = buff_.data();
+
+  // If this host is little-endian, the number is encoded in MSB, 0x0402
+  ValueCodec::encodeFixedInt(buffc, num, true);
+  // Decode in MSB
+  ValueCodec::decodeFixedInt(buffc, &val, sizeof(val), true);
+  ASSERT_EQ(num, val);
+
+  // If this host is little-endian, the number is encoded in LSB, 0x0204
+  ValueCodec::encodeFixedInt(buffc, num, false);
+  // Decode in MSB
+  ValueCodec::decodeFixedInt(buffc, &val, sizeof(val), true);
+  ASSERT_EQ(uint16_t(0x0204), val);
+
+  // If this host is little-endian, the number is encoded in LSB, 0x0204
+  ValueCodec::encodeFixedInt(buffc, num, false);
+  // Decode in MSB
+  ValueCodec::decodeFixedInt(buffc, &val, sizeof(val), false);
+  ASSERT_EQ(num, val);
+
+  const int16_t num_neg = -0x0402;
+  int16_t val_neg = 0;
+
+  // If this host is little-endian, the number is encoded in MSB, -0x0402
+  ValueCodec::encodeFixedInt(buffc, num_neg, true);
+  ValueCodec::decodeFixedInt(buffc, &val_neg, sizeof(val_neg), true);
+  ASSERT_EQ(num_neg, val_neg);
+
+  // If this host is little-endian, the number is encoded in LSB, -0x0204
+  ValueCodec::encodeFixedInt(buffc, num_neg, false);
+  // Decode in MSB
+  ValueCodec::decodeFixedInt(buffc, &val_neg, sizeof(val_neg), true);
+  ASSERT_EQ(int16_t(-0x0105), val_neg);
+
+  // If this host is little-endian, the number is encoded in LSB, -0x0204
+  ValueCodec::encodeFixedInt(buffc, num_neg, false);
+  // Decode in MSB
+  ValueCodec::decodeFixedInt(buffc, &val_neg, sizeof(val_neg), false);
+  ASSERT_EQ(num_neg, val_neg);
+}
+
+TEST_F(ValueCodecTest, encodeFixedIntNegative)
 {
   const int16_t num = -0x0402;
   int16_t val = 0;
@@ -318,7 +363,7 @@ TEST_F(ValueCodecTest, testSetFixedIntNegative)
   ASSERT_EQ(num, val);
 }
 
-TEST_F(ValueCodecTest, testEncodeFloatToInt)
+TEST_F(ValueCodecTest, encodeFloatToInt)
 {
   double v = Misc::PI;
 
@@ -339,7 +384,7 @@ TEST_F(ValueCodecTest, testEncodeFloatToInt)
   }
 }
 
-TEST_F(ValueCodecTest, testDecodeIntToFloat)
+TEST_F(ValueCodecTest, decodeIntToFloat)
 {
   uint8_t raw[] = { 0x1, 0x3A }; // 314
   double v = 0;
@@ -371,7 +416,7 @@ void decodeIntPartsToFloat(Buff* buff, OutType ipart_expected, OutType fpart_exp
   ASSERT_EQ(fpart_expected, fpart_actual) << "Line: " << line;
 }
 
-TEST_F(ValueCodecTest, testEncodeFloatToIntParts)
+TEST_F(ValueCodecTest, encodeFloatToIntParts)
 {
   double val = Misc::PI;
 

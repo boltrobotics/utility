@@ -107,6 +107,8 @@ public:
    */
   template<typename T>
   static void encodeFixedInt(Buff* buff, T val, bool msb);
+  template<typename T>
+  static void encodeFixedInt(uint8_t* buff, T val, bool msb);
 
   /**
    * Encode a floating-point number as an integer by shifting decimal point to the right.
@@ -168,6 +170,15 @@ public:
    * @return true if this host is little endian
    */
   static bool isLittleEndian();
+
+  /**
+   * Convert a value between MSB and LSB host order considering the target and host order.
+   *
+   * @param val - numeric value
+   * @param msb - target order
+   */
+  template<typename T>
+  static void swap(T* val, bool msb);
 
   /**
    * Convert a value between MSB and LSB host order.
@@ -294,16 +305,16 @@ inline int ValueCodec::decodeFixedInt(Buff* buff, T* val, uint32_t bytes, bool m
 template<typename T>
 inline void ValueCodec::encodeFixedInt(Buff* buff, T val, bool msb)
 {
-  if (isLittleEndian()) {
-    if (msb) {
-      swap(&val);
-    }
-  } else {
-    if (!msb) {
-      swap(&val);
-    }
-  }
+  swap(&val, msb);
   buff->write(val);
+}
+
+template<typename T>
+inline void ValueCodec::encodeFixedInt(uint8_t* buff, T val, bool msb)
+{
+  swap(&val, msb);
+  const uint8_t* val_bytes = reinterpret_cast<const uint8_t*>(&val);
+  memcpy(buff, val_bytes, sizeof(T));
 }
 
 template<typename T, typename FloatType>
@@ -378,6 +389,20 @@ inline bool ValueCodec::isLittleEndian()
 }
 
 template<typename T>
+inline void ValueCodec::swap(T* val, bool msb)
+{
+  if (isLittleEndian()) {
+    if (msb) {
+      swap(val);
+    }
+  } else {
+    if (!msb) {
+      swap(val);
+    }
+  }
+}
+
+template<typename T>
 inline void ValueCodec::swap(T* val)
 {
   uint8_t* bytes = reinterpret_cast<uint8_t*>(val);
@@ -389,7 +414,6 @@ inline void ValueCodec::swap(T* val)
     bytes[j] = tmp;
   }
 }
-
 
 } // namespace btr
 
