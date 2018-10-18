@@ -25,19 +25,24 @@ public:
     NodeBase(key)
   {}
 
-// OPERATIONS
-
-  /**
-   * @override NodeObserver::onTraverse
-   */
-  virtual void onTraverse(Server* node)
-  {
-    keys_.push_back(node->key());
-  }
+public:
 
 // ATTRIBUTES
 
   std::vector<uint16_t> keys_;
+
+protected:
+
+// OPERATIONS
+
+  /**
+   * @override NodeObserver::onTraverseImpl
+   */
+  virtual int onTraverseImpl(Server* node)
+  {
+    keys_.push_back(node->key());
+    return 0;
+  }
 };
 
 //------------------------------------------------------------------------------
@@ -74,9 +79,9 @@ public:
 
 //------------------------------------------------------------------------------
 
-TEST_F(AvlTreeTest, traverseInOrder)
+TEST_F(AvlTreeTest, traverse)
 {
-  tree_.traverseInOrder(tree_.root(), &observer_);
+  tree_.traverse(tree_.root(), &observer_);
 
   ASSERT_EQ(keys_[0], observer_.keys_[0]);
   ASSERT_EQ(keys_[2], observer_.keys_[1]);

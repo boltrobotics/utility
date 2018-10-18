@@ -18,12 +18,26 @@ public:
 
 // LIFECYCLE
 
-  NodeObserver() = default;
+  NodeObserver();
   virtual ~NodeObserver() = default;
 
 // OPERATIONS
 
-  virtual void onTraverse(N* node) = 0;
+  /**
+   * @return -1 on error, 0 otherwise
+   */
+  int onTraverse(N* node);
+
+  /**
+   * @return -1 on error, 0 otherwise
+   */
+  virtual int onTraverseImpl(N* node) = 0;
+
+// ATTRIBUTES
+
+  N* start_node_;
+  N* prev_node_;
+  int errno_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +125,8 @@ public:
   static H balance(N* node);
   static H height(N* node);
   static H max(H v1, H v2);
-  static void traverseInOrder(N* node, NodeObserver<N>* o);
+  static int traverse(N* node, NodeObserver<N>* o);
+  static int traverse(N* node, NodeObserver<N>* o, K key_min, K key_max);
   static N* searchMin(N* node);
   static N* search(N* root, K key);
 
@@ -147,6 +162,14 @@ private:
 
 //============================================= LIFECYCLE ==========================================
 
+template<typename N>
+inline NodeObserver<N>::NodeObserver() :
+  start_node_(nullptr),
+  prev_node_(nullptr),
+  errno_(0)
+{
+}
+
 template<typename N, typename K, typename H>
 inline NodeBase<N, K, H>::NodeBase(K key) :
   key_(key),
@@ -169,6 +192,14 @@ inline AvlTree<N, K, H>::~AvlTree()
 }
 
 //============================================= OPERATIONS =========================================
+
+template<typename N>
+inline int NodeObserver<N>::onTraverse(N* n)
+{
+  int rc = onTraverseImpl(n);
+  prev_node_ = n;
+  return rc;
+}
 
 template<typename N, typename K, typename H>
 inline K NodeBase<N, K, H>::key() const
@@ -319,15 +350,49 @@ H AvlTree<N, K, H>::max(H v1, H v2)
 }
 
 template<typename N, typename K, typename H>
-void AvlTree<N, K, H>::traverseInOrder(N* node, NodeObserver<N>* o)
+int AvlTree<N, K, H>::traverse(N* node, NodeObserver<N>* o)
 {
+  int rc = 0;
+
   if (nullptr == node) {
-    return;
+    return rc;
   }
 
-  traverseInOrder(node->left(), o);
-  o->onTraverse(node);
-  traverseInOrder(node->right(), o);
+  rc = traverse(node->left(), o);
+
+  if (-1 != rc) {
+    rc = o->onTraverse(node);
+
+    if (-1 != rc) {
+      rc = traverse(node->right(), o);
+    }
+  }
+  return rc;
+}
+
+template<typename N, typename K, typename H>
+int AvlTree<N, K, H>::traverse(N* node, NodeObserver<N>* o, K key_min, K key_max)
+{
+  int rc = 0;
+
+  if (nullptr == node) {
+    return rc;
+  }
+
+  if (key_min < node->key()) {
+    rc = traverse(node->left(), o, key_min, key_max);
+  }
+
+  if (-1 != rc) {
+    if (key_min <= node->key() && key_max >= node->key()) {
+      rc = o->onTraverse(node);
+    }
+
+    if (-1 != rc && key_max > node->key()) {
+      rc = traverse(node->right(), o, key_min, key_max);
+    }
+  }
+  return rc;
 }
 
 template<typename N, typename K, typename H>
