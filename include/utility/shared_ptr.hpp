@@ -92,6 +92,10 @@ public:
   PtrType* operator->();
 
   /**
+   */
+  PtrType* get();
+
+  /**
    * @return the count
    */
   int count() const;
@@ -193,6 +197,12 @@ PtrType& SharedPtr<PtrType>::operator*()
 
 template<typename PtrType>
 PtrType* SharedPtr<PtrType>::operator->()
+{
+  return ptr_;
+}
+
+template<typename PtrType>
+PtrType* SharedPtr<PtrType>::get()
 {
   return ptr_;
 }
