@@ -7,6 +7,8 @@
 #include "utility/x86/serial_io_boost.hpp"  // class implemented
 #include "utility/buff.hpp"
 
+#define BOOST_SYSTEM_NO_DEPRECATED
+
 namespace btr
 {
 
