@@ -112,6 +112,7 @@ TEST_F(AvlTreeTest, erase)
   // After deleting root node 3, node 7 becomes root. We expect data members to be copied over
   // from 3 to 7.
   Server* e_node = tree_.erase(3);
+  (void)e_node;
   s_node = tree_.search(tree_.root(), 3);
   ASSERT_TRUE(nullptr == s_node);
 
