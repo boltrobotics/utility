@@ -63,6 +63,7 @@ function(add_project)
   if (NOT p_HOME)
     message(FATAL_ERROR "${p_PREFIX} HOME undefined")
   endif ()
+  message(STATUS "${p_PREFIX} home directory: ${p_HOME}")
 
   # Set binary directory
   #
@@ -72,20 +73,7 @@ function(add_project)
     set(${p_PREFIX}_BINARY_DIR "${p_BIN_DIR}")
   endif()
   set(${p_PREFIX}_BINARY_DIR "${${p_PREFIX}_BINARY_DIR}" PARENT_SCOPE)
-
-  # Set include directory variable
-  #
-  if (NOT p_INC_DIR)
-    set(${p_PREFIX}_INC_DIR "${p_HOME}/include")
-  else ()
-    set(${p_PREFIX}_INC_DIR "${p_INC_DIR}")
-  endif ()
-  # Verify that include directory exists
-  if (IS_DIRECTORY "${${p_PREFIX}_INC_DIR}")
-    set(${p_PREFIX}_INC_DIR "${${p_PREFIX}_INC_DIR}" PARENT_SCOPE)
-  else ()
-    unset(${p_PREFIX}_INC_DIR)
-  endif ()
+  message(STATUS "${p_PREFIX} binary directory: ${${p_PREFIX}_BINARY_DIR}")
 
   # Set source directory
   #
@@ -95,6 +83,24 @@ function(add_project)
     set(${p_PREFIX}_SOURCE_DIR "${p_SRC_DIR}")
   endif()
   set(${p_PREFIX}_SOURCE_DIR "${${p_PREFIX}_SOURCE_DIR}" PARENT_SCOPE)
+  message(STATUS "${p_PREFIX} source directory: ${${p_PREFIX}_SOURCE_DIR}")
+
+  # If home directory does not exist, try to download and build the external project.
+  #
+  if (NOT IS_DIRECTORY "${p_HOME}" OR p_FORCE_UPDATE)
+    message(STATUS "${p_PREFIX} download directory: ${p_HOME}")
+    download_project(${ARGN})
+  endif ()
+
+  # Set include directory variable
+  #
+  if (NOT p_INC_DIR)
+    set(${p_PREFIX}_INC_DIR "${p_HOME}/include")
+  else ()
+    set(${p_PREFIX}_INC_DIR "${p_INC_DIR}")
+  endif ()
+  set(${p_PREFIX}_INC_DIR "${${p_PREFIX}_INC_DIR}" PARENT_SCOPE)
+  message(STATUS "${p_PREFIX} include directory: ${${p_PREFIX}_INC_DIR}")
 
   # Set library directory
   #
@@ -104,6 +110,7 @@ function(add_project)
     set(${p_PREFIX}_LIB_DIR  "${p_LIB_DIR}")
   endif ()
   set(${p_PREFIX}_LIB_DIR  "${${p_PREFIX}_LIB_DIR}" PARENT_SCOPE)
+  message(STATUS "${p_PREFIX} library directory: ${${p_PREFIX}_LIB_DIR}")
 
   # Set library name without prefix/suffix (i.e. lib[library name].a)
   #
@@ -113,16 +120,7 @@ function(add_project)
     set(${p_PREFIX}_LIB_NAME "${p_LIB_NAME}")
   endif ()
   set(${p_PREFIX}_LIB_NAME "${${p_PREFIX}_LIB_NAME}" PARENT_SCOPE)
-
-  # If home directory does not exist, try to download and build the external project.
-  #
-  if (NOT IS_DIRECTORY "${p_HOME}" OR p_FORCE_UPDATE)
-    message(STATUS "${p_PREFIX} download directory: ${p_HOME}")
-    download_project(${ARGN})
-  endif ()
-
-  message(STATUS "${p_PREFIX} source directory: ${${p_PREFIX}_SOURCE_DIR}")
-  message(STATUS "${p_PREFIX} binary directory: ${${p_PREFIX}_BINARY_DIR}")
+  message(STATUS "${p_PREFIX} library name: ${${p_PREFIX}_LIB_NAME}")
 
   # For cross-compiled (arm) project, cmake sets root filesystem at /usr/local/arm-non-eabi.
   # Set the root to system root.
@@ -132,7 +130,7 @@ function(add_project)
 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(${p_PREFIX} REQUIRED_VARS
-    ${p_PREFIX}_INC_DIR ${p_PREFIX}_LIB_DIR)
+    ${p_PREFIX}_LIB_DIR ${p_PREFIX}_INC_DIR)
 
   if (NOT TARGET ${p_PREFIX})
     #if (NOT ${p_PREFIX}_${CMAKE_BUILD_TYPE}_ALREADY_ADDED)
