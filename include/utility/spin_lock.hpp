@@ -1,4 +1,5 @@
-/* Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com> */
+// Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
+// License: GNU GPL v3
 
 #ifndef _btr_SpinLock_hpp_
 #define _btr_SpinLock_hpp_
