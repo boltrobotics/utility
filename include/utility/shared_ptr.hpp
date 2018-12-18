@@ -48,7 +48,11 @@ private:
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * The class represents an AVL self-balancing binary search tree.
+ * The class represents a smart pointer that keeps track of the number of references to an
+ * object. When reference cont goes to zero, the object is deleted.
+ *
+ * Custom shared pointer is required for development on C++ compatible platforms that don't
+ * support standard template library.
  */
 template <typename PtrType>
 class SharedPtr
