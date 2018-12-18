@@ -5,9 +5,9 @@
 
 // PROJECT INCLUDES
 #include "utility/x86/serial_io_boost.hpp"
+#include "utility/x86/pseudo_tty.hpp"
 #include "utility/buff.hpp"
 #include "utility/test_helpers.hpp"
-#include "utility/pseudo_tty.hpp"
 
 namespace btr
 {
