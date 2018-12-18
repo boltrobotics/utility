@@ -4,17 +4,6 @@ build/
 # Mac
 .DS_Store
 
-# Jekyll
-_site
-.jekyll
-.jekyll-metadata
-.bundle
-.sass-cache
-Gemfile
-Gemfile.lock
-node_modules
-package.json
-
 # Prerequisites
 *.d
 
