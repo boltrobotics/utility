@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2019 Bolt Robotics <info@boltrobotics.com>
+# Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 # License: GNU GPL v3
 
 BOARD_FAMILY="x86"
