@@ -18,6 +18,8 @@ namespace btr
 {
 
 #define BAUD 115200
+#define DATA_BITS 8
+#define TIMEOUT 100
 
 //------------------------------------------------------------------------------
 
@@ -28,14 +30,12 @@ public:
   // LIFECYCLE
 
   SerialIOTermiosTest()
-  : tty_(),
-    act_serial_(TTY_SIM_0, BAUD, 100),
-    sim_serial_(TTY_SIM_1, BAUD, 100),
-    wbuff_(),
-    rbuff_(),
-    success_(0, std::generic_category()),
-    timeout_(ETIME, std::generic_category()),
-    no_buff_space_(ENOBUFS, std::generic_category())
+    :
+      tty_(),
+      act_serial_(TTY_SIM_0, BAUD, DATA_BITS, SerialIOTermios::PARITY_NONE, TIMEOUT),
+      sim_serial_(TTY_SIM_1, BAUD, DATA_BITS, SerialIOTermios::PARITY_NONE, TIMEOUT),
+      wbuff_(),
+      rbuff_()
   {
     resetBuffers();
   }
@@ -58,9 +58,6 @@ protected:
   SerialIOTermios sim_serial_;
   Buff wbuff_;
   Buff rbuff_;
-  std::error_code success_;
-  std::error_code timeout_;
-  std::error_code no_buff_space_;
 };
 
 //------------------------------------------------------------------------------
@@ -69,57 +66,57 @@ protected:
 
 TEST_F(SerialIOTermiosTest, ReadWriteOK)
 {
-  std::error_code e = sim_serial_.send(&wbuff_);
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  errno = 0;
+  int e = sim_serial_.send(&wbuff_);
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
+  errno = 0;
   std::this_thread::sleep_for(10ms);
   e = act_serial_.recv(&rbuff_, rbuff_.remaining());
 
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size()));
   TEST_MSG << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOTermiosTest, Flush)
 {
-  std::error_code e = sim_serial_.send(&wbuff_);
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  errno = 0;
+  int e = sim_serial_.send(&wbuff_);
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
-  e = sim_serial_.flush();
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  e = sim_serial_.flush(SerialIOTermios::FlashType::FLUSH_INOUT);
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
 
   std::this_thread::sleep_for(10ms);
 
   e = act_serial_.recv(&rbuff_, rbuff_.remaining());
-  ASSERT_EQ(timeout_, e) << " Message: " << e.message();
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
+
   ASSERT_EQ(0, rbuff_.available());
 
   resetBuffers();
 
   e = sim_serial_.send(&wbuff_);
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
   std::this_thread::sleep_for(10ms);
   e = act_serial_.recv(&rbuff_, rbuff_.remaining());
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
+}
+
+TEST_F(SerialIOTermiosTest, setTimeout)
+{
+  FAIL();
 }
 
 TEST_F(SerialIOTermiosTest, ReadTimeout)
 {
-  std::error_code e = act_serial_.recv(&rbuff_, rbuff_.remaining());
-  ASSERT_EQ(timeout_, e) << " Message: " << e.message();
+  int e = act_serial_.recv(&rbuff_, rbuff_.remaining());
+  // Timed out
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
   ASSERT_EQ(0, rbuff_.available());
-}
-
-TEST_F(SerialIOTermiosTest, NoBufferSpace)
-{
-  rbuff_.write_ptr() += rbuff_.remaining();
-  ASSERT_EQ(rbuff_.size(), rbuff_.available());
-  ASSERT_EQ(0, rbuff_.remaining());
-
-  std::error_code e = act_serial_.recv(&rbuff_, rbuff_.remaining() + 1);
-  ASSERT_EQ(no_buff_space_, e) << " Message: " << e.message();
 }
 
 TEST_F(SerialIOTermiosTest, DISABLED_WriteTimeout)
@@ -128,9 +125,20 @@ TEST_F(SerialIOTermiosTest, DISABLED_WriteTimeout)
   // FIXME: Write time-out simulation doesn't work.
   Buff large_buff;
   large_buff.resize(65536);
-  std::error_code e = sim_serial_.send(&large_buff);
-  ASSERT_EQ(success_, e) << " Message: " << e.message();
+  int e = sim_serial_.send(&large_buff);
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
 #endif
+}
+
+TEST_F(SerialIOTermiosTest, NoBufferSpace)
+{
+  rbuff_.write_ptr() += rbuff_.remaining();
+  ASSERT_EQ(rbuff_.size(), rbuff_.available());
+  ASSERT_EQ(0, rbuff_.remaining());
+
+  int e = act_serial_.recv(&rbuff_, rbuff_.remaining() + 1);
+  ASSERT_EQ(-1, e) << " Message: " << strerror(errno);
+  ASSERT_EQ(ENOBUFS, errno) << " Message: " << strerror(errno);
 }
 
 // } Tests

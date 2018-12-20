@@ -1,14 +1,11 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
-// License: GNU GPL v3
+// License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 #ifndef _btr_SerialIOTermios_hpp__
 #define _btr_SerialIOTermios_hpp__
 
 // SYSTEM INCLUDES
-#include <string>
-#include <system_error>
-
-// PROJECT INCLUDES
+#include <inttypes.h>
 
 namespace btr
 {
@@ -22,17 +19,38 @@ class SerialIOTermios
 {
 public:
 
+  typedef enum
+  {
+    PARITY_NONE,
+    PARITY_ODD,
+    PARITY_EVEN
+  } ParityType;
+
+  typedef enum
+  {
+    FLUSH_IN,
+    FLUSH_OUT,
+    FLUSH_INOUT
+  } FlashType;
+
 // LIFECYCLE
 
   /**
    * Ctor.
    *
-   * @param port - serial IO port
+   * @param port - serial IO port name (e.g., /dev/ttyS0)
    * @param baud_rate - baud rate. It must be one of values specified by in termios.h
    *  @see http://man7.org/linux/man-pages/man3/termios.3.html
+   * @param data_bits
+   * @param parity - @see ParityType
    * @param timeout - serial operation timeout in milliseconds
    */
-  SerialIOTermios(const std::string& port, int baud_rate = 57600, int timeout = 0);
+  SerialIOTermios(
+      const char* port_name,
+      uint32_t baud_rate = 57600,
+      uint8_t data_bits = 8,
+      ParityType parity = PARITY_NONE,
+      uint32_t timeout_millis = 0);
 
   /**
    * Dtor.
@@ -42,14 +60,40 @@ public:
 // OPERATIONS
 
   /**
-   * Close and open the port.
+   * Close serial port.
    */
-  void reset();
+  void close();
+
+  /**
+   * Open serial port.
+   *
+   * @see SerialIOTermios()
+   * @return 0 on success, -1 on failure
+   */
+  int open(
+      const char* port_name,
+      uint32_t baud_rate,
+      uint8_t data_bits,
+      ParityType parity,
+      uint32_t timeout_millis);
+
+  /**
+   * @param timeout_millis
+   * @return -1 on error, 0 otherwise
+   */
+  int setTimeout(uint32_t timeout_millis);
 
   /**
    * Flush not-transmitted and non-read data on the serial port.
+   *
+   * @param queue_selector - one of:
+   *  FLUSH_IN - flushes data received but not read.
+   *  FLUSH_OUT - flushes data written but not transmitted.
+   *  FLUSH_INOUT - flushes both data received but not read, and data written but not transmitted.
+   *
+   *  @see termios(3)
    */
-  std::error_code flush();
+  int flush(FlashType queue_selector);
 
   /**
    * @return bytes available on the serial port
@@ -69,7 +113,7 @@ public:
    * @param buff - the buffer to read into
    * @param bytes - the number of bytes to read
    */
-  std::error_code recv(Buff* buff, uint32_t bytes);
+  int recv(Buff* buff, uint32_t bytes);
 
   /**
    * Write data to serial port. The function increments buffer->read_ptr() by
@@ -77,7 +121,7 @@ public:
    *
    * @param data - the data to send
    */
-  std::error_code send(Buff* buff);
+  int send(Buff* buff);
 
 private:
 
@@ -93,9 +137,10 @@ private:
 
 // ATTRIBUTES
 
-  std::string port_name_;
-  int baud_rate_;
-  int timeout_millis_;
+  const char* port_name_;
+  uint32_t baud_rate_;
+  uint8_t data_bits_;
+  ParityType parity_;
   int port_;
 
 }; // class SerialIOTermios

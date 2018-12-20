@@ -1,11 +1,12 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
-// License: GNU GPL v3
+// License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 // SYSTEM INCLUDES
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 
 // PROJECT INCLUDES
 #include "utility/x86/serial_io_termios.hpp"  // class implemented
@@ -18,60 +19,137 @@ namespace btr
 
 //============================================= LIFECYCLE ==========================================
 
-SerialIOTermios::SerialIOTermios(const std::string& port_name, int baud_rate, int timeout_millis)
+SerialIOTermios::SerialIOTermios(
+  const char* port_name,
+  uint32_t baud_rate,
+  uint8_t data_bits,
+  ParityType parity,
+  uint32_t timeout_millis)
   :
   port_name_(port_name),
   baud_rate_(baud_rate),
-  timeout_millis_(timeout_millis),
+  data_bits_(data_bits),
+  parity_(parity),
   port_(-1)
 {
   baud_rate_ = getNativeBaud(baud_rate);
-  reset();
+  open(port_name, baud_rate, data_bits, parity, timeout_millis);
 }
 
 SerialIOTermios::~SerialIOTermios()
 {
-  close(port_);
+  close();
 }
 
 //============================================= OPERATIONS =========================================
 
-void SerialIOTermios::reset()
+void SerialIOTermios::close()
 {
-  close(port_);
+  if (port_ != -1) {
+    ::close(port_);
+    port_ = -1;
+  }
+}
 
-  port_ = open(port_name_.c_str(), O_RDWR | O_NOCTTY);
+int SerialIOTermios::open(
+    const char* port_name,
+    uint32_t baud_rate,
+    uint8_t data_bits,
+    ParityType parity,
+    uint32_t timeout_millis)
+{
+  port_ = ::open(port_name_, O_RDWR | O_NOCTTY);
 
   if (port_ < 0) {
-      throw "Failed to open " + port_name_;
+    errno = EBADF;
+    return -1;
   }
 
   struct termios options;
-  tcgetattr(port_, &options);
+
+  if (tcgetattr(port_, &options) != 0) {
+    return -1;
+  }
 
   cfmakeraw(&options);
-  cfsetospeed(&options, baud_rate_);
-  cfsetispeed(&options, baud_rate_);
-
+  //bzero(&options, sizeof(struct termios));
   //options.c_cflag = CS8 | CREAD | CLOCAL | baud_rate_;
   //options.c_iflag = IGNPAR | IGNCR;
   //options.c_lflag &= ~ICANON;
-  options.c_cc[VTIME] = timeout_millis_ / 100; // VTIME is in tenths of seconds
+
+  switch (parity) {
+    case PARITY_NONE:
+      break;
+    case PARITY_EVEN:
+      options.c_cflag |= PARENB;
+      break;
+    case PARITY_ODD:
+      options.c_cflag |= PARENB | PARODD;
+      break;
+    default:
+      errno = EINVAL;
+      return -1;
+  }
+
+  switch (data_bits) {
+    case 8:
+      options.c_cflag |= CS8;
+      break;
+    case 7:
+      options.c_cflag |= CS7;
+      break;
+    default:
+      errno = EINVAL;
+      return -1;
+  }
+
+  options.c_cc[VTIME] = timeout_millis / 100; // VTIME is in tenths of seconds
   options.c_cc[VMIN] = 0;
 
-  tcflush(port_, TCIOFLUSH);
-  tcsetattr(port_, TCSANOW, &options);
+  baud_rate_ = getNativeBaud(baud_rate);
+
+  if (cfsetospeed(&options, baud_rate_) != 0
+      || cfsetispeed(&options, baud_rate_) != 0
+      || tcsetattr(port_, TCSANOW, &options) != 0
+      || flush(FLUSH_INOUT) != 0)
+  {
+    return -1;
+  }
+  return 0;
 }
 
-std::error_code SerialIOTermios::flush()
+int SerialIOTermios::setTimeout(uint32_t timeout_millis)
 {
-  errno = 0;
+  struct termios options;
+  int rc = 0;
 
-  if (0 == tcflush(port_, TCIOFLUSH)) {
-    return std::error_code(0, std::generic_category());
-  } else {
-    return std::error_code(errno, std::generic_category());
+  if ((rc = tcgetattr(port_, &options)) == 0) {
+    options.c_cc[VTIME] = timeout_millis / 100; // VTIME is in tenths of seconds
+    options.c_cc[VMIN] = 0;
+    rc = tcsetattr(port_, TCSANOW, &options);
   }
+  return rc;
+}
+
+int SerialIOTermios::flush(FlashType queue_selector)
+{
+  int rc = 0;
+
+  switch (queue_selector) {
+    case FLUSH_IN:
+      rc = tcflush(port_, TCIFLUSH);
+      break;
+    case FLUSH_OUT:
+      rc = tcflush(port_, TCOFLUSH);
+      break;
+    case FLUSH_INOUT:
+      rc = tcflush(port_, TCIOFLUSH);
+      break;
+    default:
+      errno = EINVAL;
+      rc = -1;
+  };
+  return rc;
 }
 
 uint32_t SerialIOTermios::available()
@@ -90,48 +168,53 @@ void SerialIOTermios::setReadMinimum(uint32_t bytes)
   tcsetattr(port_, TCSANOW, &options);
 }
 
-std::error_code SerialIOTermios::recv(Buff* buff, uint32_t bytes)
+int SerialIOTermios::recv(Buff* buff, uint32_t bytes)
 {
   if (buff->remaining() < bytes) {
-    return std::error_code(ENOBUFS, std::generic_category());
+    errno = ENOBUFS;
+    return -1;
   }
 
-  std::error_code err(0, std::generic_category());
+  ssize_t rc = 0;
 
   do {
-    errno = 0;
-    ssize_t count = read(port_, buff->write_ptr(), bytes);
+    rc = read(port_, buff->write_ptr(), bytes);
 
-    if (count > 0) {
-      // At least 1 byte is received, continue reading until received requested bytes
-      buff->write_ptr() += count;
-      bytes -= count;
-    } else if (count == 0) {
-      // If count is 0, we reached EOF or the call has timed out.
-      err = std::error_code(ETIME, std::generic_category());
-      break;
+    if (rc > 0) {
+      // At least 1 byte is received, continue reading until received requested bytes.
+      buff->write_ptr() += rc;
+      bytes -= rc;
+    } else if (rc == 0) {
+      errno = ETIME;
+      break; // Reached EOF or the call has timed out.
     } else {
-      // -1 is received on error.
-      err = std::error_code(errno, std::generic_category());
+      rc = -1; // Error occured.
       break;
     }
   } while (bytes > 0);
 
-  return err;
+  return rc;
 }
 
-std::error_code SerialIOTermios::send(Buff* buff)
+int SerialIOTermios::send(Buff* buff)
 {
-  errno = 0;
-  int count = write(port_, buff->read_ptr(), buff->available());
+  int rc = 0;
+  
+  while (buff->available() > 0) {
+    rc = write(port_, buff->read_ptr(), buff->available());
 
-  if (count >= 0) {
-    return std::error_code(0, std::generic_category());
-  } else {
-    return std::error_code(errno, std::generic_category());
+    // If system call was interrupted, try to write the available data again.
+    //
+    if (rc == -1) {
+      if (errno != EINTR) {
+        break;
+      }
+    }
+
+    buff->read_ptr() += rc;
   }
+  return rc;
 }
-
 
 /////////////////////////////////////////////// PROTECTED //////////////////////////////////////////
 
