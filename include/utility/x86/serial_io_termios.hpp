@@ -38,19 +38,8 @@ public:
   /**
    * Ctor.
    *
-   * @param port - serial IO port name (e.g., /dev/ttyS0)
-   * @param baud_rate - baud rate. It must be one of values specified by in termios.h
-   *  @see http://man7.org/linux/man-pages/man3/termios.3.html
-   * @param data_bits
-   * @param parity - @see ParityType
-   * @param timeout - serial operation timeout in milliseconds
    */
-  SerialIOTermios(
-      const char* port_name,
-      uint32_t baud_rate = 57600,
-      uint8_t data_bits = 8,
-      ParityType parity = PARITY_NONE,
-      uint32_t timeout_millis = 0);
+  SerialIOTermios();
 
   /**
    * Dtor.
@@ -67,14 +56,19 @@ public:
   /**
    * Open serial port.
    *
-   * @see SerialIOTermios()
+   * @param port - serial IO port name (e.g., /dev/ttyS0)
+   * @param baud_rate - baud rate. It must be one of values specified by in termios.h
+   *  @see http://man7.org/linux/man-pages/man3/termios.3.html
+   * @param data_bits
+   * @param parity - @see ParityType
+   * @param timeout - serial operation timeout in milliseconds
    * @return 0 on success, -1 on failure
    */
   int open(
       const char* port_name,
       uint32_t baud_rate,
       uint8_t data_bits,
-      ParityType parity,
+      uint8_t parity,
       uint32_t timeout_millis);
 
   /**
@@ -140,7 +134,7 @@ private:
   const char* port_name_;
   uint32_t baud_rate_;
   uint8_t data_bits_;
-  ParityType parity_;
+  uint8_t parity_;
   int port_;
 
 }; // class SerialIOTermios

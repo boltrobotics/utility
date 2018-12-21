@@ -32,11 +32,13 @@ public:
   SerialIOTermiosTest()
     :
       tty_(),
-      act_serial_(TTY_SIM_0, BAUD, DATA_BITS, SerialIOTermios::PARITY_NONE, TIMEOUT),
-      sim_serial_(TTY_SIM_1, BAUD, DATA_BITS, SerialIOTermios::PARITY_NONE, TIMEOUT),
+      act_serial_(),
+      sim_serial_(),
       wbuff_(),
       rbuff_()
   {
+    act_serial_.open(TTY_SIM_0, BAUD, DATA_BITS, SerialIOTermios::PARITY_NONE, TIMEOUT),
+    sim_serial_.open(TTY_SIM_1, BAUD, DATA_BITS, SerialIOTermios::PARITY_NONE, TIMEOUT),
     resetBuffers();
   }
 

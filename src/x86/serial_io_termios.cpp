@@ -19,21 +19,14 @@ namespace btr
 
 //============================================= LIFECYCLE ==========================================
 
-SerialIOTermios::SerialIOTermios(
-  const char* port_name,
-  uint32_t baud_rate,
-  uint8_t data_bits,
-  ParityType parity,
-  uint32_t timeout_millis)
+SerialIOTermios::SerialIOTermios()
   :
-  port_name_(port_name),
-  baud_rate_(baud_rate),
-  data_bits_(data_bits),
-  parity_(parity),
+  port_name_(""),
+  baud_rate_(),
+  data_bits_(),
+  parity_(),
   port_(-1)
 {
-  baud_rate_ = getNativeBaud(baud_rate);
-  open(port_name, baud_rate, data_bits, parity, timeout_millis);
 }
 
 SerialIOTermios::~SerialIOTermios()
@@ -55,9 +48,14 @@ int SerialIOTermios::open(
     const char* port_name,
     uint32_t baud_rate,
     uint8_t data_bits,
-    ParityType parity,
+    uint8_t parity,
     uint32_t timeout_millis)
 {
+  port_name_ = port_name;
+  data_bits_ = data_bits;
+  parity_ = parity;
+
+  baud_rate_ = getNativeBaud(baud_rate);
   port_ = ::open(port_name_, O_RDWR | O_NOCTTY);
 
   if (port_ < 0) {
