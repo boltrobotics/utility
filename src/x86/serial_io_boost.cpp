@@ -38,7 +38,7 @@ SerialIOBoost::~SerialIOBoost()
 
 //============================================= OPERATIONS =========================================
 
-std::error_code SerialIOBoost::open(
+int SerialIOBoost::open(
     const char* port_name,
     uint32_t baud_rate,
     uint8_t data_bits,
@@ -67,7 +67,11 @@ std::error_code SerialIOBoost::open(
     }
   }
 
-  return err_;
+  if (err_) {
+    errno = err_.value();
+    return -1;
+  }
+  return 0;
 }
 
 void SerialIOBoost::setTimeout(uint32_t timeout_millis)
@@ -75,17 +79,28 @@ void SerialIOBoost::setTimeout(uint32_t timeout_millis)
   timeout_ = timeout_millis;
 }
 
-std::error_code SerialIOBoost::flush()
+int SerialIOBoost::flush(FlashType queue_selector)
 {
-  if (0 == tcflush(serial_port_.lowest_layer().native_handle(), TCIOFLUSH)) {
-    err_.clear();
-  } else {
-    err_ = std::error_code(errno, std::generic_category());
+  int rc = 0;
+
+  switch (queue_selector) {
+    case FLUSH_IN:
+      rc = tcflush(serial_port_.lowest_layer().native_handle(), TCIFLUSH);
+      break;
+    case FLUSH_OUT:
+      rc = tcflush(serial_port_.lowest_layer().native_handle(), TCOFLUSH);
+      break;
+    case FLUSH_INOUT:
+      rc = tcflush(serial_port_.lowest_layer().native_handle(), TCIOFLUSH);
+      break;
+    default:
+      errno = EINVAL;
+      rc = -1;
   }
-  return err_;
+  return rc;
 }
 
-std::error_code SerialIOBoost::recv(Buff* buff)
+int SerialIOBoost::recv(Buff* buff)
 {
   io_service_.reset();
   expected_bytes_ = buff->remaining();
@@ -103,11 +118,14 @@ std::error_code SerialIOBoost::recv(Buff* buff)
 
   if (!err_) {
     buff->write_ptr() += expected_bytes_;
+  } else {
+    errno = err_.value();
+    return -1;
   }
-  return err_;
+  return 0;
 }
 
-std::error_code SerialIOBoost::send(Buff* buff)
+int SerialIOBoost::send(Buff* buff)
 {
   io_service_.reset();
   expected_bytes_ = buff->available();
@@ -124,9 +142,11 @@ std::error_code SerialIOBoost::send(Buff* buff)
 
   if (!err_) {
     buff->read_ptr() += expected_bytes_;
+  } else {
+    errno = err_.value();
+    return -1;
   }
-
-  return err_;
+  return 0;
 }
 
 /////////////////////////////////////////////// PROTECTED //////////////////////////////////////////

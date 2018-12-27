@@ -30,6 +30,13 @@ public:
     PARITY_EVEN
   } ParityType;
 
+  typedef enum
+  {
+    FLUSH_IN,
+    FLUSH_OUT,
+    FLUSH_INOUT
+  } FlashType;
+
 // LIFECYCLE
 
   /**
@@ -59,7 +66,7 @@ public:
    * @param timeout - serial operation timeout in milliseconds
    * @return 0 on success, -1 on failure
    */
-  std::error_code open(
+  int open(
       const char* port_name,
       uint32_t baud_rate,
       uint8_t data_bits,
@@ -73,15 +80,22 @@ public:
 
   /**
    * Flush not-transmitted and non-read data on the serial port.
+   *
+   * @param queue_selector - one of:
+   *  FLUSH_IN - flushes data received but not read.
+   *  FLUSH_OUT - flushes data written but not transmitted.
+   *  FLUSH_INOUT - flushes both data received but not read, and data written but not transmitted.
+   *
+   *  @see termios(3)
    */
-  std::error_code flush();
+  int flush(FlashType queue_selector);
 
   /**
    * Read data from serial port.
    *
    * @param bytes - the number of bytes to read
    */
-  std::error_code recv(Buff* buff);
+  int recv(Buff* buff);
 
   /**
    * Write data to serial port. The function increments buffer->read_ptr() by
@@ -89,7 +103,7 @@ public:
    *
    * @param data - the data to send
    */
-  std::error_code send(Buff* buff);
+  int send(Buff* buff);
 
 private:
 
