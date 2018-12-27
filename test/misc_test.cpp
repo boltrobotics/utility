@@ -73,4 +73,35 @@ TEST(MiscTest, toHex)
   ASSERT_EQ("30:31:61:62:63", output);
 }
 
+TEST(MiscTest, modBits)
+{
+  uint8_t v[] = { 0, 0 };
+
+  Misc::setBit(v, 1, 0);
+  ASSERT_EQ(0x2, v[0]);
+  ASSERT_EQ(1, Misc::checkBit(v, 1, 0));
+  Misc::clearBit(v, 1, 0);
+  ASSERT_EQ(0, Misc::checkBit(v, 1, 0));
+
+  Misc::setBit(v, 7, 0);
+  ASSERT_EQ(0x80, v[0]);
+  ASSERT_EQ(1, Misc::checkBit(v, 7, 0));
+  Misc::clearBit(v, 7, 0);
+  ASSERT_EQ(0, Misc::checkBit(v, 7, 0));
+
+  Misc::setBit(v, 10, 0);
+  ASSERT_EQ(0x4, v[1]);
+  ASSERT_EQ(1, Misc::checkBit(v, 10, 0));
+  Misc::clearBit(v, 10, 0);
+  ASSERT_EQ(0, Misc::checkBit(v, 10, 0));
+
+  Misc::setBit(v, 3, 1);
+  Misc::setBit(v, 9, 0);
+  ASSERT_EQ(0xA, v[1]);
+  Misc::toggleBit(v, 3, 1);
+  ASSERT_EQ(0x2, v[1]);
+  Misc::toggleBit(v, 3, 1);
+  ASSERT_EQ(0xA, v[1]);
+}
+
 } // namespace btr

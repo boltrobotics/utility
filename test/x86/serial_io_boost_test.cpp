@@ -3,6 +3,7 @@
 
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
+#include <chrono>
 
 // PROJECT INCLUDES
 #include "utility/x86/serial_io_boost.hpp"
@@ -10,10 +11,15 @@
 #include "utility/buff.hpp"
 #include "utility/test_helpers.hpp"
 
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
 namespace btr
 {
 
 #define BAUD 115200
+#define DATA_BITS 8
+#define TIMEOUT 100
 
 //------------------------------------------------------------------------------
 
@@ -24,18 +30,21 @@ public:
   // LIFECYCLE
 
   SerialIOBoostTest()
-  : tty_(),
-    act_serial_(TTY_SIM_0, BAUD, 100),
-    sim_serial_(TTY_SIM_1, BAUD, 100),
-    wbuff_(),
-    rbuff_(),
-    success_(),
-    timeout_(std::make_error_code(std::errc::operation_canceled))
+    :
+      tty_(),
+      reader_(),
+      sender_(),
+      wbuff_(),
+      rbuff_(),
+      success_(),
+      timeout_(std::make_error_code(std::errc::operation_canceled))
   {
-    reset();
+    reader_.open(TTY_SIM_0, BAUD, DATA_BITS, SerialIOBoost::PARITY_NONE, TIMEOUT);
+    sender_.open(TTY_SIM_1, BAUD, DATA_BITS, SerialIOBoost::PARITY_NONE, TIMEOUT);
+    resetBuffers();
   }
 
-  void reset()
+  void resetBuffers()
   {
     uint8_t h[] =  { 'h','e','l','l','o' };
     wbuff_.resize(sizeof(h));
@@ -49,8 +58,8 @@ protected:
   // ATTRIBUTES
 
   PseudoTTY tty_;
-  SerialIOBoost act_serial_;
-  SerialIOBoost sim_serial_;
+  SerialIOBoost reader_;
+  SerialIOBoost sender_;
   Buff wbuff_;
   Buff rbuff_;
   std::error_code success_;
@@ -63,10 +72,10 @@ protected:
 
 TEST_F(SerialIOBoostTest, ReadWriteOK)
 {
-  std::error_code e = sim_serial_.send(&wbuff_);
+  std::error_code e = sender_.send(&wbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
-  e = act_serial_.recv(&rbuff_);
+  e = reader_.recv(&rbuff_);
 
   ASSERT_EQ(success_, e) << " Message: " << e.message();
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
@@ -74,30 +83,48 @@ TEST_F(SerialIOBoostTest, ReadWriteOK)
 
 TEST_F(SerialIOBoostTest, DISABLED_Flush)
 {
-  std::error_code e = sim_serial_.send(&wbuff_);
+  std::error_code e = sender_.send(&wbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
-  e = sim_serial_.flush();
+  e = sender_.flush();
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
   // FIXME: Flush test: serial_.recv generates an error
-  e = act_serial_.recv(&rbuff_);
+  e = reader_.recv(&rbuff_);
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
 
-  reset();
+  resetBuffers();
 
-  e = sim_serial_.send(&wbuff_);
+  e = sender_.send(&wbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
 
-  e = act_serial_.recv(&rbuff_);
+  e = reader_.recv(&rbuff_);
   ASSERT_EQ(success_, e) << " Message: " << e.message();
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOBoostTest, ReadTimeout)
 {
-  std::error_code e = act_serial_.recv(&rbuff_);
+  std::error_code e = reader_.recv(&rbuff_);
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
+}
+
+TEST_F(SerialIOBoostTest, setTimeout)
+{
+  uint32_t timeout = 2;
+  reader_.setTimeout(timeout);
+  high_resolution_clock::time_point start = high_resolution_clock::now();
+
+  std::error_code e = reader_.recv(&rbuff_);
+
+  high_resolution_clock::time_point now = high_resolution_clock::now();
+  auto duration = duration_cast<milliseconds>(now - start).count();
+
+  ASSERT_LE((timeout - 2), duration);
+  ASSERT_GT((timeout + 2), duration);
+
+  ASSERT_EQ(timeout_, e) << " Message: " << e.message();
+  ASSERT_EQ(0, rbuff_.available());
 }
 
 TEST_F(SerialIOBoostTest, DISABLED_WriteTimeout)
@@ -105,7 +132,7 @@ TEST_F(SerialIOBoostTest, DISABLED_WriteTimeout)
   // FIXME: Write time-out simulation doesn't work.
   Buff large_buff;
   large_buff.resize(65536);
-  std::error_code e = sim_serial_.send(&large_buff);
+  std::error_code e = sender_.send(&large_buff);
   ASSERT_EQ(timeout_, e) << " Message: " << e.message();
 }
 

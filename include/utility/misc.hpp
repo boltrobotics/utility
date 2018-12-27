@@ -1,5 +1,5 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
-// License: GNU GPL v3
+// License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 #ifndef _btr_Misc_hpp_
 #define _btr_Misc_hpp_
@@ -86,7 +86,7 @@ public:
    * @param offset - the address of the target byte starting from data's 0 position
    */
   template<typename T>
-  static void setBit(uint8_t* data, T addr, T offset);
+  static void setBit(uint8_t* data, T addr, T offset = 0);
 
   /**
    * Clear the bit at a given address, at an offset from data's 0.
@@ -96,7 +96,7 @@ public:
    * @param offset - the address of the target byte starting from data's 0 position
    */
   template<typename T>
-  static void clearBit(uint8_t* data, T addr, T offset);
+  static void clearBit(uint8_t* data, T addr, T offset = 0);
 
   /**
    * Toggle the bit at a given address, at an offset from data's 0.
@@ -106,7 +106,7 @@ public:
    * @param offset - the address of the target byte starting from data's 0 position
    */
   template<typename T>
-  static void toggleBit(uint8_t* data, T addr, T offset);
+  static void toggleBit(uint8_t* data, T addr, T offset = 0);
 
   /**
    * Check the bit at a given address, at an offset from data's 0.
@@ -116,7 +116,7 @@ public:
    * @param offset - the address of the target byte starting from data's 0 position
    */
   template<typename T>
-  static uint8_t checkBit(uint8_t* data, T addr, T offset);
+  static uint8_t checkBit(uint8_t* data, T addr, T offset = 0);
 
   /**
    * Convert angle in degrees to radians.
@@ -187,33 +187,33 @@ inline T Misc::modulo(T a, U b)
 template<typename T>
 inline void Misc::setBit(uint8_t* data, T addr, T offset)
 {
-  T idx_byte = (addr - offset) / 8;
-  T idx_bit = (addr - offset) % 8;
-  data[idx_byte] |= (1 << idx_bit);
+  T idx_byte = addr / 8;
+  T idx_bit = addr % 8;
+  data[offset + idx_byte] |= (1 << idx_bit);
 }
 
 template<typename T>
 inline void Misc::clearBit(uint8_t* data, T addr, T offset)
 {
-  T idx_byte = (addr - offset) / 8;
-  T idx_bit = (addr - offset) % 8;
-  data[idx_byte] &= ~(1 << idx_bit);
+  T idx_byte = addr / 8;
+  T idx_bit = addr % 8;
+  data[offset + idx_byte] &= ~(1 << idx_bit);
 }
 
 template<typename T>
 inline void Misc::toggleBit(uint8_t* data, T addr, T offset)
 {
-  T idx_byte = (addr - offset) / 8;
-  T idx_bit = (addr - offset) % 8;
-  data[idx_byte] ^= (1 << idx_bit);
+  T idx_byte = addr / 8;
+  T idx_bit = addr % 8;
+  data[offset + idx_byte] ^= (1 << idx_bit);
 }
 
 template<typename T>
 inline uint8_t Misc::checkBit(uint8_t* data, T addr, T offset)
 {
-  T idx_byte = (addr - offset) / 8;
-  T idx_bit = (addr - offset) % 8;
-  return ((data[idx_byte] >> idx_bit) & 1);
+  T idx_byte = addr / 8;
+  T idx_bit = addr % 8;
+  return ((data[offset + idx_byte] >> idx_bit) & 1);
 }
 
 inline double Misc::toRadians(uint8_t angle)
