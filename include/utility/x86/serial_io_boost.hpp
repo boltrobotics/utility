@@ -74,6 +74,11 @@ public:
       uint32_t timeout_millis);
 
   /**
+   * Close serial port.
+   */
+  void close();
+
+  /**
    * @param timeout_millis 
    */
   void setTimeout(uint32_t timeout_millis);
@@ -93,9 +98,10 @@ public:
   /**
    * Read data from serial port.
    *
+   * @param buff - byte container
    * @param bytes - the number of bytes to read
    */
-  int recv(Buff* buff);
+  int recv(Buff* buff, uint32_t bytes);
 
   /**
    * Write data to serial port. The function increments buffer->read_ptr() by
@@ -134,7 +140,7 @@ private:
   bio::io_service     io_service_;
   bio::serial_port    serial_port_;
   bio::deadline_timer timer_;
-  std::error_code     err_;
+  int                 err_;
   size_t              expected_bytes_;
   size_t              timeout_;
 

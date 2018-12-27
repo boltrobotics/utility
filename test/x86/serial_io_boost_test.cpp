@@ -71,7 +71,7 @@ TEST_F(SerialIOBoostTest, ReadWriteOK)
   int rc = sender_.send(&wbuff_);
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
 
-  rc = reader_.recv(&rbuff_);
+  rc = reader_.recv(&rbuff_, rbuff_.remaining());
 
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
@@ -86,7 +86,7 @@ TEST_F(SerialIOBoostTest, DISABLED_Flush)
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
 
   // FIXME: Flush test: serial_.recv generates an error
-  rc = reader_.recv(&rbuff_);
+  rc = reader_.recv(&rbuff_, rbuff_.remaining());
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
 
   resetBuffers();
@@ -94,14 +94,14 @@ TEST_F(SerialIOBoostTest, DISABLED_Flush)
   rc = sender_.send(&wbuff_);
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
 
-  rc = reader_.recv(&rbuff_);
+  rc = reader_.recv(&rbuff_, rbuff_.remaining());
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOBoostTest, ReadTimeout)
 {
-  int rc = reader_.recv(&rbuff_);
+  int rc = reader_.recv(&rbuff_, rbuff_.remaining());
   ASSERT_EQ(-1, rc) << " Message: " << strerror(errno);
 }
 
@@ -111,7 +111,7 @@ TEST_F(SerialIOBoostTest, setTimeout)
   reader_.setTimeout(timeout);
   high_resolution_clock::time_point start = high_resolution_clock::now();
 
-  int rc = reader_.recv(&rbuff_);
+  int rc = reader_.recv(&rbuff_, rbuff_.remaining());
 
   high_resolution_clock::time_point now = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(now - start).count();

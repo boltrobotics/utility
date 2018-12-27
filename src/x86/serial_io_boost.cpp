@@ -25,7 +25,7 @@ SerialIOBoost::SerialIOBoost()
   io_service_(),
   serial_port_(io_service_),
   timer_(io_service_),
-  err_(),
+  err_(0),
   expected_bytes_(0),
   timeout_(SERIAL_IO_TIMEOUT)
 {
@@ -33,7 +33,7 @@ SerialIOBoost::SerialIOBoost()
 
 SerialIOBoost::~SerialIOBoost()
 {
-  serial_port_.close();
+  close();
 }
 
 //============================================= OPERATIONS =========================================
@@ -45,12 +45,14 @@ int SerialIOBoost::open(
     uint8_t parity,
     uint32_t timeout_millis)
 {
+  if (serial_port_.is_open()) {
+    close();
+  }
+
   boost::system::error_code ec;
   serial_port_.open(port_name, ec);
 
-  if (ec) {
-    err_ = std::error_code(ec.value(), std::generic_category());
-  } else {
+  if (0 == ec.value()) {
     serial_port_.set_option(bio::serial_port::baud_rate(baud_rate));
     serial_port_.set_option(bio::serial_port::character_size(data_bits));
 
@@ -65,13 +67,16 @@ int SerialIOBoost::open(
       default:
         serial_port_.set_option(bio::serial_port::parity(bio::serial_port::parity::none));
     }
-  }
-
-  if (err_) {
-    errno = err_.value();
+  } else {
+    errno = ec.value();
     return -1;
   }
   return 0;
+}
+
+void SerialIOBoost::close()
+{
+  serial_port_.close();
 }
 
 void SerialIOBoost::setTimeout(uint32_t timeout_millis)
@@ -100,10 +105,15 @@ int SerialIOBoost::flush(FlashType queue_selector)
   return rc;
 }
 
-int SerialIOBoost::recv(Buff* buff)
+int SerialIOBoost::recv(Buff* buff, uint32_t bytes)
 {
+  if (buff->remaining() < bytes) {
+    errno = ENOBUFS;
+    return -1;
+  }
+
   io_service_.reset();
-  expected_bytes_ = buff->remaining();
+  expected_bytes_ = bytes;
 
   bio::async_read(
       serial_port_,
@@ -116,10 +126,10 @@ int SerialIOBoost::recv(Buff* buff)
 
   timeAsyncOpr();
 
-  if (!err_) {
+  if (0 == err_) {
     buff->write_ptr() += expected_bytes_;
   } else {
-    errno = err_.value();
+    errno = err_;
     return -1;
   }
   return 0;
@@ -140,10 +150,10 @@ int SerialIOBoost::send(Buff* buff)
 
   timeAsyncOpr();
 
-  if (!err_) {
+  if (0 == err_) {
     buff->read_ptr() += expected_bytes_;
   } else {
-    errno = err_.value();
+    errno = err_;
     return -1;
   }
   return 0;
@@ -167,13 +177,12 @@ void SerialIOBoost::timeAsyncOpr()
 void SerialIOBoost::onOprComplete(const boost::system::error_code& err, size_t bytes_transferred)
 {
   if (err) {
-    err_ = std::make_error_code(static_cast<std::errc>(err.value()));
+    err_ = err.value();
   } else if (bytes_transferred != expected_bytes_) {
-    err_ = std::make_error_code(std::errc::message_size);
+    err_ = EMSGSIZE;
   } else {
-    err_.clear();
+    err_ = 0;
   }
-
   timer_.cancel();
 }
 
