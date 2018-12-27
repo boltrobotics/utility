@@ -36,14 +36,6 @@ SerialIOTermios::~SerialIOTermios()
 
 //============================================= OPERATIONS =========================================
 
-void SerialIOTermios::close()
-{
-  if (port_ != -1) {
-    ::close(port_);
-    port_ = -1;
-  }
-}
-
 int SerialIOTermios::open(
     const char* port_name,
     uint32_t baud_rate,
@@ -101,9 +93,6 @@ int SerialIOTermios::open(
       return -1;
   }
 
-  options.c_cc[VTIME] = timeout_millis / 100; // VTIME is in tenths of seconds
-  options.c_cc[VMIN] = 0;
-
   baud_rate_ = getNativeBaud(baud_rate);
 
   if (cfsetospeed(&options, baud_rate_) != 0
@@ -113,7 +102,17 @@ int SerialIOTermios::open(
   {
     return -1;
   }
-  return 0;
+
+  int rc = setTimeout(timeout_millis);
+  return rc;
+}
+
+void SerialIOTermios::close()
+{
+  if (port_ != -1) {
+    ::close(port_);
+    port_ = -1;
+  }
 }
 
 int SerialIOTermios::setTimeout(uint32_t timeout_millis)
@@ -122,7 +121,16 @@ int SerialIOTermios::setTimeout(uint32_t timeout_millis)
   int rc = 0;
 
   if ((rc = tcgetattr(port_, &options)) == 0) {
-    options.c_cc[VTIME] = timeout_millis / 100; // VTIME is in tenths of seconds
+    // 1. VMIN = 0 and VTIME > 0
+    //  read returns if one or more bytes are available or VTIME expires
+    // 2. VMIN > 0 and VTIME > 0
+    //  read returns when either VMIN characters are received or VTIME BETWEEN characters expires
+    //
+    // See http://unixwiz.net/techtips/termios-vmin-vtime.html
+    //
+    // WARNING: VTIME is in tenths of a second, so the minimum can be set is 100 milliseconds
+    //
+    options.c_cc[VTIME] = timeout_millis / 100;
     options.c_cc[VMIN] = 0;
     rc = tcsetattr(port_, TCSANOW, &options);
   }

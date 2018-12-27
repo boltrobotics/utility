@@ -49,11 +49,6 @@ public:
 // OPERATIONS
 
   /**
-   * Close serial port.
-   */
-  void close();
-
-  /**
    * Open serial port.
    *
    * @param port - serial IO port name (e.g., /dev/ttyS0)
@@ -70,6 +65,11 @@ public:
       uint8_t data_bits,
       uint8_t parity,
       uint32_t timeout_millis);
+
+  /**
+   * Close serial port.
+   */
+  void close();
 
   /**
    * @param timeout_millis

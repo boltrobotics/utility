@@ -1,5 +1,5 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
-// License: GNU GPL v3
+// License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 #ifndef _btr_SerialIOBoost_hpp__
 #define _btr_SerialIOBoost_hpp__
@@ -23,7 +23,14 @@ class SerialIOBoost
 {
 public:
 
-  // LIFECYCLE
+  typedef enum
+  {
+    PARITY_NONE,
+    PARITY_ODD,
+    PARITY_EVEN
+  } ParityType;
+
+// LIFECYCLE
 
   /**
    * Ctor.
@@ -32,14 +39,37 @@ public:
    * @param baud_rate - baud rate
    * @param timeout - serial operation timeout in milliseconds
    */
-  SerialIOBoost(const std::string& port, int baud_rate, int timeout);
+  SerialIOBoost();
 
   /**
    * Dtor.
    */
   ~SerialIOBoost();
 
-  // OPERATIONS
+// OPERATIONS
+
+  /**
+   * Open serial port.
+   *
+   * @param port - serial IO port name (e.g., /dev/ttyS0)
+   * @param baud_rate - baud rate. It must be one of values specified by in termios.h
+   *  @see http://man7.org/linux/man-pages/man3/termios.3.html
+   * @param data_bits
+   * @param parity - @see ParityType
+   * @param timeout - serial operation timeout in milliseconds
+   * @return 0 on success, -1 on failure
+   */
+  std::error_code open(
+      const char* port_name,
+      uint32_t baud_rate,
+      uint8_t data_bits,
+      uint8_t parity,
+      uint32_t timeout_millis);
+
+  /**
+   * @param timeout_millis 
+   */
+  void setTimeout(uint32_t timeout_millis);
 
   /**
    * Flush not-transmitted and non-read data on the serial port.
@@ -63,7 +93,7 @@ public:
 
 private:
 
-  // OPERATIONS
+// OPERATIONS
 
   /**
    * Schedule a timer for asynchronous operation execution.
@@ -85,10 +115,10 @@ private:
    */
   void onTimeout(const boost::system::error_code& error);
 
-  // ATTRIBUTES
+// ATTRIBUTES
 
   bio::io_service     io_service_;
-  bio::serial_port    serial_;
+  bio::serial_port    serial_port_;
   bio::deadline_timer timer_;
   std::error_code     err_;
   size_t              expected_bytes_;
