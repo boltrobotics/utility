@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
+// Copyright (C) 2019 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 #ifndef _btr_SerialIOTermios_hpp__
@@ -107,7 +107,7 @@ public:
    * @param buff - the buffer to read into
    * @param bytes - the number of bytes to read
    */
-  int recv(Buff* buff, uint32_t bytes);
+  ssize_t recv(Buff* buff, uint32_t bytes);
 
   /**
    * Write data to serial port. The function increments buffer->read_ptr() by
@@ -115,7 +115,7 @@ public:
    *
    * @param data - the data to send
    */
-  int send(Buff* buff);
+  ssize_t send(Buff* buff);
 
 private:
 

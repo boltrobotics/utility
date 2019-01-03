@@ -69,12 +69,9 @@ protected:
 
 TEST_F(SerialIOTermiosTest, ReadWriteOK)
 {
-  errno = 0;
-  int e = sender_.send(&wbuff_);
+  ssize_t e = sender_.send(&wbuff_);
   ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
-  errno = 0;
-  std::this_thread::sleep_for(10ms);
   e = reader_.recv(&rbuff_, rbuff_.remaining());
 
   ASSERT_EQ(5, e) << " Message: " << strerror(errno);
@@ -84,7 +81,6 @@ TEST_F(SerialIOTermiosTest, ReadWriteOK)
 
 TEST_F(SerialIOTermiosTest, Flush)
 {
-  errno = 0;
   int e = sender_.send(&wbuff_);
   ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 

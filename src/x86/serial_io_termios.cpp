@@ -174,7 +174,7 @@ void SerialIOTermios::setReadMinimum(uint32_t bytes)
   tcsetattr(port_, TCSANOW, &options);
 }
 
-int SerialIOTermios::recv(Buff* buff, uint32_t bytes)
+ssize_t SerialIOTermios::recv(Buff* buff, uint32_t bytes)
 {
   if (buff->remaining() < bytes) {
     errno = ENOBUFS;
@@ -202,9 +202,9 @@ int SerialIOTermios::recv(Buff* buff, uint32_t bytes)
   return rc;
 }
 
-int SerialIOTermios::send(Buff* buff)
+ssize_t SerialIOTermios::send(Buff* buff)
 {
-  int rc = 0;
+  ssize_t rc = 0;
   
   while (buff->available() > 0) {
     rc = write(port_, buff->read_ptr(), buff->available());

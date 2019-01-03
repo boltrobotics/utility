@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
+// Copyright (C) 2019 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 #ifndef _btr_PseudoTTY_hpp__
@@ -59,21 +59,21 @@ inline PseudoTTY::PseudoTTY()
 {
   switch (child_pid_ = vfork()) {
     case -1:
-        throw std::runtime_error("Failed to fork pseudo TTY");
+      throw std::runtime_error("Failed to fork pseudo TTY");
     case 0: // child
-        execlp(PRG, PRG, PTY0, PTY1, (char*) NULL);
-        throw std::runtime_error("Failed to exec: " PRG);
+      execlp(PRG, PRG, PTY0, PTY1, (char*) NULL);
+      throw std::runtime_error("Failed to exec: " PRG);
     default: // parent
-        std::this_thread::sleep_for(50ms);
-        break;
+      std::this_thread::sleep_for(10ms);
+      break;
   }
 }
 
 inline PseudoTTY::~PseudoTTY()
 {
   if (child_pid_ > 0) {
-      kill(child_pid_, SIGTERM);
-      waitpid(child_pid_, NULL, 0);
+    kill(child_pid_, SIGTERM);
+    waitpid(child_pid_, NULL, 0);
   }
 }
 

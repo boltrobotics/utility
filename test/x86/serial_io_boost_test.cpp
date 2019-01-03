@@ -68,68 +68,96 @@ protected:
 
 TEST_F(SerialIOBoostTest, ReadWriteOK)
 {
-  int rc = sender_.send(&wbuff_);
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  ssize_t e = sender_.send(&wbuff_);
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
-  rc = reader_.recv(&rbuff_, rbuff_.remaining());
+  e = reader_.recv(&rbuff_, rbuff_.remaining());
 
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
-  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
+  ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size()));
+  TEST_MSG << TestHelpers::toHex(rbuff_);
 }
 
-TEST_F(SerialIOBoostTest, DISABLED_Flush)
+TEST_F(SerialIOBoostTest, Flush)
 {
-  int rc = sender_.send(&wbuff_);
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  int e = sender_.send(&wbuff_);
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
-  rc = sender_.flush(SerialIOBoost::FLUSH_INOUT);
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  e = sender_.flush(SerialIOBoost::FlashType::FLUSH_INOUT);
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
 
-  // FIXME: Flush test: serial_.recv generates an error
-  rc = reader_.recv(&rbuff_, rbuff_.remaining());
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  std::this_thread::sleep_for(10ms);
+
+  e = reader_.recv(&rbuff_, rbuff_.remaining());
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
+
+  ASSERT_EQ(0, rbuff_.available());
 
   resetBuffers();
 
-  rc = sender_.send(&wbuff_);
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  e = sender_.send(&wbuff_);
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
 
-  rc = reader_.recv(&rbuff_, rbuff_.remaining());
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  std::this_thread::sleep_for(10ms);
+  e = reader_.recv(&rbuff_, rbuff_.remaining());
+  ASSERT_EQ(5, e) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
 
 TEST_F(SerialIOBoostTest, ReadTimeout)
 {
-  int rc = reader_.recv(&rbuff_, rbuff_.remaining());
-  ASSERT_EQ(-1, rc) << " Message: " << strerror(errno);
-}
-
-TEST_F(SerialIOBoostTest, setTimeout)
-{
-  uint32_t timeout = 2;
-  reader_.setTimeout(timeout);
   high_resolution_clock::time_point start = high_resolution_clock::now();
 
-  int rc = reader_.recv(&rbuff_, rbuff_.remaining());
+  int e = reader_.recv(&rbuff_, rbuff_.remaining());
 
   high_resolution_clock::time_point now = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(now - start).count();
 
-  ASSERT_LE((timeout - 2), duration);
-  ASSERT_GT((timeout + 2), duration);
+  ASSERT_LE(TIMEOUT, duration);
+  ASSERT_GT(TIMEOUT + 20, duration);
 
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
   ASSERT_EQ(0, rbuff_.available());
-  ASSERT_EQ(-1, rc) << " Message: " << strerror(errno);
+}
+
+TEST_F(SerialIOBoostTest, setTimeout)
+{
+  uint32_t timeout = 200;
+  reader_.setTimeout(timeout);
+  high_resolution_clock::time_point start = high_resolution_clock::now();
+
+  int e = reader_.recv(&rbuff_, rbuff_.remaining());
+
+  high_resolution_clock::time_point now = high_resolution_clock::now();
+  auto duration = duration_cast<milliseconds>(now - start).count();
+
+  ASSERT_LE((timeout - 10), duration);
+  ASSERT_GT((timeout + 10), duration);
+
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
+  ASSERT_EQ(0, rbuff_.available());
 }
 
 TEST_F(SerialIOBoostTest, DISABLED_WriteTimeout)
 {
+#if 0
   // FIXME: Write time-out simulation doesn't work.
   Buff large_buff;
   large_buff.resize(65536);
-  int rc = sender_.send(&large_buff);
-  ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
+  int e = sender_.send(&large_buff);
+  ASSERT_EQ(0, e) << " Message: " << strerror(errno);
+#endif
+}
+
+TEST_F(SerialIOBoostTest, NoBufferSpace)
+{
+  rbuff_.write_ptr() += rbuff_.remaining();
+  ASSERT_EQ(rbuff_.size(), rbuff_.available());
+  ASSERT_EQ(0, rbuff_.remaining());
+
+  int e = reader_.recv(&rbuff_, rbuff_.remaining() + 1);
+  ASSERT_EQ(-1, e) << " Message: " << strerror(errno);
+  ASSERT_EQ(ENOBUFS, errno) << " Message: " << strerror(errno);
 }
 
 // } Tests

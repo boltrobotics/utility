@@ -3,6 +3,7 @@
 
 // SYSTEM INCLUDES
 #include <boost/bind.hpp>
+#include <iostream>
 
 // PROJECT INCLUDES
 #include "utility/x86/serial_io_boost.hpp"  // class implemented
@@ -25,8 +26,7 @@ SerialIOBoost::SerialIOBoost()
   io_service_(),
   serial_port_(io_service_),
   timer_(io_service_),
-  err_(0),
-  expected_bytes_(0),
+  bytes_transferred_(0),
   timeout_(SERIAL_IO_TIMEOUT)
 {
 }
@@ -49,6 +49,7 @@ int SerialIOBoost::open(
     close();
   }
 
+  errno = 0;
   boost::system::error_code ec;
   serial_port_.open(port_name, ec);
 
@@ -86,6 +87,7 @@ void SerialIOBoost::setTimeout(uint32_t timeout_millis)
 
 int SerialIOBoost::flush(FlashType queue_selector)
 {
+  errno = 0;
   int rc = 0;
 
   switch (queue_selector) {
@@ -105,7 +107,7 @@ int SerialIOBoost::flush(FlashType queue_selector)
   return rc;
 }
 
-int SerialIOBoost::recv(Buff* buff, uint32_t bytes)
+ssize_t SerialIOBoost::recv(Buff* buff, uint32_t bytes)
 {
   if (buff->remaining() < bytes) {
     errno = ENOBUFS;
@@ -113,11 +115,12 @@ int SerialIOBoost::recv(Buff* buff, uint32_t bytes)
   }
 
   io_service_.reset();
-  expected_bytes_ = bytes;
+  errno = 0;
+  bytes_transferred_ = 0;
 
   bio::async_read(
       serial_port_,
-      bio::buffer(buff->write_ptr(), expected_bytes_),
+      bio::buffer(buff->write_ptr(), bytes),
       boost::bind(
         &SerialIOBoost::onOprComplete,
         this,
@@ -126,23 +129,19 @@ int SerialIOBoost::recv(Buff* buff, uint32_t bytes)
 
   timeAsyncOpr();
 
-  if (0 == err_) {
-    buff->write_ptr() += expected_bytes_;
-  } else {
-    errno = err_;
-    return -1;
-  }
-  return 0;
+  buff->write_ptr() += bytes_transferred_;
+  return bytes_transferred_;
 }
 
-int SerialIOBoost::send(Buff* buff)
+ssize_t SerialIOBoost::send(Buff* buff)
 {
   io_service_.reset();
-  expected_bytes_ = buff->available();
+  errno = 0;
+  bytes_transferred_ = 0;
 
   bio::async_write(
       serial_port_,
-      bio::buffer(buff->read_ptr(), expected_bytes_),
+      bio::buffer(buff->read_ptr(), buff->available()),
       boost::bind(&SerialIOBoost::onOprComplete,
         this,
         bio::placeholders::error,
@@ -150,13 +149,8 @@ int SerialIOBoost::send(Buff* buff)
 
   timeAsyncOpr();
 
-  if (0 == err_) {
-    buff->read_ptr() += expected_bytes_;
-  } else {
-    errno = err_;
-    return -1;
-  }
-  return 0;
+  buff->read_ptr() += bytes_transferred_;
+  return bytes_transferred_;
 }
 
 /////////////////////////////////////////////// PROTECTED //////////////////////////////////////////
@@ -176,21 +170,21 @@ void SerialIOBoost::timeAsyncOpr()
 
 void SerialIOBoost::onOprComplete(const boost::system::error_code& err, size_t bytes_transferred)
 {
+  bytes_transferred_ = bytes_transferred;
+
   if (err) {
-    err_ = err.value();
-  } else if (bytes_transferred != expected_bytes_) {
-    err_ = EMSGSIZE;
-  } else {
-    err_ = 0;
+    // When timer cancels operation, the error is 89, Operation canceled.
+    errno = err.value();
   }
   timer_.cancel();
 }
 
 void SerialIOBoost::onTimeout(const boost::system::error_code& error)
 {
-  // When the timer is cancelled, the error is generated.
+  // When the timer is cancelled, the error generated is bio::operation_aborted.
   //
   if (!error) {
+    // When the timer fires, there is no error, therefore just cancel pending operation.
     serial_port_.cancel();
   }
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
+// Copyright (C) 2019 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 #ifndef _btr_SerialIOBoost_hpp__
@@ -100,16 +100,18 @@ public:
    *
    * @param buff - byte container
    * @param bytes - the number of bytes to read
+   * @return the number of bytes transferred
    */
-  int recv(Buff* buff, uint32_t bytes);
+  ssize_t recv(Buff* buff, uint32_t bytes);
 
   /**
    * Write data to serial port. The function increments buffer->read_ptr() by
    * the amount of buff->available() bytes on successful operation.
    *
    * @param data - the data to send
+   * @return the number of bytes transferred
    */
-  int send(Buff* buff);
+  ssize_t send(Buff* buff);
 
 private:
 
@@ -140,8 +142,7 @@ private:
   bio::io_service     io_service_;
   bio::serial_port    serial_port_;
   bio::deadline_timer timer_;
-  int                 err_;
-  size_t              expected_bytes_;
+  size_t              bytes_transferred_;
   size_t              timeout_;
 
 }; // class SerialIOBoost
