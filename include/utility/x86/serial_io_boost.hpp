@@ -14,8 +14,6 @@ namespace bio = boost::asio;
 namespace btr
 {
 
-class Buff;
-
 /**
  * The class provides a send/receive interface to a serial port.
  */
@@ -96,22 +94,37 @@ public:
   int flush(FlashType queue_selector);
 
   /**
+   * @return bytes available on the serial port
+   */
+  uint32_t available();
+
+  /**
    * Read data from serial port.
    *
-   * @param buff - byte container
+   * @param buff - container for received bytes
    * @param bytes - the number of bytes to read
    * @return the number of bytes transferred
    */
-  ssize_t recv(Buff* buff, uint32_t bytes);
+  ssize_t recv(char* buff, uint32_t bytes);
 
   /**
-   * Write data to serial port. The function increments buffer->read_ptr() by
-   * the amount of buff->available() bytes on successful operation.
+   * Write data to serial port.
    *
    * @param data - the data to send
+   * @param bytes - the number of bytes to send
+   * @param drain - block until all output has been transmitted
    * @return the number of bytes transferred
    */
-  ssize_t send(Buff* buff);
+  ssize_t send(const char* buff, uint32_t bytes, bool drain = false);
+
+  /**
+   * Transmit a continuous stream of 0 bits.
+   *
+   * @param duration - the length of the transmission. If duration is greater than 0, 0 bits are
+   *  transmitted for duration milliseconds. If duration is 0, 0 bits are transmitted for 0.25
+   *  seconds.
+   */
+  int sendBreak(uint32_t duration);
 
 private:
 

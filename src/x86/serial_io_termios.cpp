@@ -10,7 +10,6 @@
 
 // PROJECT INCLUDES
 #include "utility/x86/serial_io_termios.hpp"  // class implemented
-#include "utility/buff.hpp"
 
 namespace btr
 {
@@ -174,52 +173,25 @@ void SerialIOTermios::setReadMinimum(uint32_t bytes)
   tcsetattr(port_, TCSANOW, &options);
 }
 
-ssize_t SerialIOTermios::recv(Buff* buff, uint32_t bytes)
+ssize_t SerialIOTermios::recv(char* buff, uint32_t bytes)
 {
-  if (buff->remaining() < bytes) {
-    errno = ENOBUFS;
-    return -1;
-  }
-
-  ssize_t rc = 0;
-
-  do {
-    rc = read(port_, buff->write_ptr(), bytes);
-
-    if (rc > 0) {
-      // At least 1 byte is received, continue reading until received requested bytes.
-      buff->write_ptr() += rc;
-      bytes -= rc;
-    } else if (rc == 0) {
-      errno = ETIME;
-      break; // Reached EOF or the call has timed out.
-    } else {
-      rc = -1; // Error occured.
-      break;
-    }
-  } while (bytes > 0);
-
+  ssize_t rc = read(port_, buff, bytes);
   return rc;
 }
 
-ssize_t SerialIOTermios::send(Buff* buff)
+ssize_t SerialIOTermios::send(const char* buff, uint32_t bytes, bool drain)
 {
-  ssize_t rc = 0;
-  
-  while (buff->available() > 0) {
-    rc = write(port_, buff->read_ptr(), buff->available());
+  ssize_t rc = write(port_, buff, bytes);
 
-    // If system call was interrupted, try to write the available data again.
-    //
-    if (rc == -1) {
-      if (errno != EINTR) {
-        break;
-      }
-    }
-
-    buff->read_ptr() += rc;
+  if (drain) {
+    tcdrain(port_);
   }
   return rc;
+}
+
+int SerialIOTermios::sendBreak(uint32_t duration)
+{
+  return tcsendbreak(port_, duration);
 }
 
 /////////////////////////////////////////////// PROTECTED //////////////////////////////////////////

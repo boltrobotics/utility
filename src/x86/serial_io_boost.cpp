@@ -1,15 +1,15 @@
-// Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
+// Copyright (C) 2019 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
 // SYSTEM INCLUDES
 #include <boost/bind.hpp>
-#include <iostream>
+#include <sys/ioctl.h>
 
 // PROJECT INCLUDES
 #include "utility/x86/serial_io_boost.hpp"  // class implemented
-#include "utility/buff.hpp"
 
 #define BOOST_SYSTEM_NO_DEPRECATED
+
 #ifndef SERIAL_IO_TIMEOUT
 #define SERIAL_IO_TIMEOUT 100
 #endif
@@ -107,20 +107,22 @@ int SerialIOBoost::flush(FlashType queue_selector)
   return rc;
 }
 
-ssize_t SerialIOBoost::recv(Buff* buff, uint32_t bytes)
+uint32_t SerialIOBoost::available()
 {
-  if (buff->remaining() < bytes) {
-    errno = ENOBUFS;
-    return -1;
-  }
+  uint32_t bytes_available;
+  ioctl(serial_port_.lowest_layer().native_handle(), FIONREAD, &bytes_available);
+  return bytes_available;
+}
 
+ssize_t SerialIOBoost::recv(char* buff, uint32_t bytes)
+{
   io_service_.reset();
   errno = 0;
   bytes_transferred_ = 0;
 
   bio::async_read(
       serial_port_,
-      bio::buffer(buff->write_ptr(), bytes),
+      bio::buffer(buff, bytes),
       boost::bind(
         &SerialIOBoost::onOprComplete,
         this,
@@ -128,12 +130,10 @@ ssize_t SerialIOBoost::recv(Buff* buff, uint32_t bytes)
         bio::placeholders::bytes_transferred));
 
   timeAsyncOpr();
-
-  buff->write_ptr() += bytes_transferred_;
   return bytes_transferred_;
 }
 
-ssize_t SerialIOBoost::send(Buff* buff)
+ssize_t SerialIOBoost::send(const char* buff, uint32_t bytes, bool drain)
 {
   io_service_.reset();
   errno = 0;
@@ -141,7 +141,7 @@ ssize_t SerialIOBoost::send(Buff* buff)
 
   bio::async_write(
       serial_port_,
-      bio::buffer(buff->read_ptr(), buff->available()),
+      bio::buffer(buff, bytes),
       boost::bind(&SerialIOBoost::onOprComplete,
         this,
         bio::placeholders::error,
@@ -149,8 +149,16 @@ ssize_t SerialIOBoost::send(Buff* buff)
 
   timeAsyncOpr();
 
-  buff->read_ptr() += bytes_transferred_;
+  if (drain) {
+    tcdrain(serial_port_.lowest_layer().native_handle());
+  }
+
   return bytes_transferred_;
+}
+
+int SerialIOBoost::sendBreak(uint32_t duration)
+{
+  return tcsendbreak(serial_port_.lowest_layer().native_handle(), duration);
 }
 
 /////////////////////////////////////////////// PROTECTED //////////////////////////////////////////
