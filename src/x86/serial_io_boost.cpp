@@ -45,9 +45,7 @@ int SerialIOBoost::open(
     uint8_t parity,
     uint32_t timeout_millis)
 {
-  if (serial_port_.is_open()) {
-    close();
-  }
+  close();
 
   errno = 0;
   boost::system::error_code ec;
@@ -77,7 +75,11 @@ int SerialIOBoost::open(
 
 void SerialIOBoost::close()
 {
-  serial_port_.close();
+  if (serial_port_.is_open()) {
+    timer_.cancel();
+    serial_port_.cancel();
+    serial_port_.close();
+  }
 }
 
 void SerialIOBoost::setTimeout(uint32_t timeout_millis)
