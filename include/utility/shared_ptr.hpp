@@ -4,6 +4,9 @@
 #ifndef _btr_SharedPtr_hpp_
 #define _btr_SharedPtr_hpp_
 
+// PROJECT INCLUDES
+#include "spin_lock.hpp"
+
 namespace btr
 {
 
@@ -42,6 +45,7 @@ private:
 
 // ATTRIBUTES
 
+  SpinLock lock_;
   int count_;
 };
 
@@ -126,6 +130,7 @@ private:
 //============================================= LIFECYCLE ==========================================
 
 inline RefCounter::RefCounter() :
+  lock_(),
   count_(1)
 {
 }
@@ -181,12 +186,17 @@ inline SharedPtr<PtrType>::~SharedPtr()
 
 inline void RefCounter::increment()
 {
+  lock_.lock();
   ++count_;
+  lock_.unlock();
 }
 
 inline int RefCounter::decrement()
 {
-  return --count_;
+  lock_.lock();
+  --count_;
+  lock_.unlock();
+  return count_;
 }
 
 inline int RefCounter::count() const
