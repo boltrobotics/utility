@@ -4,6 +4,7 @@
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
 #include <iostream>
+#include <limits>
 
 // PROJECT INCLUDES
 #include "utility/value_codec.hpp"
@@ -388,18 +389,19 @@ TEST_F(ValueCodecTest, encodeFloatToInt)
 
 TEST_F(ValueCodecTest, decodeIntToFloat)
 {
-  uint8_t raw[] = { 0x1, 0x3A }; // 314
   double v = 0;
-  ValueCodec::decodeIntToFloat(raw, 2, &v, 2, true);
+
+  uint8_t raw[] = { 0x1, 0x3A }; // 314
+  ValueCodec::decodeIntToFloat<int16_t>(raw, 2, &v, 2, true);
   ASSERT_EQ(3.14, v);
 
   uint8_t raw2[] = { 0x8, 0x34 }; // 2100
-  ValueCodec::decodeIntToFloat(raw2, 2, &v, 3, true);
+  ValueCodec::decodeIntToFloat<int16_t>(raw2, 2, &v, 3, true);
   ASSERT_EQ(2.1, v);
 
-  uint8_t raw3[] = { 0xFF, 0xFF }; // 65535
-  ValueCodec::decodeIntToFloat(raw3, 2, &v, 5, true);
-  ASSERT_EQ(0.65535, v);
+  uint8_t raw3[] = { 0x80, 0x00 };
+  ValueCodec::decodeIntToFloat<int16_t>(raw3, 2, &v, 5, true);
+  ASSERT_EQ(-0.32768, v);
 }
 
 template<typename OutType>

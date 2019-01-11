@@ -131,9 +131,9 @@ public:
    * @param msb - if true, encode in MSB order, otherwise in LSB
    * @return -1 on error, 0 otherwise
    */
-  template<typename T>
+  template<typename T, typename FloatType>
   static int decodeIntToFloat(
-      const uint8_t* buff, uint8_t bytes, T* val, uint8_t dec_places, bool msb);
+      const uint8_t* buff, uint8_t bytes, FloatType* val, uint8_t dec_places, bool msb);
 
   /**
    * Encode an integer and fractional parts of a floating-point number into two integers.
@@ -334,11 +334,11 @@ inline void ValueCodec::encodeFloatToInt(uint8_t* buff, FloatType val, uint8_t d
   encodeFixedInt(buff, output, msb);
 }
 
-template<typename T>
+template<typename T, typename FloatType>
 inline int ValueCodec::decodeIntToFloat(
-    const uint8_t* buff, uint8_t bytes, T* val, uint8_t dec_places, bool msb)
+    const uint8_t* buff, uint8_t bytes, FloatType* val, uint8_t dec_places, bool msb)
 {
-  uint64_t int_val;
+  T int_val;
   decodeFixedInt(buff, &int_val, bytes, msb);
   *val = int_val / pow(10, dec_places);
   return 0;
