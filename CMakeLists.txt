@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(utility)
 
-set(CMAKE_MODULE_PATH $ENV{PROJECTS_HOME}/cmake-helpers/cmake/Modules)
+set(CMAKE_MODULE_PATH $ENV{CMAKEHELPERS_HOME}/cmake/Modules)
 include(init)
 include(firmware)
 
@@ -53,10 +53,15 @@ else ()
   string(COMPARE EQUAL "${BOARD_FAMILY}" x86 _cmp)
   if (_cmp)
     add_subdirectory(${PROJECT_SOURCE_DIR}/src/x86)
-    include(unit_testing)
   endif ()
 
 endif ()
 
 # } x86, stm32
 
+####################################################################################################
+# unit testing, x86 {
+
+include(unit_testing)
+
+# } unit testing, x86
