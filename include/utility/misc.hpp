@@ -6,8 +6,8 @@
 
 // SYSTEM INCLUDES
 #include <inttypes.h>
-#include <cmath>
-#include <cstring>
+#include <math.h>
+#include <string.h>
 
 // PROJECT INCLUDES
 
@@ -174,7 +174,7 @@ inline int8_t Misc::sign(T val)
 
 inline double Misc::delta(double angle1, double angle2)
 {
-  return std::pow((angle1 - angle2), 2);
+  return pow((angle1 - angle2), 2);
 }
 
 template<typename T, typename U>

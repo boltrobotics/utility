@@ -4,6 +4,7 @@
 #ifndef _btr_SharedPtr_hpp_
 #define _btr_SharedPtr_hpp_
 
+#include <stdlib.h>
 // PROJECT INCLUDES
 #include "spin_lock.hpp"
 
@@ -155,8 +156,15 @@ inline SharedPtr<PtrType>& SharedPtr<PtrType>::operator=(const SharedPtr<PtrType
 {
   if (this != &shared_ptr) {
     if (0 == counter_->decrement()) {
+#if defined(avr)
+      ptr_->~PtrType();
+      free(ptr_);
+      counter_->~RefCounter();
+      free(counter_);
+#else
       delete ptr_;
       delete counter_;
+#endif
     }
 
     ptr_ = shared_ptr.ptr_;
@@ -177,8 +185,15 @@ template<typename PtrType>
 inline SharedPtr<PtrType>::~SharedPtr()
 {
   if (0 == counter_->decrement()) {
-    delete ptr_;
-    delete counter_;
+#if defined(avr)
+      ptr_->~PtrType();
+      free(ptr_);
+      counter_->~RefCounter();
+      free(counter_);
+#else
+      delete ptr_;
+      delete counter_;
+#endif
   }
 }
 

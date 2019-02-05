@@ -1,5 +1,5 @@
 # Cmake
-build/
+build-*
 
 # Mac
 .DS_Store

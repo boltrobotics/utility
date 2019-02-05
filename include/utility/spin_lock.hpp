@@ -5,7 +5,9 @@
 #define _btr_SpinLock_hpp_
 
 // SYSTEM INCLUDES
+#if defined(x86)
 #include <atomic>
+#endif
 
 namespace btr
 {
@@ -33,7 +35,9 @@ private:
 
 // ATTRIBUTES
 
+#if defined(x86)
   std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
+#endif
 
 }; // class SpinLock
 
@@ -45,13 +49,17 @@ private:
 
 inline void SpinLock::lock()
 {
+#if defined(x86)
   while (lock_.test_and_set(std::memory_order_acquire))
   {}
+#endif
 }
 
 inline void SpinLock::unlock()
 {
+#if defined(x86)
   lock_.clear(std::memory_order_release);
+#endif
 }
 
 } // namespace btr

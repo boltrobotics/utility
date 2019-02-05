@@ -5,12 +5,16 @@
 #define _btr_ValueCodec_hpp_
 
 // SYSTEM INCLUDES
-#include <cmath>
-#include <cerrno>
+#include <math.h>
+#include <errno.h>
 
 // PROJECT INCLUDES
 #include "utility/buff.hpp"
 #include "utility/misc.hpp"
+
+#ifndef EOVERFLOW
+#define EOVERFLOW 75
+#endif
 
 namespace btr
 {
