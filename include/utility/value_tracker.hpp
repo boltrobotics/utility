@@ -13,10 +13,8 @@ namespace btr
 {
 
 /**
- * The class stores two values, prior and current, so as to track delta
- * between the two.
- *
- * IMPORTANT: The class is shared by AVR and x86 plaforms. Keep it portable.
+ * The class keeps track of numeric values so as to calculate the delta, mean or median between
+ * them. 
  */
 template<typename T>
 class ValueTracker
