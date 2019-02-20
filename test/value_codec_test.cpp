@@ -23,8 +23,8 @@ public:
   // LIFECYCLE
 
   ValueCodecTest()
-  :
-    buff_(32)
+    :
+      buff_(32)
   {
   }
 
@@ -369,7 +369,7 @@ TEST_F(ValueCodecTest, encodeFloatToInt)
 {
   double v = Misc::PI;
 
-  ValueCodec::encodeFloatToInt<uint16_t>(&buff_, v, 2, true);
+  ValueCodec::encodeFloatToInt(&buff_, sizeof(uint16_t), v, 2, true);
   uint8_t expected[] = { 0x1, 0x3A };
 
   for (uint8_t i = 0; i < 2; i++) {
@@ -379,7 +379,7 @@ TEST_F(ValueCodecTest, encodeFloatToInt)
   buff_.reset();
   v = 2.1;
   uint8_t* buff = buff_.data();
-  ValueCodec::encodeFloatToInt<uint16_t>(buff, v, 3, true);
+  ValueCodec::encodeFloatToInt(buff, sizeof(uint16_t), v, 3, true);
   uint8_t expected2[] = { 0x8, 0x34 };
 
   for (uint8_t i = 0; i < 2; i++) {
@@ -424,21 +424,21 @@ TEST_F(ValueCodecTest, encodeFloatToIntParts)
 {
   double val = Misc::PI;
 
-  ValueCodec::encodeFloatToIntParts<uint8_t>(&buff_, val, 2, true);
+  ValueCodec::encodeFloatToIntParts(&buff_, sizeof(uint8_t), val, 2, true);
   decodeIntPartsToFloat<uint8_t>(&buff_, 3, 14, __LINE__);
 
-  ValueCodec::encodeFloatToIntParts<uint8_t>(&buff_, val, 1, true);
+  ValueCodec::encodeFloatToIntParts(&buff_, sizeof(uint8_t), val, 1, true);
   decodeIntPartsToFloat<uint8_t>(&buff_, 3, 1, __LINE__);
 
-  ValueCodec::encodeFloatToIntParts<uint8_t>(&buff_, val, 0, true);
+  ValueCodec::encodeFloatToIntParts(&buff_, sizeof(uint8_t), val, 0, true);
   decodeIntPartsToFloat<uint8_t>(&buff_, 3, 0, __LINE__);
 
   val = 65535.65536;
-  ValueCodec::encodeFloatToIntParts<uint8_t>(&buff_, val, 5, true);
+  ValueCodec::encodeFloatToIntParts(&buff_, sizeof(uint8_t), val, 5, true);
   decodeIntPartsToFloat<uint8_t>(&buff_, 255, 0, __LINE__);
 
   val = 65536.65535;
-  ValueCodec::encodeFloatToIntParts<uint16_t>(&buff_, val, 5, true);
+  ValueCodec::encodeFloatToIntParts(&buff_, sizeof(uint16_t), val, 5, true);
   decodeIntPartsToFloat<uint16_t>(&buff_, 0, 65535, __LINE__);
 }
 

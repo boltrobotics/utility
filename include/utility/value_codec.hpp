@@ -5,7 +5,6 @@
 #define _btr_ValueCodec_hpp_
 
 // SYSTEM INCLUDES
-#include <math.h>
 #include <errno.h>
 
 // PROJECT INCLUDES
@@ -14,6 +13,10 @@
 
 #ifndef EOVERFLOW
 #define EOVERFLOW 75
+#endif
+
+#ifndef BTR_FLOAT_ENABLED
+#define BTR_FLOAT_ENABLED 1
 #endif
 
 namespace btr
@@ -115,17 +118,42 @@ public:
   template<typename T>
   static void encodeFixedInt(uint8_t* buff, T val, bool msb);
 
+#if BTR_FLOAT_ENABLED > 0
+
   /**
    * Encode a floating-point number as an integer by shifting decimal point to the right.
    *
    * @param buff - buffer to store encoded value
    * @param val - value to encode
    * @param msb - if true, encode in MSB order, otherwise in LSB
+   * @return 0 on success, -1 on failure
    */
-  template<typename T, typename FloatType>
-  static void encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_places, bool msb);
-  template<typename T, typename FloatType>
-  static void encodeFloatToInt(uint8_t* buff, FloatType val, uint8_t dec_places, bool msb);
+  static int encodeFloatToInt(
+      Buff* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb);
+
+  /**
+   * Encode a floating-point number as an integer by shifting decimal point to the right.
+   *
+   * @param buff - buffer to store encoded value
+   * @param val - value to encode
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   * @return 0 on success, -1 on failure
+   */
+  static int encodeFloatToInt(
+      uint8_t* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb);
+
+  /**
+   * Encode an integer and fractional parts of a floating-point number into two integers.
+   *
+   * @param buff - the buffer to store encoded value
+   * @param val - the value to encode
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   * @return -1 on error, 0 otherwise
+   */
+  static int encodeFloatToIntParts(
+      Buff* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb);
+
+#endif // BTR_FLOAT_ENABLED > 0
 
   /**
    * Decode an integer into a floating-point number by shifting decimal point to the left.
@@ -138,16 +166,6 @@ public:
   template<typename T, typename FloatType>
   static int decodeIntToFloat(
       const uint8_t* buff, uint8_t bytes, FloatType* val, uint8_t dec_places, bool msb);
-
-  /**
-   * Encode an integer and fractional parts of a floating-point number into two integers.
-   *
-   * @param buff - the buffer to store encoded value
-   * @param val - the value to encode
-   * @param msb - if true, encode in MSB order, otherwise in LSB
-   */
-  template<typename T, typename FloatType>
-  static void encodeFloatToIntParts(Buff* buff, FloatType val, uint8_t dec_places, bool msb);
 
   /**
    * Decode two consecutive integers into integer and fractional parts of a floating-point number.
@@ -325,20 +343,6 @@ inline void ValueCodec::encodeFixedInt(uint8_t* buff, T val, bool msb)
 }
 
 template<typename T, typename FloatType>
-inline void ValueCodec::encodeFloatToInt(Buff* buff, FloatType val, uint8_t dec_places, bool msb)
-{
-  T output = round(val * pow(10, dec_places));
-  encodeFixedInt(buff, output, msb);
-}
-
-template<typename T, typename FloatType>
-inline void ValueCodec::encodeFloatToInt(uint8_t* buff, FloatType val, uint8_t dec_places, bool msb)
-{
-  T output = round(val * pow(10, dec_places));
-  encodeFixedInt(buff, output, msb);
-}
-
-template<typename T, typename FloatType>
 inline int ValueCodec::decodeIntToFloat(
     const uint8_t* buff, uint8_t bytes, FloatType* val, uint8_t dec_places, bool msb)
 {
@@ -346,19 +350,6 @@ inline int ValueCodec::decodeIntToFloat(
   decodeFixedInt(buff, &int_val, bytes, msb);
   *val = int_val / pow(10, dec_places);
   return 0;
-}
-
-template<typename T, typename FloatType>
-inline void ValueCodec::encodeFloatToIntParts(
-    Buff* buff, FloatType val, uint8_t dec_places, bool msb)
-{
-  double ipart_tmp = 0;
-  double fpart_tmp = modf(val, &ipart_tmp);
-
-  T ipart = static_cast<T>(ipart_tmp);
-  encodeFixedInt(buff, ipart, msb);
-
-  encodeFloatToInt<T>(buff, fpart_tmp, dec_places, msb);
 }
 
 template<typename T, typename FloatType>
