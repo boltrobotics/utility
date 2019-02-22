@@ -156,7 +156,7 @@ inline SharedPtr<PtrType>& SharedPtr<PtrType>::operator=(const SharedPtr<PtrType
 {
   if (this != &shared_ptr) {
     if (0 == counter_->decrement()) {
-#if defined(ard)
+#if BTR_ARD > 0
       ptr_->~PtrType();
       free(ptr_);
       counter_->~RefCounter();
@@ -185,7 +185,7 @@ template<typename PtrType>
 inline SharedPtr<PtrType>::~SharedPtr()
 {
   if (0 == counter_->decrement()) {
-#if defined(ard)
+#if BTR_ARD > 0
       ptr_->~PtrType();
       free(ptr_);
       counter_->~RefCounter();

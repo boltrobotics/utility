@@ -3,9 +3,6 @@ set(CMAKE_MODULE_PATH $ENV{CMAKEHELPERS_HOME}/cmake/Modules)
 
 include(arduino_project)
 
-set(AVR_UPLOADTOOL_PORT /dev/tty.usbmodemFD14511)
-setup_mega()
 setup()
-
 find_srcs()
 build_lib(SRCS ${SOURCES})

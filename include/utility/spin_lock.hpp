@@ -5,7 +5,7 @@
 #define _btr_SpinLock_hpp_
 
 // SYSTEM INCLUDES
-#if defined(x86)
+#if BTR_X86 > 0
 #include <atomic>
 #endif
 
@@ -35,7 +35,7 @@ private:
 
 // ATTRIBUTES
 
-#if defined(x86)
+#if BTR_X86 > 0
   std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
 #endif
 
@@ -49,7 +49,7 @@ private:
 
 inline void SpinLock::lock()
 {
-#if defined(x86)
+#if BTR_X86 > 0
   while (lock_.test_and_set(std::memory_order_acquire))
   {}
 #endif
@@ -57,7 +57,7 @@ inline void SpinLock::lock()
 
 inline void SpinLock::unlock()
 {
-#if defined(x86)
+#if BTR_X86 > 0
   lock_.clear(std::memory_order_release);
 #endif
 }
