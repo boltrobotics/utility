@@ -118,8 +118,6 @@ public:
   template<typename T>
   static void encodeFixedInt(uint8_t* buff, T val, bool msb);
 
-#if BTR_FLOAT_ENABLED > 0
-
   /**
    * Encode a floating-point number as an integer by shifting decimal point to the right.
    *
@@ -152,8 +150,6 @@ public:
    */
   static int encodeFloatToIntParts(
       Buff* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb);
-
-#endif // BTR_FLOAT_ENABLED > 0
 
   /**
    * Decode an integer into a floating-point number by shifting decimal point to the left.
