@@ -9,13 +9,9 @@ The project contains portable C++ utility tools for
 * Improving output from unit tests
 * Tracking number ranges for calculating delta, mean or median
 
-# Build
-
-Set up <a href="https://github.com/boltrobotics/cmake-helpers" target="_blank">cmake build</a> by
-following an <a href="https://github.com/boltrobotics/cmake-helpers#Example">example</a>.
-
 # Table of Contents
 
+* [Build](#Build)
 * [Tools](#Tools)
   * [AvlTree](#avl_tree)
   * [Buff](#buff)
@@ -28,7 +24,12 @@ following an <a href="https://github.com/boltrobotics/cmake-helpers#Example">exa
   * [ValueTracker](#value_tracker)
 * [Contribute](#Contribute)
 
-## <a name="Tools">Tools</a>
+# <a name="Build">Build</a>
+
+Set up <a href="https://github.com/boltrobotics/cmake-helpers" target="_blank">cmake build</a> by
+following an <a href="https://github.com/boltrobotics/cmake-helpers#Example">example</a>.
+
+# <a name="Tools">Tools</a>
 
 ### <a name="avl_tree" href="https://github.com/boltrobotics/utility/tree/master/include/utility/avl_tree.hpp" target="_blank">AvlTree</a>
 
