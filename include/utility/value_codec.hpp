@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_ValueCodec_hpp_
 #define _btr_ValueCodec_hpp_
 
@@ -88,7 +90,7 @@ public:
    *
    * @param buff - data container
    * @param val - target value
-   * @parma bytes - the number of bytes that the integer occupies
+   * @param bytes - the number of bytes that the integer occupies
    * @param msb - the data is in most-significant byte order
    */
   template<typename T>
@@ -99,7 +101,7 @@ public:
    *
    * @param buff - buffer to store encoded value
    * @param val - target value
-   * @parma bytes - the number of bytes that the integer occupies
+   * @param bytes - the number of bytes that the integer occupies
    * @param msb - the data is in most-significant byte order 
    * @return the values returned by check()
    */
@@ -122,7 +124,9 @@ public:
    * Encode a floating-point number as an integer by shifting decimal point to the right.
    *
    * @param buff - buffer to store encoded value
+   * @param val_bytes - number of bytes that the value occupies
    * @param val - value to encode
+   * @param dec_places - number of digits after decimal point
    * @param msb - if true, encode in MSB order, otherwise in LSB
    * @return 0 on success, -1 on failure
    */
@@ -133,7 +137,9 @@ public:
    * Encode a floating-point number as an integer by shifting decimal point to the right.
    *
    * @param buff - buffer to store encoded value
+   * @param val_bytes - number of bytes that the value occupies
    * @param val - value to encode
+   * @param dec_places - number of digits after decimal point
    * @param msb - if true, encode in MSB order, otherwise in LSB
    * @return 0 on success, -1 on failure
    */
@@ -144,7 +150,9 @@ public:
    * Encode an integer and fractional parts of a floating-point number into two integers.
    *
    * @param buff - the buffer to store encoded value
+   * @param val_bytes - bytes in buffer
    * @param val - the value to encode
+   * @param dec_places - number of digits after decimal point
    * @param msb - if true, encode in MSB order, otherwise in LSB
    * @return -1 on error, 0 otherwise
    */
@@ -155,7 +163,9 @@ public:
    * Decode an integer into a floating-point number by shifting decimal point to the left.
    *
    * @param buff - buffer to read an integer from
-   * @param val - value to store the result
+   * @param bytes - bytes in buffer
+   * @param val - value to store the result in
+   * @param dec_places - number of digits after decimal point
    * @param msb - if true, encode in MSB order, otherwise in LSB
    * @return -1 on error, 0 otherwise
    */
@@ -169,6 +179,7 @@ public:
    *
    * @param buff - buffer to retrieve the integers from
    * @param val - value to store decoding result
+   * @param dec_places - number of digits after decimal point
    * @param msb - if true, decode in MSB order, otherwise in LSB
    */
   template<typename T, typename FloatType>

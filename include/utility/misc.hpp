@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_Misc_hpp_
 #define _btr_Misc_hpp_
 
@@ -49,7 +51,7 @@ public:
    */
   template<typename T>
   static void translate(
-    double value, double left_min, double left_max, double right_min, double right_max, T* output);
+    double val, double left_min, double left_max, double right_min, double right_max, T* output);
 
   /**
    * Get a sign of the provided value.

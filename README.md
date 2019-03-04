@@ -1,4 +1,4 @@
-# Introduction
+# Overview
 
 The project contains portable C++ utility tools for
 
@@ -11,7 +11,7 @@ The project contains portable C++ utility tools for
 
 # Build
 
-Set up <a href="https://github.com/boltrobotics/cmake-helpers" target="_blank">cmake build<a> by
+Set up <a href="https://github.com/boltrobotics/cmake-helpers" target="_blank">cmake build</a> by
 following an <a href="https://github.com/boltrobotics/cmake-helpers#Example">example</a>.
 
 # Table of Contents

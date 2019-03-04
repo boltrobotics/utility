@@ -1,5 +1,6 @@
 # Cmake
 build-*
+*doc/html*
 
 # Mac
 .DS_Store

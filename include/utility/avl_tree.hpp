@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_AvlTree_hpp_
 #define _btr_AvlTree_hpp_
 
@@ -10,7 +12,7 @@ namespace btr
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- *
+ * The class provides a callback interface for a class handling node objects during tree traversal.
  */
 template <typename N>
 class NodeObserver

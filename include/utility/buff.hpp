@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_Buff_hpp_
 #define _btr_Buff_hpp_
 
@@ -12,14 +14,23 @@
 namespace btr
 {
 
+/** Define array of uint8_t values. */
 #define ARRAY(...) (const uint8_t[]) { __VA_ARGS__ }
+/** Define array of uint8_t values. */
 #define ARRAYU8(...) (const uint8_t[]) { __VA_ARGS__ }
+/** Define array of int8_t values. */
 #define ARRAYS8(...) (const int8_t[]) { __VA_ARGS__ }
+/** Define array of uint16_t values. */
 #define ARRAYU16(...) (const uint16_t[]) { __VA_ARGS__ }
+/** Define array of int16_t values. */
 #define ARRAYS16(...) (const int16_t[]) { __VA_ARGS__ }
+/** Define array of uint32_t values. */
 #define ARRAYU32(...) (const uint32_t[]) { __VA_ARGS__ }
+/** Define array of int32_t values. */
 #define ARRAYS32(...) (const int32_t[]) { __VA_ARGS__ }
+/** Define array of uint64_t values. */
 #define ARRAYU64(...) (const uint64_t[]) { __VA_ARGS__ }
+/** Define array of int64_t values. */
 #define ARRAYS64(...) (const int64_t[]) { __VA_ARGS__ }
 
 /**
@@ -152,7 +163,7 @@ public:
   /**
    * Read a single byte.
    *
-   * @param v - the storage for the value
+   * @param val - the storage for the value
    * @param advance - the flag indicating to advance read position
    * @return false if no data is avalable
    */
@@ -162,8 +173,8 @@ public:
   /**
    * Read a chunk.
    *
-   * @param v - the storage for the data
-   * @param N - the number of data bytes
+   * @param vals - the storage for the data
+   * @param vals_size - the number of data bytes
    * @param advance - the flag indicating to advance read position
    * @return false if not enough data is avalable, true otherwise
    */

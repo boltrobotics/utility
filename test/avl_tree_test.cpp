@@ -1,5 +1,7 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
-// License: GNU GPL v3
+// License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+
+/** @file */
 
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
@@ -16,12 +18,18 @@ namespace btr
 
 //------------------------------------------------------------------------------
 
+/** The class simulates a Server node within an AvlTree */
 class Server : public NodeBase<Server>, public NodeObserver<Server>
 {
 public:
 
 // LIFECYCLE
 
+  /**
+   * Ctor.
+   *
+   * @param key - node key
+   */
   Server(uint16_t key) :
     NodeBase(key)
   {}
@@ -30,6 +38,7 @@ public:
 
 // ATTRIBUTES
 
+  /** Contains keys used in the tree. */
   std::vector<uint16_t> keys_;
 
 protected:
@@ -37,7 +46,10 @@ protected:
 // OPERATIONS
 
   /**
-   * @override NodeObserver::onTraverseImpl
+   * Add node key to all-keys set.
+   *
+   * @param node - a tree node
+   * @see NodeObserver::onTraverseImpl
    */
   virtual int onTraverseImpl(Server* node)
   {
@@ -48,6 +60,7 @@ protected:
 
 //------------------------------------------------------------------------------
 
+/** Test fixture for testing AvlTree */
 class AvlTreeTest : public testing::Test
 {
 public:
@@ -80,6 +93,7 @@ public:
 
 //------------------------------------------------------------------------------
 
+/** Test traverse function. */
 TEST_F(AvlTreeTest, traverse)
 {
   tree_.traverse(tree_.root(), &observer_);
@@ -90,6 +104,7 @@ TEST_F(AvlTreeTest, traverse)
   ASSERT_EQ(keys_[1], observer_.keys_[3]);
 }
 
+/** Test search function. */
 TEST_F(AvlTreeTest, search)
 {
   ASSERT_EQ(3, tree_.root()->key());
@@ -100,6 +115,7 @@ TEST_F(AvlTreeTest, search)
   }
 }
 
+/** Test erase function. */
 TEST_F(AvlTreeTest, erase)
 {
   Server* s_node = tree_.search(tree_.root(), 3);
@@ -130,6 +146,7 @@ TEST_F(AvlTreeTest, erase)
   ASSERT_EQ(88, s_node->keys_[1]);
 }
 
+/** Test eraseBranch function. */
 TEST_F(AvlTreeTest, eraseBranch)
 {
   tree_.eraseBranch(tree_.root());

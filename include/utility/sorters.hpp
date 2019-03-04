@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_Sorters_hpp_
 #define _btr_Sorters_hpp_
 
@@ -29,7 +31,8 @@ public:
   /**
    * Sort array in-place using insertion sort.
    *
-   * @param arr the elements to sort
+   * @param arr - elements to sort
+   * @param size - the number of elements
    */
   template<typename T>
   static void insertionSort(T* arr, uint32_t size);

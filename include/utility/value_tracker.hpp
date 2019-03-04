@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_ValueTracker_hpp_
 #define _btr_ValueTracker_hpp_
 
@@ -21,12 +23,13 @@ class ValueTracker
 {
 public:
 
-  // LIFECYCLE
+// LIFECYCLE
 
   /**
    * Ctor.
    *
    * @param count - the number of values to track
+   * @param id - value tracker ID
    */
   ValueTracker(uint32_t count = 2, uint8_t id = 0);
 
@@ -35,7 +38,7 @@ public:
    */
   ~ValueTracker();
 
-  // OPERATIONS
+// OPERATIONS
 
   /**
    * @return the identifier
@@ -95,7 +98,7 @@ public:
 
 private:
 
-  // ATTRIBUTES
+// ATTRIBUTES
 
   T* vals_;
   uint32_t count_;
@@ -115,10 +118,10 @@ private:
 template<typename T>
 inline ValueTracker<T>::ValueTracker(uint32_t count, uint8_t id)
   :
-  vals_(new T[count]()),
-  count_(count),
-  pos_(0),
-  id_(id)
+    vals_(new T[count]()),
+    count_(count),
+    pos_(0),
+    id_(id)
 {
 }
 

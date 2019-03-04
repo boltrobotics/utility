@@ -16,6 +16,9 @@ namespace btr
 
 //================================ TEST FIXTURES ===============================
 
+/**
+ * Test fixture for testing functionality in ValueCodec class.
+ */
 class ValueCodecTest : public testing::Test
 {
 public:

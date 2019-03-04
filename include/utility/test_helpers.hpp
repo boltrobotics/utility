@@ -1,6 +1,8 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
 // License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 
+/** @file */
+
 #ifndef _btr_TestHelpers_hpp_
 #define _btr_TestHelpers_hpp_
 
@@ -55,13 +57,15 @@ public:
   /**
    * Output an array of values as a comma-delimieted string.
    *
-   * @param vals - the array
+   * @param buff - data
+   * @param size - data size
    * @return string representation
    */
   static std::string toString(const uint8_t* buff, uint32_t size);
 
 }; // class TestHelpers
 
+/** Create an instance of TestHelpers class. */
 #define TEST_MSG TestHelpers()
 
 /////////////////////////////////////////////// INLINE /////////////////////////////////////////////

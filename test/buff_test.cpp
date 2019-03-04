@@ -1,5 +1,7 @@
 // Copyright (C) 2018 Bolt Robotics <info@boltrobotics.com>
-// License: GNU GPL v3
+// License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+
+/** @file */
 
 // SYSTEM INCLUDES
 #include <gtest/gtest.h>
@@ -15,24 +17,28 @@ namespace btr
 
 //------------------------------------------------------------------------------
 
+/** Test fixture for testing Buff class */
 class BuffTest : public testing::Test
 {
 public:
 
-  // LIFECYCLE
+// LIFECYCLE
 
+  /** Ctor. */
   BuffTest()
-  : buff_(1)
+    :
+      buff_(1)
   {
   }
 
-  // ATTRIBUTES
+// ATTRIBUTES
 
   btr::Buff buff_;
 };
 
 //------------------------------------------------------------------------------
 
+/** Test reserve function. */
 TEST_F(BuffTest, reserve)
 {
   ASSERT_EQ(uint32_t(1), buff_.capacity());
@@ -73,6 +79,7 @@ TEST_F(BuffTest, reserve)
   ASSERT_EQ(uint32_t(0), buff_.remaining());
 }
 
+/** Test resize function. */
 TEST_F(BuffTest, resize)
 {
   buff_.reserve(4097);
@@ -115,6 +122,7 @@ TEST_F(BuffTest, resize)
   ASSERT_EQ(uint32_t(0), buff_.remaining());
 }
 
+/** Test extendAdd function. */
 TEST_F(BuffTest, extendAdd)
 {
   buff_.reserve(5);
@@ -145,6 +153,7 @@ TEST_F(BuffTest, extendAdd)
   ASSERT_EQ(uint32_t(10000 + 4), buff_.capacity());
 }
 
+/** Test extendMinimal function. */
 TEST_F(BuffTest, extendMinimal)
 {
   buff_.reserve(4);
@@ -174,6 +183,7 @@ TEST_F(BuffTest, extendMinimal)
   ASSERT_EQ(uint32_t(10000), buff_.capacity());
 }
 
+/** Test readWriteSingle function. */
 TEST_F(BuffTest, readWriteSingle)
 {
   buff_.reserve(4);
@@ -205,6 +215,7 @@ TEST_F(BuffTest, readWriteSingle)
   ASSERT_EQ(uint32_t(0), buff_.remaining());
 }
 
+/** Test readWrite function. */
 TEST_F(BuffTest, readWrite)
 {
   buff_.reserve(7);
@@ -245,6 +256,7 @@ TEST_F(BuffTest, readWrite)
   ASSERT_EQ(uint32_t(7), buff_.capacity());
 }
 
+/** Test shiftOnWrite function. */
 TEST_F(BuffTest, shiftOnWrite)
 {
   buff_.reserve(2);
