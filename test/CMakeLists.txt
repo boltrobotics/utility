@@ -1,5 +1,6 @@
 include(test_project)
 
+setup()
 find_test_srcs()
 build_exe(SRCS ${SOURCES} LIBS utility SUFFIX "-tests")
 
