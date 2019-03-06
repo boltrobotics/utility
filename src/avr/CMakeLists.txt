@@ -3,6 +3,6 @@ set(CMAKE_MODULE_PATH $ENV{CMAKEHELPERS_HOME}/cmake/Modules)
 
 include(avr_project)
 
-setup()
+setup_avr()
 find_srcs()
 build_lib(SRCS ${SOURCES})

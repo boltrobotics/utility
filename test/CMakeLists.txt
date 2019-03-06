@@ -1,8 +1,8 @@
 include(test_project)
 
-setup()
+setup_tests()
 find_test_srcs()
-build_exe(SRCS ${SOURCES} LIBS utility SUFFIX "-tests")
+build_tests(SRCS ${SOURCES} LIBS utility SUFFIX "-tests")
 
 set(DOXYGEN_WARN NO)
 build_doc(DEP ${PROJECT_NAME}-tests SUFFIX "-docs")
