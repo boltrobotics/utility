@@ -116,12 +116,12 @@ TEST_F(ValueCodecTest, decodeFixedIntBad)
   int64_t val64 = 0;
   int rc = ValueCodec::decodeFixedInt(&buff_, &val64, sizeof(int64_t), false);
   ASSERT_EQ(-1, rc);
-  ASSERT_EQ(ENOBUFS, errno);
+  ASSERT_EQ(ERANGE, errno);
   ASSERT_EQ(uint32_t(4), buff_.available());
 
   int16_t val16 = 0;
   rc = ValueCodec::decodeFixedInt(&buff_, &val16, sizeof(val16) + 1, true);
-  ASSERT_EQ(EOVERFLOW, errno);
+  ASSERT_EQ(ERANGE, errno);
   ASSERT_EQ(uint32_t(4), buff_.available());
 }
 
@@ -229,7 +229,7 @@ TEST_F(ValueCodecTest, varInt7BitsBad)
   uint16_t v1 = 0;
   int rc = ValueCodec::decodeVarInt7Bits(&buff_, &v1);
   ASSERT_EQ(-1, rc);
-  ASSERT_EQ(ENOBUFS, errno);
+  ASSERT_EQ(ERANGE, errno);
   ASSERT_EQ(uint32_t(0), buff_.available());
 
   // High bit is not set.
@@ -237,7 +237,7 @@ TEST_F(ValueCodecTest, varInt7BitsBad)
   uint16_t v2 = 0;
   rc = ValueCodec::decodeVarInt7Bits(&buff_, &v2);
   ASSERT_EQ(-1, rc);
-  ASSERT_EQ(EOVERFLOW, errno);
+  ASSERT_EQ(ERANGE, errno);
   ASSERT_EQ(uint32_t(1), buff_.available());
 }
 

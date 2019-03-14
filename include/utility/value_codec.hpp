@@ -6,19 +6,14 @@
 #ifndef _btr_ValueCodec_hpp_
 #define _btr_ValueCodec_hpp_
 
-// SYSTEM INCLUDES
-#include <errno.h>
-
 // PROJECT INCLUDES
+#include "utility/defines.hpp"
 #include "utility/buff.hpp"
 #include "utility/misc.hpp"
 
-#ifndef EOVERFLOW
-#define EOVERFLOW 75
-#endif
-
-#ifndef BTR_FLOAT_ENABLED
-#define BTR_FLOAT_ENABLED 1
+// SYSTEM INCLUDES
+#if BTR_FLOAT_ENABLED > 0
+#include <math.h>
 #endif
 
 namespace btr
@@ -111,19 +106,27 @@ public:
   /**
    * Encode a fixed-size integer into a raw buffer.
    *
-   * @param buff - buffer to store encoded value
+   * @param buff - buffer object to store encoded value
    * @param val - the value to encode
    * @param msb - if true, encode in MSB order, otherwise in LSB
    */
   template<typename T>
   static void encodeFixedInt(Buff* buff, T val, bool msb);
+
+  /**
+   * Encode a fixed-size integer into a raw buffer.
+   *
+   * @param buff - character array to store encoded value
+   * @param val - the value to encode
+   * @param msb - if true, encode in MSB order, otherwise in LSB
+   */
   template<typename T>
   static void encodeFixedInt(uint8_t* buff, T val, bool msb);
 
   /**
    * Encode a floating-point number as an integer by shifting decimal point to the right.
    *
-   * @param buff - buffer to store encoded value
+   * @param buff - buffer object to store encoded value
    * @param val_bytes - number of bytes that the value occupies
    * @param val - value to encode
    * @param dec_places - number of digits after decimal point
@@ -191,10 +194,7 @@ public:
    * @param buff - the data container
    * @param target_size - byte-size of target number (e.g. uint32_t == 4 bytes)
    * @param source_size - amount of bytes to use for conversion to the target number
-   * @return 0 on success, otherwise -1 on error, errno will be set to
-   *  ENOBUFS - If there is not enough raw bytes in the buffer (< source_size)
-   *  EOVERFLOW - if target_size is less than source size. If the requested amount of bytes is
-   *        converted to a number, the target integer type needs to be larger
+   * @return 0 on success, otherwise -1 on error, errno will be set to EDOM or ERANGE
    */
   static int check(Buff* buff, uint32_t target_size, uint32_t source_size);
 
@@ -241,7 +241,7 @@ template<typename T>
 inline int ValueCodec::decodeVarInt7Bits(Buff* buff, T* val)
 {
   int rc = -1;
-  int err = EOVERFLOW;
+  int err = ERANGE;
 
   uint8_t bits = 7;
   uint8_t bit_map[] = { bits };
@@ -249,7 +249,7 @@ inline int ValueCodec::decodeVarInt7Bits(Buff* buff, T* val)
 
   for (; bits_remain >= 0; bits_remain -= bits) {
     if (buff->available() == 0) { 
-      err = ENOBUFS;
+      err = ERANGE;
       break;
     }
 
@@ -349,6 +349,61 @@ inline void ValueCodec::encodeFixedInt(uint8_t* buff, T val, bool msb)
   memcpy(buff, val_bytes, sizeof(T));
 }
 
+#if BTR_FLOAT_ENABLED > 0
+
+inline int ValueCodec::encodeFloatToInt(
+    Buff* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb)
+{
+  if (0 == encodeFloatToInt(buff->write_ptr(), val_bytes, val, dec_places, msb)) {
+    buff->write_ptr() += val_bytes;
+    return 0;
+  }
+  return -1;
+}
+
+inline int ValueCodec::encodeFloatToInt(
+    uint8_t* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb)
+{
+  if (sizeof(uint8_t) == val_bytes) {
+    uint8_t output = round(val * pow(10, dec_places));
+    encodeFixedInt(buff, output, msb);
+  } else if (sizeof(uint16_t) == val_bytes) {
+    uint16_t output = round(val * pow(10, dec_places));
+    encodeFixedInt(buff, output, msb);
+  } else if (sizeof(uint32_t) == val_bytes) {
+    uint32_t output = round(val * pow(10, dec_places));
+    encodeFixedInt(buff, output, msb);
+  } else if (sizeof(uint64_t) == val_bytes) {
+    uint64_t output = round(val * pow(10, dec_places));
+    encodeFixedInt(buff, output, msb);
+  } else {
+    errno = EDOM;
+    return -1;
+  }
+  return 0;
+}
+
+inline int ValueCodec::encodeFloatToIntParts(
+    Buff* buff, uint8_t val_bytes, double val, uint8_t dec_places, bool msb)
+{
+  double ipart_tmp = 0;
+  double fpart_tmp = modf(val, &ipart_tmp);
+
+  if (sizeof(uint8_t) == val_bytes) {
+    encodeFixedInt(buff, static_cast<uint8_t>(ipart_tmp), msb);
+  } else if (sizeof(uint16_t) == val_bytes) {
+    encodeFixedInt(buff, static_cast<uint16_t>(ipart_tmp), msb);
+  } else if (sizeof(uint32_t) == val_bytes) {
+    encodeFixedInt(buff, static_cast<uint32_t>(ipart_tmp), msb);
+  } else if (sizeof(uint64_t) == val_bytes) {
+    encodeFixedInt(buff, static_cast<uint64_t>(ipart_tmp), msb);
+  } else {
+    errno = EDOM;
+    return -1;
+  }
+  return encodeFloatToInt(buff, val_bytes, fpart_tmp, dec_places, msb);
+}
+
 template<typename T, typename FloatType>
 inline int ValueCodec::decodeIntToFloat(
     const uint8_t* buff, uint8_t bytes, FloatType* val, uint8_t dec_places, bool msb)
@@ -379,16 +434,18 @@ inline int ValueCodec::decodeIntPartsToFloat(
   return -1;
 }
 
+#endif // BTR_FLOAT_ENABLED > 0
+
 inline int ValueCodec::check(Buff* buff, uint32_t target_size, uint32_t source_size)
 {
   int rc = 0;
 
   if (buff->available() < source_size) {
     rc = -1;
-    errno = ENOBUFS;
+    errno = ERANGE;
   } else if (source_size > target_size) {
     rc = -1;
-    errno = EOVERFLOW;
+    errno = ERANGE;
   }
   return rc;
 }
