@@ -15,6 +15,7 @@
 #if BTR_FLOAT_ENABLED > 0
 #include <math.h>
 #endif
+#include <errno.h>
 
 namespace btr
 {
@@ -123,6 +124,8 @@ public:
   template<typename T>
   static void encodeFixedInt(uint8_t* buff, T val, bool msb);
 
+#if BTR_FLOAT_ENABLED > 0
+
   /**
    * Encode a floating-point number as an integer by shifting decimal point to the right.
    *
@@ -187,6 +190,8 @@ public:
    */
   template<typename T, typename FloatType>
   static int decodeIntPartsToFloat(Buff* buff, FloatType* val, uint8_t dec_places, bool msb);
+
+#endif // BTR_FLOAT_ENABLED > 0
 
   /**
    * Check if the provided data can be converted into requested number.
