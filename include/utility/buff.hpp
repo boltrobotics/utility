@@ -7,9 +7,9 @@
 #define _btr_Buff_hpp_
 
 // SYSTEM INCLUDES
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstddef>
+#include <cstring>
+#include <cstdlib>
 
 namespace btr
 {
@@ -224,7 +224,7 @@ inline Buff::Buff(uint32_t capacity)
   :
   capacity_(capacity),
   size_(capacity),
-  data_((uint8_t*) malloc(capacity_)),
+  data_(new uint8_t[capacity_]),
   read_ptr_(data_),
   write_ptr_(data_)
 {
@@ -232,7 +232,7 @@ inline Buff::Buff(uint32_t capacity)
 
 inline Buff::~Buff()
 {
-  free(data_);
+  delete [] data_;
   data_ = nullptr;
   read_ptr_ = nullptr;
   write_ptr_ = nullptr;
