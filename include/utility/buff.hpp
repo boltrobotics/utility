@@ -7,9 +7,15 @@
 #define _btr_Buff_hpp_
 
 // SYSTEM INCLUDES
+#if BTR_STM32 > 0
 #include <cstddef>
 #include <cstring>
 #include <cstdlib>
+#else
+#include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
+#endif
 
 namespace btr
 {
