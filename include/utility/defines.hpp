@@ -34,10 +34,12 @@ inline bool is_err(uint32_t v)   { return BTR_ERR_I(v); }
 inline bool is_ok(uint32_t* v)   { return BTR_OK_I(*v); }
 inline bool is_err(uint32_t* v)  { return BTR_ERR_I(*v); }
 inline void set_status(uint32_t* s, uint32_t v) { BTR_ESET_I(*s, v); }
+inline void clear_status(uint32_t* s) { *s &= ~(0xFFFF0000); }
 #else
 inline bool is_ok(uint32_t*)   { return true; }
 inline bool is_err(uint32_t*)  { return false; }
 inline void set_status(uint32_t*, uint32_t)  {}
+inline void clear_status(uint32_t* s) {}
 #endif
 
 } // namespace btr
