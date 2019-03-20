@@ -3,8 +3,8 @@
 
 /** @file */
 
-#ifndef _btr_Defines_hpp_
-#define _btr_Defines_hpp_
+#ifndef _utility_btr_Defines_hpp_
+#define _utility_btr_Defines_hpp_
 
 // SYSTEM INCLUDES
 #include <inttypes.h>
@@ -18,6 +18,28 @@ namespace btr
 #define BTR_FLOAT_ENABLED     1
 #endif
 
+/** Enable/disable status-handling code in this library. */
+#ifndef BTR_STATUS_ENABLED
+#define BTR_STATUS_ENABLED    1
+#endif
+
+#define BTR_OK_I(v)             ((v & 0xFFFF0000) == 0)
+#define BTR_ERR_I(v)            ((v & 0xFFFF0000) != 0)
+#define BTR_ESET_I(s,v)         (s |= (v & 0xFFFF0000))
+
+inline bool is_ok(uint32_t v)    { return BTR_OK_I(v); }
+inline bool is_err(uint32_t v)   { return BTR_ERR_I(v); }
+
+#if BTR_STATUS_ENABLED > 0
+inline bool is_ok(uint32_t* v)   { return BTR_OK_I(*v); }
+inline bool is_err(uint32_t* v)  { return BTR_ERR_I(*v); }
+inline void set_status(uint32_t* s, uint32_t v) { BTR_ESET_I(*s, v); }
+#else
+inline bool is_ok(uint32_t*)   { return true; }
+inline bool is_err(uint32_t*)  { return false; }
+inline void set_status(uint32_t*, uint32_t)  {}
+#endif
+
 } // namespace btr
 
-#endif // _btr_Defines_hpp_
+#endif // _utility_btr_Defines_hpp_
