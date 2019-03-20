@@ -39,7 +39,7 @@ inline void clear_status(uint32_t* s) { *s &= ~(0xFFFF0000); }
 inline bool is_ok(uint32_t*)   { return true; }
 inline bool is_err(uint32_t*)  { return false; }
 inline void set_status(uint32_t*, uint32_t)  {}
-inline void clear_status(uint32_t* s) {}
+inline void clear_status(uint32_t*) {}
 #endif
 
 } // namespace btr
