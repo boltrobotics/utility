@@ -15,7 +15,11 @@ namespace btr
 
 /** Macro enables encoding/decoding of floating-point numbers. @see ValueCodec */
 #ifndef BTR_FLOAT_ENABLED
+#if BTR_X86 > 0
 #define BTR_FLOAT_ENABLED     1
+#else
+#define BTR_FLOAT_ENABLED     0
+#endif
 #endif
 
 /** Enable/disable status-handling code in this library. */
