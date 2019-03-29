@@ -29,6 +29,7 @@ namespace btr
 
 #define BTR_OK_I(v)             ((v & 0xFFFF0000) == 0)
 #define BTR_ERR_I(v)            ((v & 0xFFFF0000) != 0)
+#define BTR_IS_SET(s,v)         (v == (s & v))
 #define BTR_ESET_I(s,v)         (s |= (v & 0xFFFF0000))
 
 inline bool is_ok(uint32_t v)    { return BTR_OK_I(v); }
@@ -37,11 +38,13 @@ inline bool is_err(uint32_t v)   { return BTR_ERR_I(v); }
 #if BTR_STATUS_ENABLED > 0
 inline bool is_ok(uint32_t* v)   { return BTR_OK_I(*v); }
 inline bool is_err(uint32_t* v)  { return BTR_ERR_I(*v); }
+inline bool is_set(uint32_t* s, uint32_t v) { return BTR_IS_SET(*s, v); }
 inline void set_status(uint32_t* s, uint32_t v) { BTR_ESET_I(*s, v); }
 inline void clear_status(uint32_t* s) { *s &= ~(0xFFFF0000); }
 #else
 inline bool is_ok(uint32_t*)   { return true; }
 inline bool is_err(uint32_t*)  { return false; }
+inline bool is_set(uint32_t*, uint32_t) { return false; );
 inline void set_status(uint32_t*, uint32_t)  {}
 inline void clear_status(uint32_t*) {}
 #endif
