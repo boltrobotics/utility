@@ -57,4 +57,24 @@ TEST(StatusTest, clear_status)
   ASSERT_EQ(false, is_err(&status));
 }
 
+TEST(StatusTest, is_set)
+{
+  uint32_t s1 = 0x00120000;
+  uint32_t s2 = 0x10080000;
+  uint32_t s3 = 0x80100000;
+  uint32_t status = 0;
+
+  set_status(&status, s1);
+  set_status(&status, s3);
+
+  ASSERT_EQ(true,  is_set(&status, s1));
+  ASSERT_EQ(false, is_set(&status, s2));
+  ASSERT_EQ(true,  is_set(&status, s3));
+
+  set_status(&status, s2);
+  ASSERT_EQ(true, is_set(&status, s1));
+  ASSERT_EQ(true, is_set(&status, s2));
+  ASSERT_EQ(true, is_set(&status, s3));
+}
+
 } // namespace btr
