@@ -8,7 +8,7 @@ help()
   echo -e "  -a - build avr"
   echo -e "  -r - build arduino"
   echo -e "  -d - pull dependencies"
-  echo -e "  -p - projects home"
+  echo -e "  -p - absolute path to projects home"
   echo -e "  -h - this help"
 }
 
