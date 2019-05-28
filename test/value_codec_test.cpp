@@ -158,7 +158,7 @@ TEST_F(ValueCodecTest, varIntNBits)
   uint8_t v1 = 0;
   ValueCodec::decodeVarIntNBits(&buff_, &v1, ARRAY(0x86), true);
   ASSERT_EQ(0b111111, v1);
-  ASSERT_EQ(0, buff_.available());
+  ASSERT_EQ(uint32_t(0), buff_.available());
 
   buff_.write((uint8_t) 0xFF);
   uint8_t v2 = 0;

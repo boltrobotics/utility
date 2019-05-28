@@ -50,7 +50,7 @@ TEST(StatusTest, clear_status)
   set_status(&status, 0);
 
   clear_status(&status);
-  ASSERT_EQ(0x0000FFFF, status);
+  ASSERT_EQ(uint32_t(0x0000FFFF), status);
   ASSERT_EQ(true, is_ok(status));
   ASSERT_EQ(true, is_ok(&status));
   ASSERT_EQ(false, is_err(status));
