@@ -8,15 +8,22 @@
 
 // SYSTEM INCLUDES
 #if BTR_STM32 > 0
+// Defined here because the compiler doesn't see size_t definition (gcc arm none eabi 7/8 q4/q2)
+using namespace std;
+
+// Defined guard because the compiler complains "::max_align_t" is not declared
+#ifndef _GCC_MAX_ALIGN_T
+#define _GCC_MAX_ALIGN_T
 #include <cstddef>
-#include <cstring>
+#endif
+
 #include <cstdlib>
+#include <cstring>
 #else
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #endif
-#include <inttypes.h>
 
 namespace btr
 {
