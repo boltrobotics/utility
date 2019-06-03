@@ -25,6 +25,8 @@ using namespace std;
 #include <stdlib.h>
 #endif
 
+#include <inttypes.h>
+
 namespace btr
 {
 
