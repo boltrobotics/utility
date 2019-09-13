@@ -44,7 +44,7 @@ inline void clear_status(uint32_t* s) { *s &= ~(0xFFFF0000); }
 #else
 inline bool is_ok(uint32_t*)   { return true; }
 inline bool is_err(uint32_t*)  { return false; }
-inline bool is_set(uint32_t*, uint32_t) { return false; );
+inline bool is_set(uint32_t*, uint32_t) { return false; };
 inline void set_status(uint32_t*, uint32_t)  {}
 inline void clear_status(uint32_t*) {}
 #endif
