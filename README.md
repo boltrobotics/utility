@@ -22,7 +22,6 @@ The project contains portable C++ utility tools for
   * [TestHelpers](#test_helpers)
   * [ValueCodec](#value_codec)
   * [ValueTracker](#value_tracker)
-* [Contribute](#Contribute)
 
 # <a name="Build">Build</a>
 
@@ -88,8 +87,3 @@ The class keeps track of numeric values so as to calculate the delta, mean or me
 See usage examples in
 <a href="https://github.com/boltrobotics/utility/tree/master/test/value_tracker_test.cpp"
 target="_blank">value_tracker_test.cpp</a>
-
-# <a name="Contribute" href="https://boltrobotics.com/contribute/" target="_blank">Contribute</a>
-
-Consider supporting our projects by contributing to their development.
-<a href="https://boltrobotics.com/contribute/" target="_blank">Learn more at boltrobotics.com</a>
