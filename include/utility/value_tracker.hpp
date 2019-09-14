@@ -18,7 +18,7 @@ namespace btr
  * The class keeps track of numeric values so as to calculate the delta, mean or median between
  * them. 
  */
-template<typename T>
+template<typename T, uint8_t S = 5>
 class ValueTracker
 {
 public:
@@ -28,15 +28,9 @@ public:
   /**
    * Ctor.
    *
-   * @param count - the number of values to track
    * @param id - value tracker ID
    */
-  ValueTracker(uint32_t count = 2, uint8_t id = 0);
-
-  /**
-   * Dtor.
-   */
-  ~ValueTracker();
+  ValueTracker(uint8_t id = 0);
 
 // OPERATIONS
 
@@ -48,7 +42,7 @@ public:
   /**
    * Set all samples to 0.
    */
-  void clear();
+  void reset(T val = 0);
 
   /**
    * Add new value to the list.
@@ -60,7 +54,7 @@ public:
   /**
    * @return the count of tracked values 
    */
-  uint32_t count() const;
+  uint8_t count() const;
 
   /**
    * @return the last pushed value
@@ -70,7 +64,7 @@ public:
   /**
    * @return the value at given requested position. Positions start at 0.
    */
-  T value(uint32_t requested_pos) const;
+  T value(uint8_t requested_pos) const;
 
   /**
    * @return delta between last and one-before last values
@@ -84,7 +78,7 @@ public:
    * @param lower_pos - the second value position
    * @return the delta as in (upper value - lower value)
    */
-  T delta(uint32_t upper_pos, uint32_t lower_pos) const;
+  T delta(uint8_t upper_pos, uint8_t lower_pos) const;
 
   /**
    * @return the median value
@@ -100,9 +94,8 @@ private:
 
 // ATTRIBUTES
 
-  T* vals_;
-  uint32_t count_;
-  uint32_t pos_;
+  T vals_[S];
+  uint8_t pos_;
   uint8_t id_;
 
 }; // class ValueTracker
@@ -115,110 +108,100 @@ private:
 
 //=================================== LIFECYCLE ================================
 
-template<typename T>
-inline ValueTracker<T>::ValueTracker(uint32_t count, uint8_t id)
+template<typename T, uint8_t S>
+inline ValueTracker<T,S>::ValueTracker(uint8_t id)
   :
-    vals_(new T[count]()),
-    count_(count),
+    vals_(),
     pos_(0),
     id_(id)
 {
 }
 
-template<typename T>
-inline ValueTracker<T>::~ValueTracker()
-{
-  delete [] vals_;
-  vals_ = nullptr;
-}
-
 //=================================== OPERATIONS ===============================
 
-template<typename T>
-inline uint8_t ValueTracker<T>::id() const
+template<typename T, uint8_t S>
+inline uint8_t ValueTracker<T,S>::id() const
 {
   return id_;
 }
 
-template<typename T>
-inline void ValueTracker<T>::clear()
+template<typename T, uint8_t S>
+inline void ValueTracker<T,S>::reset(T val)
 {
-  for (int i = 0; i < count_; i++) {
-    vals_[i] = 0;
+  for (uint8_t i = 0; i < S; i++) {
+    vals_[i] = val;
   }
 }
 
-template<typename T>
-inline void ValueTracker<T>::push(T val)
+template<typename T, uint8_t S>
+inline void ValueTracker<T,S>::push(T val)
 {
-  vals_[pos_ % count_] = val;
+  vals_[pos_ % S] = val;
   ++pos_;
 }
 
-template<typename T>
-inline uint32_t ValueTracker<T>::count() const
+template<typename T, uint8_t S>
+inline uint8_t ValueTracker<T,S>::count() const
 {
-  return count_;
+  return S;
 }
 
-template<typename T>
-inline T ValueTracker<T>::last() const
+template<typename T, uint8_t S>
+inline T ValueTracker<T,S>::last() const
 {
   // Assume that at least one value was pushed.
   //
-  return vals_[(pos_ - 1) % count_];
+  return vals_[(pos_ - 1) % S];
 }
 
-template<typename T>
-inline T ValueTracker<T>::value(uint32_t requested_pos) const
+template<typename T, uint8_t S>
+inline T ValueTracker<T,S>::value(uint8_t requested_pos) const
 {
-  uint32_t index = (pos_ - 1) - ((count_ - 1) - requested_pos);
-  return vals_[index % count_];
+  uint16_t index = (pos_ - 1) - ((S - 1) - requested_pos);
+  return vals_[index % S];
 }
 
-template<typename T>
-inline T ValueTracker<T>::delta() const
+template<typename T, uint8_t S>
+inline T ValueTracker<T,S>::delta() const
 {
-  return delta(count_ - 1, count_ - 2);
+  return delta(S - 1, S - 2);
 }
 
-template<typename T>
-inline T ValueTracker<T>::delta(uint32_t upper_pos, uint32_t lower_pos) const
+template<typename T, uint8_t S>
+inline T ValueTracker<T,S>::delta(uint8_t upper_pos, uint8_t lower_pos) const
 {
   T upper_val = value(upper_pos);
   T lower_val = value(lower_pos);
   return (upper_val - lower_val);
 }
 
-template<typename T>
-inline T ValueTracker<T>::median() const
+template<typename T, uint8_t S>
+inline T ValueTracker<T,S>::median() const
 {
-  T* arr = new T[count_];
-  memcpy(arr, vals_, count_ * sizeof(T));
+  T arr[S] = { 0 };
+  memcpy(arr, vals_, sizeof(T) * S);
 
-  Sorters::insertionSort(arr, count_);
+  Sorters::insertionSort(arr, S);
 
   T result;
 
-  if ((count_ % 2) != 0) {
-    result = arr[count_ / 2];
+  if ((S % 2) != 0) {
+    result = arr[S / 2];
   } else {
-    result = (arr[count_ / 2] + arr[(count_ / 2) - 1]) / 2;
+    result = (arr[S / 2] + arr[(S / 2) - 1]) / 2;
   }
-
-  delete [] arr;
   return result;
 }
 
-template<typename T>
-inline T ValueTracker<T>::mean() const
+template<typename T, uint8_t S>
+inline T ValueTracker<T,S>::mean() const
 {
   T sum = 0;
 
-  for (uint32_t i = 0; i < count_; i++) {
+  for (uint8_t i = 0; i < S; i++) {
     sum += vals_[i];
   }
-  return sum / count_;
+  return sum / S;
 }
 
 } // namespace btr

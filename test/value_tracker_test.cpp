@@ -16,7 +16,7 @@ namespace btr
 
 TEST(ValueTrackerTest, testValue)
 {
-  ValueTracker<double> tracker(3);
+  ValueTracker<double, 3> tracker(3);
 
   // The tracker is empty at this point and all values are to be 0.
   ASSERT_EQ(0, tracker.value(0));
@@ -46,7 +46,7 @@ TEST(ValueTrackerTest, testValue)
 TEST(ValueTrackerTest, testDelta)
 {
   uint32_t count = 5;
-  ValueTracker<uint32_t> tracker(count);
+  ValueTracker<uint32_t, 5> tracker(count);
 
   // The tracker is empty at this point and all values are to be 0.
   ASSERT_EQ(count, tracker.count());
@@ -79,7 +79,7 @@ TEST(ValueTrackerTest, testDelta)
 
 TEST(ValueTrackerTest, testInvalidDelta)
 {
-  ValueTracker<uint16_t> tracker(3);
+  ValueTracker<uint16_t, 3> tracker(3);
 
   for (uint16_t i = 5; i <= 7; i++) {
     tracker.push(i);
@@ -99,7 +99,7 @@ TEST(ValueTrackerTest, testMedianOdd)
 {
   uint16_t data[] = { 7, 5, 2, 16, 4 };
   uint32_t size = sizeof(data) / sizeof(uint16_t);
-  ValueTracker<uint16_t> tracker(size);
+  ValueTracker<uint16_t, 5> tracker(size);
 
   for (uint32_t i = 0; i < size; i++) {
     tracker.push(data[i]);
@@ -113,7 +113,7 @@ TEST(ValueTrackerTest, testMedianEven)
 {
   uint16_t data[] = { 7, 5, 2, 16, 4, 5 };
   uint32_t size = sizeof(data) / sizeof(uint16_t);
-  ValueTracker<uint16_t> tracker(size);
+  ValueTracker<uint16_t, 6> tracker(size);
 
   for (uint32_t i = 0; i < size; i++) {
     tracker.push(data[i]);
@@ -127,7 +127,7 @@ TEST(ValueTrackerTest, testMean)
 {
   uint16_t data[] = { 7, 5, 2, 16, 4, 5 };
   uint32_t size = sizeof(data) / sizeof(uint16_t);
-  ValueTracker<uint16_t> tracker(size);
+  ValueTracker<uint16_t, 6> tracker(size);
 
   for (uint32_t i = 0; i < size; i++) {
     tracker.push(data[i]);
