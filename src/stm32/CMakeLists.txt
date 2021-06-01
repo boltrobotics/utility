@@ -1,9 +1,8 @@
-cmake_minimum_required(VERSION 3.5)
-set(CMAKE_MODULE_PATH $ENV{CMAKEHELPERS_HOME}/cmake/Modules)
+cmake_minimum_required(VERSION 3.16)
+project(utility)
 
-include(stm32f103c8t6)
 include(stm32_project)
-
 setup_stm32()
 find_srcs()
+
 build_lib(SRCS ${SOURCES})
