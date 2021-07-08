@@ -1,7 +1,6 @@
-include(test_project)
-
+include(x86_project)
 find_test_srcs()
-build_tests(SRCS ${SOURCES} SUFFIX "-tests")
+build_exe(SRCS ${SOURCES} SUFFIX "-tests" TEST ON)
 
 set(DOXYGEN_WARN NO)
 build_doc(DEP ${PROJECT_NAME}-tests SUFFIX "-docs")
