@@ -6,4 +6,4 @@ The project contains portable C++ code for
 * improving output from unit tests
 * tracking number ranges for calculating delta, mean or median
 
-Wiki: <a href="https://sknet.cc/projects/utility/">sknet.cc/projects/utility</a>
+Wiki: <a href="https://boltrobotics.com/projects/utility/">boltrobotics.com/projects/utility</a>
