@@ -21,14 +21,14 @@ The project contains portable C++ code for
   * [ValueCodec](#value_codec)
   * [ValueTracker](#value_tracker)
 
-<a name="Build" />
+<a name="Build" ></a>
 ## Build
 
 Set up the build following an <a href="/projects/cmake-helpers/#example-project">example</a> from
 cmake-helpers project.
 
-<a name="Unit_Tests" />
-## Tests
+<a name="Unit_Tests" ></a>
+## Unit Tests
 
 Build unit tests with
 ```
@@ -44,10 +44,10 @@ or
 cd build-x86 && ninja test
 ```
 
-<a name="Utility_Classes" />
+<a name="Utility_Classes" ></a>
 ## Utility Classes
 
-<a name="avl_tree" />
+<a name="avl_tree" ></a>
 ### <a href="include/utility/avl_tree.hpp">AvlTree</a>
 
 Implements an AVL tree. See usage examples in <a href="test/avl_tree_test.cpp">
