@@ -24,7 +24,7 @@ The project contains portable C++ code for
 <a name="Build" ></a>
 ## Build
 
-Set up the build following an <a href="/projects/cmake-helpers/#example-project">example</a> from
+Set up the build following an <a href="https://github.com/boltrobotics/cmake-helpers/#Example">example</a> from
 cmake-helpers project.
 
 <a name="Unit_Tests" ></a>
