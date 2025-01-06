@@ -16,8 +16,8 @@
 #include <iostream>
 
 // PROJECT INCLUDES
-#include "utility/misc.hpp"
-#include "utility/buff.hpp"
+#include "utility/common/misc.hpp"
+#include "utility/common/buff.hpp"
 
 namespace btr
 {

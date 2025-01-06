@@ -12,7 +12,7 @@
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
-#include "utility/sorters.hpp"
+#include "utility/common/sorters.hpp"
 
 namespace btr
 {

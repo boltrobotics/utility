@@ -10,9 +10,9 @@
 #include <limits>
 
 // PROJECT INCLUDES
-#include "utility/value_codec.hpp"
-#include "utility/buff.hpp"
-#include "utility/test_helpers.hpp"
+#include "utility/common/value_codec.hpp"
+#include "utility/common/buff.hpp"
+#include "utility/common/test_helpers.hpp"
 
 namespace btr
 {

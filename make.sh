@@ -11,6 +11,8 @@ if [ -z ${XTRA_HOME} ]; then
   export XTRA_HOME=${PROJECTS_HOME}/other
 fi
 
+# Bolt Robotics projects
+
 if [ -z ${CMAKEHELPERS_HOME} ]; then
   export CMAKEHELPERS_HOME=${PROJECTS_HOME}/cmake-helpers
 fi

@@ -9,9 +9,11 @@
 #ifndef _btr_SharedPtr_hpp_
 #define _btr_SharedPtr_hpp_
 
+// SYSTEM INCLUDES
 #include <stdlib.h>
+
 // PROJECT INCLUDES
-#include "spin_lock.hpp"
+#include "utility/common/spin_lock.hpp"
 
 namespace btr
 {

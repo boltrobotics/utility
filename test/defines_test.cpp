@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "utility/defines.hpp"
+#include "utility/common/defines.hpp"
 
 //================================ TEST FIXTURES ===============================
 

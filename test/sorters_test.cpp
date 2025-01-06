@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "utility/sorters.hpp"
+#include "utility/common/sorters.hpp"
 
 //================================ TEST FIXTURES ===============================
 

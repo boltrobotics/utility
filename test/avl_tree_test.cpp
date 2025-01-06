@@ -13,8 +13,8 @@
 #include <limits>
 
 // PROJECT INCLUDES
-#include "utility/avl_tree.hpp"
-#include "utility/test_helpers.hpp"
+#include "utility/common/avl_tree.hpp"
+#include "utility/common/test_helpers.hpp"
 
 namespace btr
 {

@@ -9,16 +9,16 @@
 #ifndef _btr_ValueCodec_hpp_
 #define _btr_ValueCodec_hpp_
 
-// PROJECT INCLUDES
-#include "utility/defines.hpp"
-#include "utility/buff.hpp"
-#include "utility/misc.hpp"
-
 // SYSTEM INCLUDES
 #if BTR_FLOAT_ENABLED > 0
 #include <math.h>
 #endif
 #include <errno.h>
+
+// PROJECT INCLUDES
+#include "utility/common/defines.hpp"
+#include "utility/common/buff.hpp"
+#include "utility/common/misc.hpp"
 
 namespace btr
 {

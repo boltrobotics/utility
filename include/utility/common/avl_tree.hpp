@@ -43,7 +43,6 @@ public:
 
   N* start_node_;
   N* prev_node_;
-  int errno_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,8 +170,7 @@ private:
 template<typename N>
 inline NodeObserver<N>::NodeObserver() :
   start_node_(nullptr),
-  prev_node_(nullptr),
-  errno_(0)
+  prev_node_(nullptr)
 {
 }
 

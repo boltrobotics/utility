@@ -8,8 +8,8 @@
 #include <gtest/gtest.h>
 
 // PROJECT INCLUDES
-#include "utility/shared_ptr.hpp"
-#include "utility/test_helpers.hpp"
+#include "utility/common/shared_ptr.hpp"
+#include "utility/common/test_helpers.hpp"
 
 namespace btr
 {
