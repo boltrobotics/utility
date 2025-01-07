@@ -14,6 +14,8 @@
 
 //=================================== TESTS ====================================
 
+/** The functions test status functionality */
+
 namespace btr
 {
 

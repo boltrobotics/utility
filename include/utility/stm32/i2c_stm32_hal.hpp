@@ -6,23 +6,32 @@
 
 /** @file */
 
-#ifndef _btr_I2C_hpp_
-#define _btr_I2C_hpp_
+#ifndef _btr_I2C_STM32_Hal_hpp_
+#define _btr_I2C_STM32_Hal_hpp_
 
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
-#include "utility/i2c.hpp"
+#include "utility/common/i2c.hpp"
 
 namespace btr
 {
 
 /**
- * The class implements i2c interface for AVR platform.
+ * The class implements i2c interface for STM32 platform.
  */
-class I2C_Hal : public I2C
+class I2C_STM32_Hal : public I2C
 {
 public:
+
+// LIFECYCLE
+
+  /**
+   * Ctor.
+   *
+   * @param dev_id - device id, either I2C1 or I2C2.
+   */
+  I2C_STM32_Hal(uint32_t dev_id);
 
 // OPERATIONS
 
@@ -66,8 +75,12 @@ protected:
    * @return status code as described in defines.hpp
    */
   uint32_t waitBusy();
+
+// ATTRIBUTES
+
+  uint32_t dev_id_;
 };
 
 } // namespace btr
 
-#endif // _btr_I2C_hpp_
+#endif // _btr_I2C_STM32_Hal_hpp_

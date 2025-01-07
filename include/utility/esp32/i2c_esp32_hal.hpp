@@ -6,10 +6,11 @@
 
 /** @file */
 
-#ifndef _btr_I2C_Hal_hpp_
-#define _btr_I2C_Hal_hpp_
+#ifndef _btr_I2C_ESP32_Hal_hpp_
+#define _btr_I2C_ESP32_Hal_hpp_
 
 // SYSTEM INCLUDES
+//#include "driver/i2c_types.h"
 
 // PROJECT INCLUDES
 #include "utility/common/i2c.hpp"
@@ -18,9 +19,9 @@ namespace btr
 {
 
 /**
- * The class implements i2c interface for STM32 platform.
+ * The class implements i2c interface for ESP32 platform.
  */
-class I2C_Hal : public I2C
+class I2C_ESP32_Hal : public I2C
 {
 public:
 
@@ -28,10 +29,8 @@ public:
 
   /**
    * Ctor.
-   *
-   * @param dev_id - device id, either I2C1 or I2C2.
    */
-  I2C_Hal(uint32_t dev_id);
+  I2C_ESP32_Hal();
 
 // OPERATIONS
 
@@ -67,7 +66,7 @@ protected:
   /**
    * @see I2C::receiveByte
    */
-  virtual uint32_t receiveByte(bool expect_ack, uint8_t* val);
+  virtual uint32_t receiveByte(bool ack, uint8_t* val);
 
   /**
    * Wait while I2C is busy with another transation.
@@ -76,11 +75,14 @@ protected:
    */
   uint32_t waitBusy();
 
+private:
+
 // ATTRIBUTES
 
-  uint32_t dev_id_;
+  i2c_master_bus_handle_t bus_handle_;                                                              
+  i2c_master_dev_handle_t dev_handle_; 
 };
 
 } // namespace btr
 
-#endif // _btr_I2C_Hal_hpp_
+#endif // _btr_I2C_ESP32_Hal_hpp_

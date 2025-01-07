@@ -44,17 +44,29 @@ static void onOprComplete(Usart* u, const boost::system::error_code& err, size_t
   u->timer_.cancel();
 }
 
+#if BTR_USART0_ENABLED > 0
+static Usart usart_0;
+#endif
+#if BTR_USART1_ENABLED > 0
+static Usart usart_1;
+#endif
+#if BTR_USART2_ENABLED > 0
+static Usart usart_2;
+#endif
+#if BTR_USART3_ENABLED > 0
+static Usart usart_3;
+#endif
+
 /////////////////////////////////////////////// PUBLIC /////////////////////////////////////////////
 
 //============================================= LIFECYCLE ==========================================
 
-#if BTR_X86 > 0
 Usart::Usart()
   :
-  io_service_(),
-  serial_port_(io_service_),
-  timer_(io_service_),
-  bytes_transferred_(0)
+    io_service_(),
+    serial_port_(io_service_),
+    timer_(io_service_),
+    bytes_transferred_(0)
 {
 }
 
@@ -62,7 +74,6 @@ Usart::~Usart()
 {
   close();
 }
-#endif // BTR_X86
 
 //============================================= OPERATIONS =========================================
 

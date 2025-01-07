@@ -102,7 +102,7 @@ static void onRecv(btr::Usart* u)
       u->rx_buff_[u->rx_head_] = ch;
       u->rx_head_ = head_next;
     } else {
-      u->rx_error_ |= (BTR_DEV_EOVERFLOW >> 16);
+      u->rx_error_ |= (BTR_EOVERFLOW >> 16);
     }
   }
   //LED_TOGGLE();
@@ -323,7 +323,7 @@ uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
 
   while (bytes > 0) {
     if (pdPASS != xQueueSend(tx_q_, buff, pdMS_TO_TICKS(timeout))) {
-      rc |= BTR_DEV_ETIMEOUT;
+      rc |= BTR_ETIMEOUT;
       break;
     }
     ++buff;
@@ -348,7 +348,7 @@ uint32_t Usart::recv(char* buff, uint16_t bytes, uint32_t timeout)
     } else {
       if (timeout > 0) {
         if (delay >= timeout) {
-          rc |= BTR_DEV_ETIMEOUT;
+          rc |= BTR_ETIMEOUT;
           break;
         } else {
           // Wait and test queue one time after the delay.

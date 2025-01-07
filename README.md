@@ -48,16 +48,15 @@ cd build-x86 && ninja test
 ## Utility Classes
 
 <a name="avl_tree" ></a>
-### <a href="include/utility/avl_tree.hpp">AvlTree</a>
+### AvlTree
 
-Implements an AVL tree. See usage examples in <a href="test/avl_tree_test.cpp">
-avl_tree_test.cpp</a>
+Implements an AVL tree. See usage examples in avl_tree_test.cpp
 
 <a name="buff"></a> 
-### <a href="include/utility/buff.hpp">Buff</a>
+### Buff
 
 Implements dynamicaly resizable buffer. Provides read/write pointer tracking. See usage examples in
-<a href="test/buff_test.cpp">buff_test.cpp</a>
+buff_test.cpp
 
 <a name="misc" ></a>
 ### <a href="include/utility/misc.hpp">Misc</a>
@@ -154,6 +153,8 @@ The class provides an interface for communication over serial connection.
 
 The class can drive a motor that uses three wires for direction and speed control.
 
+<a href="include/devices/avr/pwm_motor_3wire.hpp">PwmMotor3Wire for AVR</a>
+
 <a name="PwmMotor2Wire"></a>
 ### <a href="include/devices/stm32/pwm_motor_2wire.hpp">PwmMotor2Wire</a>
 
@@ -161,11 +162,6 @@ The class can drive a motor that uses two wires for direction and speed control.
 
 <a name="avr"></a>
 ## AVR
-
-<a name="PwmMotor3Wire"></a>
-### <a href="include/devices/avr/pwm_motor_3wire.hpp">PwmMotor3Wire</a>
-
-The class can drive a motor that uses three wires for direction and speed control.
 
 ## Common Code
 

@@ -9,24 +9,23 @@
  */
 
 // SYSTEM INCLUDES
+#include "driver/i2c_master.h"
 
 // PROJECT INCLUDES
-#include "utility/esp32/i2c_hal.hpp"  // class implemented
+#include "utility/esp32/i2c_esp32_hal.hpp"  // class implemented
 
 #if BTR_I2C0_ENABLED > 0 || BTR_I2C1_ENABLED > 0
 
 namespace btr
 {
 
-#if BTR_I2C0_ENABLED > 0
-static I2C i2c_0(0);
-#endif
+static I2C_ESP32_Hal i2c_0;
 
 /////////////////////////////////////////////// PUBLIC /////////////////////////////////////////////
 
 //============================================= LIFECYCLE ==========================================
 
-I2C_Hal::I2C_Hal()
+I2C_ESP32_Hal::I2C_ESP32_Hal()
   :
     I2C(),
     bus_handle_(nullptr),
@@ -41,50 +40,46 @@ I2C* I2C::instance(uint32_t dev_id, bool open)
 {
   (void) dev_id;
 
-  if (open && false == isOpen()) {
+  if (open) {
     i2c_0.open();
   }
   return &i2c_0;
 }
 
-void I2C::open()
+void I2C_ESP32_Hal::open()
 {
   if (bus_handle_) {
     close();
   }
 
-  i2c_master_bus_config_t config = {
-    .clk_source = BTR_I2C_CLK_SRC,
-    .i2c_port = BTR_I2C_MASTER_PORT,
-    .scl_io_num = BTR_I2C_MASTER_SCL_IO,
-    .sda_io_num = BTR_I2C_MASTER_SDA_IO,
-    .glitch_ignore_cnt = BTR_I2C_GLITCH_IGNORE_COUNT,
-    .flags.enable_internal_pullup = BTR_I2C_INTERNAL_PULLUP,
-  };
+  i2c_master_bus_config_t config;
+  config.i2c_port = BTR_I2C_MASTER_PORT;
+  config.sda_io_num = (gpio_num_t) BTR_I2C_MASTER_SDA_IO;
+  config.scl_io_num = (gpio_num_t) BTR_I2C_MASTER_SCL_IO;
+  config.clk_source = BTR_I2C_CLK_SRC;
+  config.glitch_ignore_cnt = BTR_I2C_GLITCH_IGNORE_COUNT;
+  config.flags.enable_internal_pullup = BTR_I2C_INTERNAL_PULLUP;
 
   esp_err_t err = i2c_new_master_bus(&config, &bus_handle_);
 
   if (ESP_OK == err) {
     open_ = true;
-  }
+  } else {
+    ESP_ERROR_CHECK(err);
 
-  uint32_t rc = BTR_DEV_ENOERR;
-
-  if (ESP_OK != err) {
-    ESP_ERROR_CHECK(err)
-
-    if (ESP_ERR_NO_MEM == rc) {
-      rc = BTR_DEV_ENOMEM; // Create I2C bus failed because of out of memory.
-    } else if (ESP_ERR_NOT_FOUND == rc) {
-      rc = BTR_DEV_EFAIL; // No more free bus.
+    if (ESP_ERR_NO_MEM == err) {
+      set_status(status(), BTR_ENOMEM);
+    } else if (ESP_ERR_NOT_FOUND == err) {
+      // No more free bus.
+      set_status(status(), BTR_EFAIL);
     } else {
-      rc = BTR_DEV_EINVAL; // I2C bus initialization failed because of invalid argument.
+      // I2C bus initialization failed because of invalid argument.
+      set_status(status(), BTR_EINVAL);
     }
   }
-  return rc;
 }
 
-void I2C::close()
+void I2C_ESP32_Hal::close()
 {
   i2c_del_master_bus(bus_handle_);
   bus_handle_ = nullptr;
@@ -95,7 +90,7 @@ void I2C::close()
 
 //============================================= OPERATIONS =========================================
 
-uint32_t I2C::start(uint8_t addr, uint8_t rw)
+uint32_t I2C_ESP32_Hal::start(uint8_t addr, uint8_t rw)
 {
   (void) rw;
 
@@ -115,74 +110,74 @@ uint32_t I2C::start(uint8_t addr, uint8_t rw)
     esp_err_t err = i2c_master_bus_add_device(bus_handle_, &dev_cfg, &dev_handle_);
 
     if (ESP_OK != err) {
-      ESP_ERROR_CHECK(err)
+      ESP_ERROR_CHECK(err);
 
-      if (ESP_ERR_NO_MEM == rc) {
-        rc = BTR_DEV_ENOMEM; 
+      if (ESP_ERR_NO_MEM == err) {
+        rc = BTR_ENOMEM; 
       } else {
-        rc = BTR_DEV_EINVAL; 
+        rc = BTR_EINVAL; 
       }
     }
   }
   return rc;
 }
 
-uint32_t I2C::stop()
+uint32_t I2C_ESP32_Hal::stop()
 {
   i2c_master_bus_rm_device(dev_handle_);
   dev_handle_ = nullptr;
-  return BTR_DEV_ENOERR;
+  return BTR_ENOERR;
 }
 
-uint32_t I2C::sendByte(uint8_t val)
+uint32_t I2C_ESP32_Hal::sendByte(uint8_t val)
 {
   esp_err_t err = i2c_master_transmit(dev_handle_, &val, sizeof(uint8_t), BTR_I2C_IO_TIMEOUT_MS);
-  uint32_t rc = BTR_DEV_ENOERR;
 
   if (ESP_OK != err) {
-    ESP_ERROR_CHECK(err)
+    ESP_ERROR_CHECK(err);
 
-    if (ESP_ERR_TIMEOUT == rc) {
+    if (ESP_ERR_TIMEOUT == err) {
       // Operation timeout(larger than xfer_timeout_ms) because the bus is busy or hardware crash.
-      rc = BTR_DEV_ETIMEOUT;
+      return BTR_ETIMEOUT;
     } else {
-      rc = BTR_DEV_EINVAL; // ESP_ERR_INVALID_ARG: I2C master transmit parameter invalid.
+      return BTR_EINVAL; // ESP_ERR_INVALID_ARG: I2C master transmit parameter invalid.
     }
+  } else {
+    return BTR_ENOERR;
   }
-  return rc;
 }
 
-uint32_t I2C::receiveByte(bool expect_ack, uint8_t* val)
+uint32_t I2C_ESP32_Hal::receiveByte(bool expect_ack, uint8_t* val)
 {
   esp_err_t err = i2c_master_receive(dev_handle_, val, sizeof(uint8_t), BTR_I2C_IO_TIMEOUT_MS);
-  uint32_t rc = BTR_DEV_ENOERR;
 
   if (ESP_OK != err) {
-    ESP_ERROR_CHECK(err)
+    ESP_ERROR_CHECK(err);
 
-    if (ESP_ERR_TIMEOUT == rc) {
+    if (ESP_ERR_TIMEOUT == err) {
       // Operation timeout(larger than xfer_timeout_ms) because the bus is busy or hardware crash.
-      rc = BTR_DEV_ETIMEOUT;
+      return BTR_ETIMEOUT;
     } else {
-      rc = BTR_DEV_EINVAL; // ESP_ERR_INVALID_ARG: I2C master receive parameter invalid.
+      return BTR_EINVAL; // ESP_ERR_INVALID_ARG: I2C master receive parameter invalid.
     }
+  } else {
+    return BTR_ENOERR;
   }
-  return rc;
 }
 
-uint32_t I2C::waitBusy()
+uint32_t I2C_ESP32_Hal::waitBusy()
 {
   esp_err_t err = i2c_master_bus_wait_all_done(bus_handle_, BTR_I2C_IO_TIMEOUT_MS);
-  uint32_t rc = BTR_DEV_ENOERR;
 
-  if (ESP_OK != err)
+  if (ESP_OK != err) {
     if (ESP_ERR_TIMEOUT == err) {
-      rc = BTR_DEV_ETIMEOUT;
+      return BTR_ETIMEOUT;
     } else { 
-      rc = BTR_DEV_EFAIL;          
+      return BTR_EFAIL;          
     }
+  } else {
+    return BTR_ENOERR;
   }
-  return rc;
 }
 
 /////////////////////////////////////////////// PRIVATE ////////////////////////////////////////////

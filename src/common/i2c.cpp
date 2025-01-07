@@ -33,7 +33,7 @@ bool I2C::isOpen()
 uint32_t I2C::scan()
 {
   if (isOpen()) {
-    uint32_t rc = BTR_DEV_ENOERR;
+    uint32_t rc = BTR_ENOERR;
     uint32_t count = 0;
 
     for (uint8_t addr = 0; addr < BTR_I2C_SCAN_MAX; addr++) {
@@ -49,7 +49,7 @@ uint32_t I2C::scan()
     set_status(status(), rc);
     return (rc | count);
   }
-  return BTR_DEV_ENOTOPEN;
+  return BTR_ENOTOPEN;
 }
 
 uint32_t I2C::write(uint8_t addr, uint8_t reg, const uint8_t* buff, uint8_t bytes)
@@ -78,7 +78,7 @@ uint32_t I2C::write(uint8_t addr, uint8_t reg, const uint8_t* buff, uint8_t byte
     set_status(status(), rc);
     return (rc | count);
   }
-  return BTR_DEV_ENOTOPEN;
+  return BTR_ENOTOPEN;
 }
 
 uint32_t I2C::read(uint8_t addr, uint8_t reg, uint8_t* buff, uint8_t count)
@@ -99,7 +99,7 @@ uint32_t I2C::read(uint8_t addr, uint8_t reg, uint8_t* buff, uint8_t count)
     set_status(status(), rc);
     return rc;
   }
-  return BTR_DEV_ENOTOPEN;
+  return BTR_ENOTOPEN;
 }
 
 uint32_t I2C::read(uint8_t addr, uint8_t* buff, uint8_t bytes, bool stop_comm)
@@ -132,7 +132,7 @@ uint32_t I2C::read(uint8_t addr, uint8_t* buff, uint8_t bytes, bool stop_comm)
     set_status(status(), rc);
     return (rc | count);
   }
-  return BTR_DEV_ENOTOPEN;
+  return BTR_ENOTOPEN;
 }
 
 /////////////////////////////////////////////// PROTECTED //////////////////////////////////////////

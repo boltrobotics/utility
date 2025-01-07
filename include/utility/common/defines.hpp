@@ -81,25 +81,65 @@ inline void clear_status(uint32_t*)             {}
 #endif
 
 // This library's status codes.
-#define BTR_DEV_ENOERR          0x00000000
-#define BTR_DEV_ENODATA         0x00010000
-#define BTR_DEV_EOVERFLOW       0x00020000
-#define BTR_DEV_EPARITY         0x00040000
-#define BTR_DEV_EOVERRUN        0x00080000
-#define BTR_DEV_EFRAME          0x00100000
-#define BTR_DEV_ETIMEOUT        0x00110000
-#define BTR_DEV_ENOTOPEN        0x00120000
-#define BTR_DEV_ESTART          0x00140000
-#define BTR_DEV_ESENDBYTE       0x00180000
-#define BTR_DEV_ERECVBYTE       0x00200000
-#define BTR_DEV_ENOACK          0x00210000
-#define BTR_DEV_ENONACK         0x00220000
-#define BTR_DEV_EINVAL          0x00240000
-#define BTR_DEV_EINIT           0x00280000
-#define BTR_DEV_EFAIL           0x00400000
-#define BTR_DEV_ENOMEM          0x00410000
+#define BTR_ENOERR          0x00000000
+#define BTR_ENODATA         0x00010000
+#define BTR_EOVERFLOW       0x00020000
+#define BTR_EPARITY         0x00040000
+#define BTR_EOVERRUN        0x00080000
+#define BTR_EFRAME          0x00100000
+#define BTR_ETIMEOUT        0x00110000
+#define BTR_ENOTOPEN        0x00120000
+#define BTR_ESTART          0x00140000
+#define BTR_ESENDBYTE       0x00180000
+#define BTR_ERECVBYTE       0x00200000
+#define BTR_ENOACK          0x00210000
+#define BTR_ENONACK         0x00220000
+#define BTR_EINVAL          0x00240000
+#define BTR_EINIT           0x00280000
+#define BTR_EFAIL           0x00400000
+#define BTR_ENOMEM          0x00410000
 
 // } Status
+
+//==================================================================================================
+// Log {
+
+enum BTR_LOG_LEVEL {
+  TRACE     = 0,
+  DEBUG     = 1,
+  INFO      = 2,
+  WARN      = 3,
+  ERROR     = 4,
+  CRITICAL  = 5,
+  LOGS_OFF  = 6
+};
+
+#ifndef BTR_LOG_ENABLED
+#if BTR_X86 > 0
+#define BTR_LOG_ENABLED         1
+#else
+#define BTR_LOG_ENABLED         0
+#endif
+#endif
+
+#if !defined(BTR_LOG_PORT_USB) && !defined(BTR_LOG_PORT_USART)
+#define BTR_LOG_PORT_USB        1
+#endif
+
+#ifndef BTR_LOG_MAX
+#define BTR_LOG_MAX             128
+#endif
+#ifndef BTR_LOG_MAX_STRING
+#define BTR_LOG_MAX_STRING      96
+#endif
+#ifndef BTR_LOG_MAX_HEX
+#define BTR_LOG_MAX_HEX         96
+#endif
+#ifndef BTR_LOG_LEVEL_DFLT
+#define BTR_LOG_LEVEL_DFLT      btr::WARN
+#endif
+
+// } Log
 
 //==================================================================================================
 // Time {
@@ -207,7 +247,7 @@ inline void clear_status(uint32_t*)             {}
 
 /** On STM32F103C8T6, I2C0 refers to SCL1/SDA1, I2C1 to SCL2/SDA2. On AVR, only I2C0 is used. */
 #ifndef BTR_I2C0_ENABLED
-#define BTR_I2C0_ENABLED      0
+#define BTR_I2C0_ENABLED      1
 #endif
 #ifndef BTR_I2C1_ENABLED
 #define BTR_I2C1_ENABLED      0
@@ -219,6 +259,7 @@ inline void clear_status(uint32_t*)             {}
 // AVR
 
 #if BTR_AVR > 0
+
 #include <util/twi.h>
 
 /** I2C write operation. */
@@ -230,14 +271,13 @@ inline void clear_status(uint32_t*)             {}
 // ESP32
 
 #elif BTR_ESP32 > 0
-#include <driver/i2c_master.h>
 
 /** Default clock doesn't work well when power management is enabled. Change it to fix */
 #ifndef BTR_I2C_CLK_SRC 
 #define BTR_I2C_CLK_SRC             I2C_CLK_SRC_DEFAULT // I2C_CLK_SRC_APB
 #endif
-#ifndef BTR_I2C_MASTER_PORT         0
-#define BTR_I2C_MASTER_PORT 
+#ifndef BTR_I2C_MASTER_PORT
+#define BTR_I2C_MASTER_PORT         0
 #endif
 #ifndef BTR_I2C_MASTER_SCL_IO       
 #define BTR_I2C_MASTER_SCL_IO       12 // Default 22
@@ -248,6 +288,14 @@ inline void clear_status(uint32_t*)             {}
 #ifndef BTR_I2C_GLITCH_IGNORE_COUNT
 #define BTR_I2C_GLITCH_IGNORE_COUNT 7
 #endif
+#ifndef BTR_I2C_INTERNAL_PULLUP
+#define BTR_I2C_INTERNAL_PULLUP     true
+#endif
+
+/** Dummy I2C write operation. Discarded in ESP32 */
+#define BTR_I2C_WRITE               0 
+/** Dummy I2C read operation. Discarded in ESP32 */
+#define BTR_I2C_READ                1
 
 //--------------------------------------------------------------------------------------------------
 // STM32
@@ -354,10 +402,22 @@ typedef enum
 
 #endif // Platform
 
+#ifndef BTR_USART0_PORT
+#define BTR_USART0_PORT         "/dev/ttyACM0"
+#endif
+#ifndef BTR_USART1_PORT
+#define BTR_USART1_PORT         "/dev/ttyACM1"
+#endif
+#ifndef BTR_USART2_PORT
+#define BTR_USART2_PORT         "/dev/ttyACM2"
+#endif
+#ifndef BTR_USART3_PORT
+#define BTR_USART3_PORT         "/dev/ttyACM3"
+#endif
+
 #ifndef BTR_USB0_ENABLED
 #define BTR_USB0_ENABLED        0
 #endif
-
 #ifndef BTR_USART0_ENABLED
 #define BTR_USART0_ENABLED      0
 #endif
