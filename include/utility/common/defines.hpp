@@ -104,6 +104,7 @@ inline void clear_status(uint32_t*)             {}
 //==================================================================================================
 // Log {
 
+#if 0
 enum BTR_LOG_LEVEL {
   TRACE     = 0,
   DEBUG     = 1,
@@ -137,6 +138,8 @@ enum BTR_LOG_LEVEL {
 #endif
 #ifndef BTR_LOG_LEVEL_DFLT
 #define BTR_LOG_LEVEL_DFLT      btr::WARN
+#endif
+
 #endif
 
 // } Log
