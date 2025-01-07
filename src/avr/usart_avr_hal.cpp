@@ -10,7 +10,7 @@
 #include <util/delay.h>
 
 // PROJECT INCLUDES
-#include "utility/common/usart.hpp"  // class implemented
+#include "usart_avr_hal.hpp"  // class implemented
 
 #if BTR_USART0_ENABLED > 0 || BTR_USART1_ENABLED > 0 || \
     BTR_USART2_ENABLED > 0 || BTR_USART3_ENABLED > 0
@@ -59,7 +59,7 @@
 // } Register bits
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// RS485 { TODO Finish off
+// RS485 { TODO Complete
 
 #if BTR_RTS_ENABLED > 0
 
@@ -92,22 +92,22 @@
 
 #if BTR_USART0_ENABLED > 0
 #if defined(UBRRH) && defined(UBRRL)
-static btr::Usart usart_0(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR);
+static btr::UsartAvrHal usart_0(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR);
 #else
-static btr::Usart usart_0(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0);
+static btr::UsartAvrHal usart_0(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0);
 #endif // UBRRH && UBRRL
 #endif
 #if BTR_USART1_ENABLED > 0
-static btr::Usart usart_1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UCSR1C, &UDR1);
+static btr::UsartAvrHal usart_1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UCSR1C, &UDR1);
 #endif
 #if BTR_USART2_ENABLED > 0
-static btr::Usart usart_2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UCSR2C, &UDR2);
+static btr::UsartAvrHal usart_2(&UBRR2H, &UBRR2L, &UCSR2A, &UCSR2B, &UCSR2C, &UDR2);
 #endif
 #if BTR_USART3_ENABLED > 0
-static btr::Usart usart_3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UCSR3C, &UDR3);
+static btr::UsartAvrHal usart_3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UCSR3C, &UDR3);
 #endif
 
-static void onRecv(btr::Usart* u)
+static void onRecv(btr::UsartAvrHal* u)
 {
   u->rx_error_ = (*(u->ucsr_a_) & ((1 << FE) | (1 << DOR) | (1 << UPE)));
   uint16_t head_next = (u->rx_head_ + 1) % BTR_USART_RX_BUFF_SIZE;
@@ -121,7 +121,7 @@ static void onRecv(btr::Usart* u)
   LED_TOGGLE();
 }
 
-static void onSend(btr::Usart* u)
+static void onSend(btr::UsartAvrHal* u)
 {
   uint8_t ch = u->tx_buff_[u->tx_tail_];
   u->tx_tail_ = (u->tx_tail_ + 1) % BTR_USART_TX_BUFF_SIZE;
@@ -206,7 +206,7 @@ namespace btr
 
 //============================================= LIFECYCLE ==========================================
 
-Usart::Usart(
+UsartAvrHal::UsartAvrHal(
     volatile uint8_t* ubrr_h,
     volatile uint8_t* ubrr_l,
     volatile uint8_t* ucsr_a,
@@ -277,12 +277,12 @@ Usart* Usart::instance(uint32_t id, bool open)
   }
 }
 
-bool Usart::isOpen()
+bool UsartAvrHal::isOpen()
 {
   return (bit_is_set(*ucsr_b_, TXEN) || bit_is_set(*ucsr_b_, RXEN));
 }
 
-int Usart::open(
+int UsartAvrHal::open(
     uint32_t baud, uint8_t data_bits, StopBitsType stop_bits, ParityType parity, const char* port)
 {
   (void) port; // not used on AVR
@@ -308,7 +308,7 @@ int Usart::open(
   return 0;
 }
 
-void Usart::close()
+void UsartAvrHal::close()
 {
   flush(DirectionType::OUT);
   clear_bit(*ucsr_b_, TXEN);
@@ -318,13 +318,13 @@ void Usart::close()
   rx_head_ = rx_tail_;
 }
 
-int Usart::available()
+int UsartAvrHal::available()
 {
   uint16_t bytes = BTR_USART_RX_BUFF_SIZE + rx_head_ - rx_tail_;
   return (bytes % BTR_USART_RX_BUFF_SIZE);
 }
 
-int Usart::flush(DirectionType queue_selector)
+int UsartAvrHal::flush(DirectionType queue_selector)
 {
   if (false == enable_flush_) {
     return 0;
@@ -343,7 +343,7 @@ int Usart::flush(DirectionType queue_selector)
   return 0;
 }
 
-uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
+uint32_t UsartAvrHal::send(const char* buff, uint16_t bytes, uint32_t timeout)
 {
   enable_flush_ = true;
   uint32_t rc = 0;
@@ -377,7 +377,7 @@ uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
   return rc;
 }
 
-uint32_t Usart::recv(char* buff, uint16_t bytes, uint32_t timeout)
+uint32_t UsartAvrHal::recv(char* buff, uint16_t bytes, uint32_t timeout)
 {
   uint32_t rc = 0;
   uint32_t delay = 0;

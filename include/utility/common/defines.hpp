@@ -250,7 +250,7 @@ enum BTR_LOG_LEVEL {
 
 /** On STM32F103C8T6, I2C0 refers to SCL1/SDA1, I2C1 to SCL2/SDA2. On AVR, only I2C0 is used. */
 #ifndef BTR_I2C0_ENABLED
-#define BTR_I2C0_ENABLED      1
+#define BTR_I2C0_ENABLED      0
 #endif
 #ifndef BTR_I2C1_ENABLED
 #define BTR_I2C1_ENABLED      0
@@ -263,12 +263,11 @@ enum BTR_LOG_LEVEL {
 
 #if BTR_AVR > 0
 
-#include <util/twi.h>
-
+// WRITE/READ constants are taken from /usr/lib/avr/include/util/twi.h
 /** I2C write operation. */
-#define BTR_I2C_WRITE               TW_WRITE
+#define BTR_I2C_WRITE               0
 /** I2C read operation. */
-#define BTR_I2C_READ                TW_READ
+#define BTR_I2C_READ                1
 
 //--------------------------------------------------------------------------------------------------
 // ESP32
@@ -388,6 +387,8 @@ typedef enum
   INOUT
 } DirectionType;
 
+//--------------------------------------------------------------------------------------------------
+
 #if BTR_STM32 > 0
 
 #define BTR_USART_MIN_ID        0
@@ -403,7 +404,9 @@ typedef enum
 #define BTR_USART_MAX_ID        3
 #endif // AVR board
 
-#endif // Platform
+#endif // BTR_STM32 > 0
+
+//--------------------------------------------------------------------------------------------------
 
 #ifndef BTR_USART0_PORT
 #define BTR_USART0_PORT         "/dev/ttyACM0"

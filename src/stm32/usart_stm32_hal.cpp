@@ -7,7 +7,7 @@
 // SYSTEM INCLUDES
 
 // PROJECT INCLUDES
-#include "utility/common/usart.hpp"  // class implemented
+#include "usart_stm32_hal.hpp"  // class implemented
 
 #if BTR_USART0_ENABLED > 0 || BTR_USART1_ENABLED > 0 || BTR_USART2_ENABLED > 0
 
@@ -34,7 +34,7 @@ extern "C" {
 #else
 #define RTS_PORT 0
 #endif
-static btr::Usart usart_0(
+static btr::UsartStm32Hal usart_0(
   RCC_GPIOA, RCC_USART1, GPIOA, USART1, NVIC_USART1_IRQ, GPIO_USART1_TX, GPIO_USART1_RX,
   CTS_PORT, RTS_PORT);
 #endif
@@ -52,7 +52,7 @@ static btr::Usart usart_0(
 #else
 #define RTS_PORT 0
 #endif
-static btr::Usart usart_1(
+static btr::UsartStm32Hal usart_1(
   RCC_GPIOA, RCC_USART2, GPIOA, USART2, NVIC_USART2_IRQ, GPIO_USART2_TX, GPIO_USART2_RX,
   CTS_PORT, RTS_PORT);
 #endif
@@ -70,14 +70,14 @@ static btr::Usart usart_1(
 #else
 #define RTS_PORT 0
 #endif
-static btr::Usart usart_2(
+static btr::UsartStm32Hal usart_2(
   RCC_GPIOB, RCC_USART3, GPIOB, USART3, NVIC_USART3_IRQ, GPIO_USART3_TX, GPIO_USART3_RX,
   CTS_PORT, RTS_PORT);
 #endif
 
 static void txTask(void* arg)
 {
-  btr::Usart* u = (btr::Usart*) arg;
+  btr::UsartStm32Hal* u = (btr::UsartStm32Hal*) arg;
   char ch;
 
   for (;;) {
@@ -91,7 +91,7 @@ static void txTask(void* arg)
   }
 }
 
-static void onRecv(btr::Usart* u)
+static void onRecv(btr::UsartStm32Hal* u)
 {
   while (USART_SR(u->pin_) & USART_SR_RXNE) {
     char ch = USART_DR(u->pin_);
@@ -136,7 +136,7 @@ namespace btr
 
 //============================================= LIFECYCLE ==========================================
 
-Usart::Usart(
+UsartStm32Hal::UsartStm32Hal(
     rcc_periph_clken rcc_gpio,
     rcc_periph_clken rcc_usart,
     uint32_t port,
@@ -197,12 +197,12 @@ Usart* Usart::instance(uint32_t id, bool open)
   }
 }
 
-bool Usart::isOpen()
+bool UsartStm32Hal::isOpen()
 {
   return enable_flush_;
 }
 
-int Usart::open(
+int UsartStm32Hal::open(
     uint32_t baud, uint8_t data_bits, StopBitsType stop_bits, ParityType parity, const char* port)
 {
   (void) port; // not used on STM32
@@ -283,7 +283,7 @@ int Usart::open(
     return -1;
 }
 
-void Usart::close()
+void UsartStm32Hal::close()
 {
   enable_flush_ = false;
   usart_disable_rx_interrupt(pin_);
@@ -298,13 +298,13 @@ void Usart::close()
   }
 }
 
-int Usart::available()
+int UsartStm32Hal::available()
 {
   uint16_t bytes = BTR_USART_RX_BUFF_SIZE + rx_head_ - rx_tail_;
   return (bytes % BTR_USART_RX_BUFF_SIZE);
 }
 
-int Usart::flush(DirectionType dir)
+int UsartStm32Hal::flush(DirectionType dir)
 {
   int rc = 0;
 
@@ -317,7 +317,7 @@ int Usart::flush(DirectionType dir)
   return rc;
 }
 
-uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
+uint32_t UsartStm32Hal::send(const char* buff, uint16_t bytes, uint32_t timeout)
 {
   uint32_t rc = 0;
 
@@ -333,7 +333,7 @@ uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
   return rc;
 }
 
-uint32_t Usart::recv(char* buff, uint16_t bytes, uint32_t timeout)
+uint32_t UsartStm32Hal::recv(char* buff, uint16_t bytes, uint32_t timeout)
 {
   uint32_t rc = 0;
   uint32_t delay = 0;

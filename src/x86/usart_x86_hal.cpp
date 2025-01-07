@@ -9,14 +9,14 @@
 #include <sys/ioctl.h>
 
 // PROJECT INCLUDES
-#include "utility/common/usart.hpp"
+#include "usart_x86_hal.hpp"
 
 #define BOOST_SYSTEM_NO_DEPRECATED
 
 namespace btr
 {
 
-static void onTimeout(Usart* u, const boost::system::error_code& error)
+static void onTimeout(UsartX86Hal* u, const boost::system::error_code& error)
 {
   // When the timer is cancelled, the error generated is bio::operation_aborted.
   //
@@ -26,14 +26,15 @@ static void onTimeout(Usart* u, const boost::system::error_code& error)
   }
 }
 
-static void timeAsyncOpr(Usart* u, uint32_t timeout)
+static void timeAsyncOpr(UsartX86Hal* u, uint32_t timeout)
 {
   u->timer_.expires_from_now(boost::posix_time::milliseconds(timeout));
   u->timer_.async_wait(boost::bind(&onTimeout, u, bio::placeholders::error));
   u->io_service_.run();
 }
 
-static void onOprComplete(Usart* u, const boost::system::error_code& err, size_t bytes_transferred)
+static void onOprComplete(
+    UsartX86Hal* u, const boost::system::error_code& err, size_t bytes_transferred)
 {
   u->bytes_transferred_ = bytes_transferred;
 
@@ -45,24 +46,25 @@ static void onOprComplete(Usart* u, const boost::system::error_code& err, size_t
 }
 
 #if BTR_USART0_ENABLED > 0
-static Usart usart_0;
+static UsartX86Hal usart_0;
 #endif
 #if BTR_USART1_ENABLED > 0
-static Usart usart_1;
+static UsartX86Hal usart_1;
 #endif
 #if BTR_USART2_ENABLED > 0
-static Usart usart_2;
+static UsartX86Hal usart_2;
 #endif
 #if BTR_USART3_ENABLED > 0
-static Usart usart_3;
+static UsartX86Hal usart_3;
 #endif
 
 /////////////////////////////////////////////// PUBLIC /////////////////////////////////////////////
 
 //============================================= LIFECYCLE ==========================================
 
-Usart::Usart()
+UsartX86Hal::UsartX86Hal()
   :
+    Usart(),
     io_service_(),
     serial_port_(io_service_),
     timer_(io_service_),
@@ -70,7 +72,7 @@ Usart::Usart()
 {
 }
 
-Usart::~Usart()
+UsartX86Hal::~UsartX86Hal()
 {
   close();
 }
@@ -120,12 +122,12 @@ Usart* Usart::instance(uint32_t id, bool open)
   }
 }
 
-bool Usart::isOpen()
+bool UsartX86Hal::isOpen()
 {
   return serial_port_.is_open();
 }
 
-int Usart::open(
+int UsartX86Hal::open(
     uint32_t baud, uint8_t data_bits, StopBitsType stop_bits, ParityType parity, const char* port)
 {
   errno = 0;
@@ -170,7 +172,7 @@ int Usart::open(
   return 0;
 }
 
-void Usart::close()
+void UsartX86Hal::close()
 {
   if (serial_port_.is_open()) {
     timer_.cancel();
@@ -179,14 +181,14 @@ void Usart::close()
   }
 }
 
-int Usart::available()
+int UsartX86Hal::available()
 {
   int bytes_available;
   ioctl(serial_port_.lowest_layer().native_handle(), FIONREAD, &bytes_available);
   return bytes_available;
 }
 
-int Usart::flush(DirectionType dir)
+int UsartX86Hal::flush(DirectionType dir)
 {
   errno = 0;
   int rc = 0;
@@ -208,7 +210,7 @@ int Usart::flush(DirectionType dir)
   return rc;
 }
 
-uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
+uint32_t UsartX86Hal::send(const char* buff, uint16_t bytes, uint32_t timeout)
 {
   io_service_.reset();
   errno = 0;
@@ -224,7 +226,7 @@ uint32_t Usart::send(const char* buff, uint16_t bytes, uint32_t timeout)
   return bytes_transferred_;
 }
 
-uint32_t Usart::recv(char* buff, uint16_t bytes, uint32_t timeout)
+uint32_t UsartX86Hal::recv(char* buff, uint16_t bytes, uint32_t timeout)
 {
   io_service_.reset();
   errno = 0;
@@ -239,13 +241,5 @@ uint32_t Usart::recv(char* buff, uint16_t bytes, uint32_t timeout)
   timeAsyncOpr(this, timeout);
   return bytes_transferred_;
 }
-
-/////////////////////////////////////////////// PROTECTED //////////////////////////////////////////
-
-//============================================= OPERATIONS =========================================
-
-/////////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
-
-//============================================= OPERATIONS =========================================
 
 } // namespace btr

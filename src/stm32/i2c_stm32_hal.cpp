@@ -14,7 +14,7 @@
 #include "task.h"
 
 // PROJECT INCLUDES
-#include "utility/stm32/i2c_stm32_hal.hpp"  // class implemented
+#include "i2c_stm32_hal.hpp"  // class implemented
 #include "utility/common/time.hpp"
 
 #if BTR_I2C0_ENABLED > 0 || BTR_I2C1_ENABLED > 0

@@ -177,16 +177,16 @@ TEST_F(UsartTermiosTest, DISABLED_sendBreak)
 }
 #endif
 
+#if 0
 TEST_F(UsartTermiosTest, DISABLED_WriteTimeout)
 {
-#if 0
   // FIXME: Write time-out simulation doesn't work.
   Buff large_buff;
   large_buff.resize(65536);
   int e = sender_.send(&large_buff);
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
-#endif
 }
+#endif
 
 // } Tests
 

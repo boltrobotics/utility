@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-// PROJECT INCLUDES
-#include "utility/avr/i2c_avr_hal.hpp"  // class implemented
-#include "utility/common/time.hpp"
-
 // SYSTEM INCLDUES
 #include <util/twi.h>
 #include <util/delay.h>
+
+// PROJECT INCLUDES
+#include "i2c_avr_hal.hpp"  // class implemented
+#include "utility/common/time.hpp"
 
 #if BTR_I2C0_ENABLED > 0
 

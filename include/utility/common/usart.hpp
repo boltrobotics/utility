@@ -10,25 +10,12 @@
 #define _btr_Usart_hpp_
 
 // SYSTEM INCLUDES
-#if BTR_X86 > 0
-#include <boost/asio.hpp>
-namespace bio = boost::asio;
-#elif BTR_STM32 > 0
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/cm3/nvic.h>
-#include <FreeRTOS.h>
-#include <queue.h>
-#endif
 
 // PROJECT INCLUDES
 #include "utility/common/defines.hpp"
 
 namespace btr
 {
-
-//==================================================================================================
 
 /**
  * The class provides an interface to a USART device.
@@ -39,44 +26,9 @@ public:
 
 // LIFECYCLE
 
-#if BTR_X86 > 0
-  /**
-   * Create an instance and initialize data members.
-   */
-  Usart();
+  virtual ~Usart() = default;
 
-  /**
-   * Call close()
-   */
-  ~Usart();
-
-#elif BTR_AVR > 0
-  /**
-   * Create an instance and initialize data members.
-   */
-  Usart(
-      volatile uint8_t* ubrr_h,
-      volatile uint8_t* ubrr_l,
-      volatile uint8_t* ucsr_a,
-      volatile uint8_t* ucsr_b,
-      volatile uint8_t* ucsr_c,
-      volatile uint8_t* udr);
-
-#elif BTR_STM32 > 0
-  /**
-   * Create an instance and initialize data members.
-   */
-  Usart(
-      rcc_periph_clken rcc_gpio,
-      rcc_periph_clken rcc_usart,
-      uint32_t port,
-      uint32_t pin,
-      uint32_t irq,
-      uint16_t tx,
-      uint16_t rx,
-      uint16_t cts,
-      uint16_t rts);
-#endif
+// OPERATIONS
 
   /**
    * Provide an USART instance identified by given id.
@@ -88,14 +40,12 @@ public:
    */
   static Usart* instance(uint32_t id, bool open);
 
-// OPERATIONS
-
   /**
    * Check if device is open.
    *
    * @return true if port is open, false otherwise
    */
-  bool isOpen();
+  virtual bool isOpen() = 0;
 
   /**
    * Open USART device.
@@ -108,21 +58,21 @@ public:
    * @return 0 on success, -1 on failure
    * @see http://man7.org/linux/man-pages/man3/termios.3.html
    */
-  int open(
+  virtual int open(
       uint32_t baud, uint8_t data_bits, StopBitsType stop_bits, ParityType parity,
-      const char* port = nullptr);
+      const char* port = nullptr) = 0;
 
   /**
    * Stop the device, queues, clocks.
    */
-  void close();
+  virtual void close() = 0;
 
   /**
    * Check if there is data in receive queue.
    *
    * @return bytes available on the serial port or -1 if failed to retrieve the value
    */
-  int available();
+  virtual int available() = 0;
 
   /**
    * Flush pending, not-transmitted and non-read, data on the serial port.
@@ -132,7 +82,7 @@ public:
    *  OUT - flushes data written but not transmitted.
    *  INOUT - flushes both data received but not read, and data written but not transmitted.
    */
-  int flush(DirectionType dir);
+  virtual int flush(DirectionType dir) = 0;
 
   /**
    * Send a number of bytes from the buffer.
@@ -143,7 +93,8 @@ public:
    * @return bits from 16 up to 24 contain error code(s), lower 16 bits contains the number of bytes
    *  submitted
    */
-  uint32_t send(const char* buff, uint16_t bytes, uint32_t timeout = BTR_USART_TX_TIMEOUT_MS);
+  virtual uint32_t send(
+      const char* buff, uint16_t bytes, uint32_t timeout = BTR_USART_TX_TIMEOUT_MS) = 0;
 
   /**
    * Receive a number of bytes and store in the buffer.
@@ -154,63 +105,8 @@ public:
    * @return bits from 16 up to 24 contain error code(s), lower 16 bits contains the number of bytes
    *  received
    */
-  uint32_t recv(char* buff, uint16_t bytes, uint32_t timeout = BTR_USART_RX_TIMEOUT_MS);
-
-// ATTRIBUTES
-
-#if BTR_X86 > 0
-  bio::io_service     io_service_;
-  bio::serial_port    serial_port_;
-  bio::deadline_timer timer_;
-  uint16_t            bytes_transferred_;
-#elif BTR_AVR > 0
-  volatile uint8_t* ubrr_h_;
-  volatile uint8_t* ubrr_l_;
-  volatile uint8_t* ucsr_a_;
-  volatile uint8_t* ucsr_b_;
-  volatile uint8_t* ucsr_c_;
-  volatile uint8_t* udr_;
-#elif BTR_STM32 > 0
-  rcc_periph_clken rcc_gpio_;
-  rcc_periph_clken rcc_usart_;
-  uint32_t port_;
-  uint32_t pin_;
-  uint32_t irq_;
-  uint16_t tx_;
-  uint16_t rx_;
-  uint16_t cts_;
-  uint16_t rts_;
-  QueueHandle_t tx_q_;
-#endif
-
-  volatile uint16_t rx_error_;
-  bool enable_flush_;
-
-#if BTR_STM32 > 0 || BTR_AVR > 0
-
-#if BTR_USART_RX_BUFF_SIZE > 256
-  volatile uint16_t rx_head_;
-  volatile uint16_t rx_tail_;
-#else
-  volatile uint8_t rx_head_;
-  volatile uint8_t rx_tail_;
-#endif // BTR_USART_RX_BUFF_SIZE > 256
-
-  uint8_t rx_buff_[BTR_USART_RX_BUFF_SIZE];
-#endif // BTR_STM32 > 0 || BTR_AVR > 0
-
-#if BTR_AVR > 0
-
-#if BTR_USART_TX_BUFF_SIZE > 256
-  volatile uint16_t tx_head_;
-  volatile uint16_t tx_tail_;
-#else
-  volatile uint8_t tx_head_;
-  volatile uint8_t tx_tail_;
-#endif // BTR_USART_TX_BUFF_SIZE > 256
-
-  uint8_t tx_buff_[BTR_USART_TX_BUFF_SIZE];
-#endif // BTR_AVR > 0
+  virtual uint32_t recv(
+      char* buff, uint16_t bytes, uint32_t timeout = BTR_USART_RX_TIMEOUT_MS) = 0;
 };
 
 } // namespace btr

@@ -1,7 +1,9 @@
 # Cmake
 sdkconfig
 build-*
-*doc/html*
+doc/html*
+.gdb_history
+gdb.txt
 
 # Mac
 .DS_Store

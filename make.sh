@@ -61,13 +61,14 @@ x86=0; avr=0; stm32=0; esp32=0;
 TESTS=""
 VERBOSE=""
 COMPILELOG=""
+DEBUG=""
 
 function build()
 {
   (set -x && \
     cd ${UTILITY_HOME} \
     && mkdir -p build-${1} && cd build-${1} \
-    && cmake -G Ninja -DBTR_${1^^}=1${TESTS}${VERBOSE}${COMPILELOG}"${2}" .. \
+    && cmake -G Ninja -DBTR_${1^^}=1${TESTS}${VERBOSE}${COMPILELOG}${DEBUG} ${2}  .. \
     && cmake --build . \
   )
 }
@@ -80,13 +81,14 @@ help()
   echo -e "  -e - build esp32"
   echo -e "  -a - build avr"
   echo -e "  -d - clone or pull dependencies"
+  echo -e "  -g - enable debug build"
   echo -e "  -c - export compile commands"
   echo -e "  -v - enable verbose output"
   echo -e "  -t - enable unit tests"
   echo -e "  -h - this help"
 }
 
-while getopts "xasedcvth" Option
+while getopts "xasedgcvth" Option
 do
   case $Option in
     x) x86=1;;
@@ -94,6 +96,7 @@ do
     s) stm32=1;;
     e) esp32=1;;
     d) clone;;
+    g) DEBUG=" -DCMAKE_BUILD_TYPE=Debug";;
     c) COMPILELOG=" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON";;
     v) VERBOSE=" -DCMAKE_VERBOSE_MAKEFILE=ON";;
     t) TESTS=" -DENABLE_TESTS=ON";;

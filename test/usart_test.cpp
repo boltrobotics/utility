@@ -35,14 +35,27 @@ public:
   UsartTest()
     :
       tty_(),
-      reader_(),
-      sender_(),
+      reader_(Usart::instance(0, false)),
+      sender_(Usart::instance(1, false)),
       wbuff_(),
       rbuff_()
   {
-    reader_.open(BAUD, DATA_BITS, StopBitsType::ONE, ParityType::NONE, TTY_SIM_0);
-    sender_.open(BAUD, DATA_BITS, StopBitsType::ONE, ParityType::NONE, TTY_SIM_1);
+#if !BTR_USART0_ENABLED | !BTR_USART1_ENABLED
+  #error "Clean the build and rerun with: CXXFLAGS="-DBTR_USART0_ENABLED=1 -DBTR_USART1_ENABLED=1""
+#endif
+    reader_->open(BAUD, DATA_BITS, StopBitsType::ONE, ParityType::NONE, TTY_SIM_0);
+    sender_->open(BAUD, DATA_BITS, StopBitsType::ONE, ParityType::NONE, TTY_SIM_1);
     resetBuffers();
+  }
+
+  ~UsartTest()
+  {
+    if (sender_) {
+      sender_->close();
+    }
+    if (reader_) {
+      reader_->close();
+    }
   }
 
   void resetBuffers()
@@ -63,8 +76,8 @@ protected:
   // ATTRIBUTES
 
   PseudoTTY tty_;
-  Usart reader_;
-  Usart sender_;
+  Usart* reader_;
+  Usart* sender_;
   Buff wbuff_;
   Buff rbuff_;
 };
@@ -75,10 +88,10 @@ protected:
 
 TEST_F(UsartTest, readWriteOK)
 {
-  ssize_t rc = sender_.send((char*)wbuff_.read_ptr(), wbuff_.available());
+  ssize_t rc = sender_->send((char*)wbuff_.read_ptr(), wbuff_.available());
   ASSERT_EQ(5, rc) << " Message: " << strerror(errno);
 
-  rc = reader_.recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
+  rc = reader_->recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
 
   ASSERT_EQ(5, rc) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size()));
@@ -87,27 +100,27 @@ TEST_F(UsartTest, readWriteOK)
 
 TEST_F(UsartTest, flush)
 {
-  ssize_t rc = sender_.send((char*)wbuff_.read_ptr(), wbuff_.available(), true);
+  ssize_t rc = sender_->send((char*)wbuff_.read_ptr(), wbuff_.available(), true);
   ASSERT_EQ(5, rc) << " Message: " << strerror(errno);
 
   std::this_thread::sleep_for(20ms);
 
-  rc = reader_.available();
+  rc = reader_->available();
   ASSERT_EQ(5, rc);
-  rc = reader_.flush(DirectionType::IN);
+  rc = reader_->flush(DirectionType::IN);
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
-  rc = reader_.available();
+  rc = reader_->available();
   ASSERT_EQ(0, rc);
 
-  rc = reader_.recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
+  rc = reader_->recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
 
   resetBuffers();
 
-  rc = sender_.send((char*)wbuff_.read_ptr(), wbuff_.available());
+  rc = sender_->send((char*)wbuff_.read_ptr(), wbuff_.available());
   ASSERT_EQ(5, rc) << " Message: " << strerror(errno);
 
-  rc = reader_.recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
+  rc = reader_->recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
   ASSERT_EQ(5, rc) << " Message: " << strerror(errno);
   ASSERT_EQ(0, memcmp(wbuff_.data(), rbuff_.data(), wbuff_.size())) << TestHelpers::toHex(rbuff_);
 }
@@ -116,7 +129,7 @@ TEST_F(UsartTest, readTimeout)
 {
   high_resolution_clock::time_point start = high_resolution_clock::now();
 
-  ssize_t rc = reader_.recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
+  ssize_t rc = reader_->recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), BTR_USART_IO_TIMEOUT_MS);
 
   high_resolution_clock::time_point now = high_resolution_clock::now();
   auto elapsed = duration_cast<milliseconds>(now - start).count();
@@ -132,7 +145,7 @@ TEST_F(UsartTest, setTimeout)
   uint32_t timeout = 200;
   high_resolution_clock::time_point start = high_resolution_clock::now();
 
-  ssize_t rc = reader_.recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), timeout);
+  ssize_t rc = reader_->recv((char*)rbuff_.write_ptr(), rbuff_.remaining(), timeout);
 
   high_resolution_clock::time_point now = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(now - start).count();
@@ -143,16 +156,16 @@ TEST_F(UsartTest, setTimeout)
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
 }
 
+#if 0
 TEST_F(UsartTest, DISABLED_writeTimeout)
 {
-#if 0
   // FIXME: Write time-out simulation doesn't work.
   Buff large_buff;
   large_buff.resize(65536);
-  int rc = sender_.send(&large_buff);
+  int rc = sender_->send(&large_buff);
   ASSERT_EQ(0, rc) << " Message: " << strerror(errno);
-#endif
 }
+#endif
 
 // } Tests
 

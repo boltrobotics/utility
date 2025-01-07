@@ -12,7 +12,7 @@
 #include "driver/i2c_master.h"
 
 // PROJECT INCLUDES
-#include "utility/esp32/i2c_esp32_hal.hpp"  // class implemented
+#include "i2c_esp32_hal.hpp"  // class implemented
 
 #if BTR_I2C0_ENABLED > 0 || BTR_I2C1_ENABLED > 0
 
