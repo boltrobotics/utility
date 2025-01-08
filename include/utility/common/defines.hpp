@@ -424,11 +424,22 @@ typedef enum
 #ifndef BTR_USB0_ENABLED
 #define BTR_USB0_ENABLED        0
 #endif
+
 #ifndef BTR_USART0_ENABLED
+#if BTR_X86 > 0
+// This is required for unit tests and is convenient to set here.
+#define BTR_USART0_ENABLED      1
+#else
 #define BTR_USART0_ENABLED      0
 #endif
+#endif
 #ifndef BTR_USART1_ENABLED
+#if BTR_X86 > 0
+// This is required for unit tests and is convenient to set here.
+#define BTR_USART1_ENABLED      1
+#else
 #define BTR_USART1_ENABLED      0
+#endif
 #endif
 #ifndef BTR_USART2_ENABLED
 #define BTR_USART2_ENABLED      0

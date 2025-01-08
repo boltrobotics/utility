@@ -7,8 +7,8 @@ if [ -z ${PROJECTS_HOME} ]; then
   # Assume the script is invoked from within its project.
   export PROJECTS_HOME="${PWD}/.."
 fi
-if [ -z ${XTRA_HOME} ]; then
-  export XTRA_HOME=${PROJECTS_HOME}/other
+if [ -z ${VENDOR_HOME} ]; then
+  export VENDOR_HOME=${PROJECTS_HOME}/vendor
 fi
 
 # Bolt Robotics projects
@@ -23,13 +23,13 @@ fi
 # Third-party projects
 
 if [ -z ${GTEST_HOME} ]; then
-  export GTEST_HOME=${XTRA_HOME}/gtest
+  export GTEST_HOME=${VENDOR_HOME}/gtest
 fi
 if [ -z ${FREERTOS_HOME} ]; then
-  export FREERTOS_HOME=${XTRA_HOME}/freertos
+  export FREERTOS_HOME=${VENDOR_HOME}/freertos
 fi
 if [ -z ${LIBOPENCM3_HOME} ]; then
-  export LIBOPENCM3_HOME=${XTRA_HOME}/libopencm3
+  export LIBOPENCM3_HOME=${VENDOR_HOME}/libopencm3
 fi
 
 ################################################################################
@@ -91,15 +91,15 @@ help()
 while getopts "xasedgcvth" Option
 do
   case $Option in
-    x) x86=1;;
     a) avr=1;;
-    s) stm32=1;;
     e) esp32=1;;
+    s) stm32=1;;
+    x) x86=1;;
     d) clone;;
     g) DEBUG=" -DCMAKE_BUILD_TYPE=Debug";;
     c) COMPILELOG=" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON";;
     v) VERBOSE=" -DCMAKE_VERBOSE_MAKEFILE=ON";;
-    t) TESTS=" -DENABLE_TESTS=ON";;
+    t) x86=1; TESTS=" -DENABLE_TESTS=ON";;
     h) help; exit 0;;
     \?) help; exit 22;;
   esac

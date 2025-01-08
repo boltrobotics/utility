@@ -5,6 +5,10 @@ doc/html*
 .gdb_history
 gdb.txt
 
+# GDB
+.gdb_history
+gdb.txt
+
 # Mac
 .DS_Store
 
